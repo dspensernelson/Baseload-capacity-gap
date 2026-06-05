@@ -104,7 +104,7 @@ export default function App() {
 
       <section style={{ maxWidth: 'var(--max-width-map)', marginTop: 'var(--spacing-section)' }} className="centered">
         <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
-        <Hook reactors={reactors} setSelectedISO={setSelectedISO} />
+        <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} />
       </section>
 
       <section style={{ maxWidth: 'var(--max-width-chart)', marginTop: 'var(--spacing-section)' }} className="centered">
