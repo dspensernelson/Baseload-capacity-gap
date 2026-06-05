@@ -1,0 +1,21 @@
+:root {
+  --color-brand:      #1d3557;
+  --color-amber:      #f4a261;
+  --color-operating:  #2d6a4f;
+  --color-shutdown:   #6c757d;
+  --color-decommissioning: #e76f51;
+  --color-pipeline:   #457b9d;
+  --color-text:       #1a1a1a;
+  --color-text-muted: #666666;
+  --color-bg:         #ffffff;
+  --color-surface:    #f8f9fa;
+  --color-border:     #e5e7eb;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+
+  --spacing-section: 5rem;
+  --max-width-map:   1200px;
+  --max-width-chart: 900px;
+  --max-width-table: 1100px;
+}

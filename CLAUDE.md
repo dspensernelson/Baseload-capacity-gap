@@ -1,0 +1,144 @@
+# Nuclear Pipeline Tracker — Claude Code Context
+
+> This file is auto-ingested by Claude Code. Read it at the start of every session before writing any code.
+
+---
+
+## What This Project Is
+
+A public-facing advocacy visualization showing the gap between retiring US nuclear capacity and new build coming online. Three screens: a map (Hook), a gap chart (the thesis), and a filterable reactor table. Target audience: curious public, advocacy-leaning. Aesthetic target: newspaper graphic, not BI dashboard.
+
+**Public URL goal:** A visitor sees three headline numbers, a US reactor map colored by status, a gap chart through ~2045, and a filterable table — all backed by real EIA + NRC data, with at least one live daily cron making it feel alive.
+
+---
+
+## Stack
+
+| Layer | Tool | Notes |
+|-------|------|-------|
+| Database | Supabase (Postgres) | Free tier. All data lives here. |
+| Frontend | React + Vite | Scaffolded with `npm create vite@latest` |
+| Map | MapLibre GL | Free, no token required. Use OpenFreeMap or CARTO free style. |
+| Charts | Recharts | Area/composed chart for the gap visualization |
+| Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
+| ETL (v1) | Python scripts | One-off seed scripts, run manually |
+| Cron (v1) | Supabase Edge Function OR GitHub Actions | NRC daily status only |
+
+---
+
+## Repo Structure
+
+```
+nuclear-pipeline-tracker/
+├── CLAUDE.md                  ← you are here
+├── CHECKLIST.md               ← master task checklist
+├── DESIGN.md                  ← architecture & data model overview
+├── docs/
+│   ├── data-model.md          ← full schema reference
+│   ├── agent-runbook.md       ← how to work with Claude Code
+│   ├── session-01.md          ← seed the database
+│   ├── session-02.md          ← full schema & remaining seed data
+│   ├── session-03.md          ← gap view (SQL)
+│   ├── session-04.md          ← frontend skeleton
+│   ├── session-05.md          ← map (Hook)
+│   ├── session-06.md          ← gap chart
+│   ├── session-07.md          ← table & visual polish
+│   └── session-08.md          ← deploy & live cron
+├── scripts/                   ← Python ETL scripts
+├── src/                       ← React app
+│   ├── components/
+│   │   ├── Hook.jsx           ← map screen
+│   │   ├── GapChart.jsx       ← chart screen
+│   │   └── ReactorTable.jsx   ← table screen
+│   ├── supabase.js            ← single Supabase client export
+│   └── App.jsx
+└── supabase/
+    ├── schema.sql             ← all table DDL
+    └── functions/             ← edge functions (cron jobs)
+```
+
+---
+
+## Data Sources
+
+| Source | What | How |
+|--------|------|-----|
+| EIA v2 API | Operating reactor inventory (~94 units) | `GET /v2/electricity/operating-generator-capacity` with `technology=Nuclear` facet |
+| NRC decommissioning page | Shutdown/decommissioning units | Manual seed in Session 2 |
+| NRC daily power reactor status | Daily power % per unit | Cron in Session 8 (text file parse) |
+| DOE ARDP / NRC new reactors | SMR/new build pipeline | Manual seed in Session 2 |
+
+**EIA API key:** Required. Store in `.env` as `EIA_API_KEY`. Never commit.  
+**Supabase keys:** Store in `.env` as `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`. Never commit.
+
+---
+
+## Database Tables (5 total)
+
+1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
+2. **`new_reactor_projects`** — SMR and new build pipeline (~15–20 rows, manual)
+3. **`decommissioning`** — shutdown details and capacity lost
+4. **`license_actions`** — license renewals, expirations, uprate actions
+5. **`sync_log`** — audit trail for every cron run
+
+**Views:**
+- `headline_numbers` — three summary stats (operating MW, retiring by 2035, pipeline MW)
+- `gap_series` — year-by-year net capacity delta from now to 2045
+
+See `docs/data-model.md` for full schema.
+
+---
+
+## Key Decisions (Do Not Relitigate)
+
+- **MapLibre over Mapbox** — free, no token, no billing surface
+- **Manual seed for SMR/decommissioning data** — only ~15–20 rows, moves quarterly, manual is correct
+- **SQL views for aggregation** — all editorial math lives in Postgres, not in React components
+- **No auth, no realtime, no payments in v1** — explicitly deferred to v2
+- **Audience = curious public** — newspaper graphic aesthetic, not BI tool
+- **Nuclear is the hero** — framing is "what quietly holds the lights on," not nuclear vs renewables
+- **Wind/solar comparison, live district output, ADAMS feeds** — all v2
+
+---
+
+## Visual Identity Rules
+
+- One strong brand color (TBD by builder)
+- Amber reserved **exclusively** for "the gap" — do not use it elsewhere
+- Display typeface for headline numbers; clean readable face for body
+- Hook → Gap Chart → Table: this order of visual prominence is fixed
+- Must not look like a default dashboard
+
+---
+
+## Coding Conventions
+
+- All Supabase queries go through `src/supabase.js` — never inline credentials
+- Filter/sort logic for the reactor table stays **client-side** (only ~200 rows max)
+- No aggregation logic in React components — consume views, don't re-aggregate
+- Every cron run writes to `sync_log` — this is non-negotiable
+- Upsert (not insert) on seed scripts, keyed on `eia_plant_id + unit_number`
+- Read the generated code line by line before running it — don't black-box ETL
+
+---
+
+## V2 Parking Lot (Do Not Build in V1)
+
+- EIA-930 live generation by balancing authority
+- Wind/solar/storage context layer
+- EIA-923 monthly generation refresh cron
+- NRC license-renewal / uprate scraper
+- ADAMS document feed / change alerts
+- Mobile layout, shareable deep links, embeddable chart
+- Full Paperclip agent org (Data Engineer, Research, Scraper, Content agents)
+- Auth, payments, user accounts, realtime websockets
+
+---
+
+## Current Session
+
+> Update this section at the start of each working session.
+
+**Active session:** —  
+**Last completed:** —  
+**Blockers:** —
