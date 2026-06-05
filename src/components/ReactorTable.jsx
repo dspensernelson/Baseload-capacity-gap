@@ -121,6 +121,7 @@ export default function ReactorTable({ reactors }) {
               <Th col="capacity_mw">Capacity</Th>
               <Th col="commercial_operation_date">Commercial op.</Th>
               <Th col="license_expiration_date">License exp.</Th>
+              <Th col="iso_rto">ISO/RTO</Th>
               <Th col="status">Status</Th>
             </tr>
           </thead>
@@ -140,6 +141,7 @@ export default function ReactorTable({ reactors }) {
                   <td style={{ ...td, color: expiring ? 'var(--color-amber)' : undefined, fontWeight: expiring ? 600 : undefined }}>
                     {fmtYear(r.license_expiration_date)}
                   </td>
+                  <td style={{ ...td, color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>{r.iso_rto ?? '—'}</td>
                   <td style={td}>
                     <span style={{ display: 'inline-block', padding: '0.15rem 0.55rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 600, background: chip.bg, color: chip.color }}>
                       {r.status?.replace('_', ' ')}
