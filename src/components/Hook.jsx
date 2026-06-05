@@ -97,6 +97,7 @@ export default function Hook({ reactors, setSelectedISO }) {
 
   useEffect(() => {
     if (!map.current) return
+    setPanel(null)
     const src = map.current.getSource('reactors')
     if (src) src.setData(reactorsToGeoJSON(reactors))
   }, [reactors])

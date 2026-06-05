@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import supabase from './supabase'
 import HeadlineBand from './components/HeadlineBand'
 import Hook from './components/Hook'
@@ -81,9 +81,10 @@ export default function App() {
     load()
   }, [])
 
-  const filteredReactors = selectedISO
-    ? reactors.filter(r => r.iso_rto === selectedISO)
-    : reactors
+  const filteredReactors = useMemo(
+    () => selectedISO ? reactors.filter(r => r.iso_rto === selectedISO) : reactors,
+    [reactors, selectedISO]
+  )
 
   if (loading) {
     return (
