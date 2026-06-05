@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 
+
 const STATUS_COLORS = {
   operating:      '#2d6a4f',
   license_renewed:'#52b788',
@@ -22,9 +23,12 @@ function reactorsToGeoJSON(reactors) {
 }
 
 export default function Hook({ reactors, setSelectedISO }) {
-  const mapContainer = useRef(null)
-  const map          = useRef(null)
+  const mapContainer  = useRef(null)
+  const map           = useRef(null)
+  const reactorsRef   = useRef(reactors)
   const [panel, setPanel] = useState(null)
+
+  reactorsRef.current = reactors
 
   useEffect(() => {
     if (map.current) return
@@ -43,7 +47,7 @@ export default function Hook({ reactors, setSelectedISO }) {
     map.current.on('load', () => {
       map.current.addSource('reactors', {
         type: 'geojson',
-        data: reactorsToGeoJSON([]),
+        data: reactorsToGeoJSON(reactorsRef.current),
       })
 
       map.current.addLayer({
@@ -93,12 +97,8 @@ export default function Hook({ reactors, setSelectedISO }) {
 
   useEffect(() => {
     if (!map.current) return
-    const update = () => {
-      const src = map.current?.getSource('reactors')
-      if (src) src.setData(reactorsToGeoJSON(reactors))
-    }
-    if (map.current.isStyleLoaded()) update()
-    else map.current.once('load', update)
+    const src = map.current.getSource('reactors')
+    if (src) src.setData(reactorsToGeoJSON(reactors))
   }, [reactors])
 
   return (
