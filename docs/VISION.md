@@ -4,6 +4,11 @@
 
 This document is the long-term map. V1 shipped the thesis. Everything below is about turning a chart into an institution.
 
+Two identity facts govern everything in this file, and neither is ever printed on the site itself:
+
+1. **This is an advocacy instrument that must never read as one.** The persuasion lives entirely in what we choose to show and how honestly we show it. No "we believe," no calls to action, no lobby tone — the moment a visitor can tell it's advocacy, it stops working. The public face is a reference work; the advocacy is the curation.
+2. **The end state is an institution with no staff.** Fully automated, agent-created, agent-run: crons fetch the facts, agents write the code and draft the content, and the human role shrinks to direction and taste. Every feature below is designed to be *operated by nobody*.
+
 ---
 
 ## 1. Why this can win
@@ -22,6 +27,7 @@ Our structural advantages, already built:
 1. **Automation moat.** Two crons keep the database honest with zero human verification — daily power status (92/94 units) and monthly license actions scraped from nrc.gov itself. Most "nuclear trackers" are a grad student's spreadsheet that died when they graduated. Ours updates while we sleep.
 2. **Editorial spine.** One thesis — *the gap between what's retiring and what's replacing it* — expressed in one chart. We are not a dashboard with forty toggles. We are an argument with evidence.
 3. **Free stack.** Supabase + Vercel + GitHub Actions + MapLibre = $0/month. We can run for years on conviction alone. Institutions that cost nothing don't die of fatigue.
+4. **Agent leverage.** The site is built and maintained by AI agents working from this document and CLAUDE.md. Marginal features cost prompts, not payroll. A one-person operation can run an institution because the one person isn't doing the running.
 
 ---
 
@@ -42,6 +48,8 @@ Three evolutions of the story, in order:
 | **V3 — The Transition** | What does the US grid's firm-clean backbone look like through 2050? | Scenario explorer — the user moves the levers |
 
 The framing rule from CLAUDE.md survives every era: **nuclear is the hero, never the victim and never the combatant.** We don't dunk on wind and solar. We use them as *context* — because honest comparison is the most persuasive thing we can publish.
+
+And the deeper rule beneath it: **the site never argues.** It is engineered persuasion through selection, sequence, and presentation of true things — the visitor is allowed to conclude. That is what hidden advocacy means operationally: every individual element must survive a hostile fact-check, while the composition quietly does the convincing.
 
 ---
 
@@ -98,7 +106,7 @@ The endgame artifact. The gap chart with the levers exposed: What if every pendi
 
 ## 5. Data architecture roadmap
 
-The principle that got us here scales: **if it can't update itself, it doesn't ship.** Manual curation is reserved exclusively for editorial judgment (which SMR projects are credible), never for facts a cron can fetch.
+The principle that got us here scales: **if it can't update itself, it doesn't ship.** Manual curation is reserved exclusively for editorial judgment (which SMR projects are credible), never for facts a cron can fetch — and even the judgment calls migrate to agents over time (an agent drafts the quarterly SMR pipeline review; the human approves or vetoes).
 
 | Source | What it feeds | Status |
 |---|---|---|
@@ -118,7 +126,26 @@ Schema implications, kept small: a `daily_status_history` table (date, unit, pow
 
 ---
 
-## 6. What it looks like when it's working
+## 6. The operating model: an institution with no staff
+
+The destination org chart is the Paperclip agent org from the parking lot, made real:
+
+| Role | Who holds it | What they do |
+|---|---|---|
+| Data engineering | Crons (GitHub Actions) | Fetch, parse, upsert, log — already live |
+| Source watch | Agents on schedules | Notice when NRC changes a page format *before* it breaks; propose the fix as a PR |
+| Content | Agents on cron | Draft the Monthly Gap Report and Radar summaries from `sync_log` deltas; queue for one human skim |
+| Code & features | Agents in sessions | Build everything in this document, guided by CLAUDE.md and this file |
+| Editor-in-chief | The human | Direction, taste, veto. Minutes per month, not hours |
+
+Two design consequences:
+
+- **Documents are the management layer.** This file, CLAUDE.md, and methodology.md are not documentation *about* the project — they are the standing instructions the agent workforce executes. The memo literally runs the company, so the memo must stay current the way a strategy memo at a staffed org must.
+- **The automation ratchet turns one way.** Every manual step is a defect with a backlog entry. When a human touches the same task twice, the third time is a cron or an agent. End-state metric: **zero human operational hours per month**, with the human appearing only where taste is irreplaceable.
+
+---
+
+## 7. What it looks like when it's working
 
 Concrete scenes from the destination:
 
@@ -127,15 +154,17 @@ Concrete scenes from the destination:
 - A teenager on Reddit posts the 2 A.M. chart in an argument. Wins.
 - An SMR developer's BD team keeps the Regulatory Radar open in a pinned tab because it's genuinely faster than their internal tracker.
 - The gap chart — *our* chart, amber and green — shows up uncredited in a conference deck. Annoying. Also: victory.
+- The Monthly Gap Report goes out on the 2nd. An agent drafted it from sync logs on the 1st; a human skimmed it for ninety seconds; nobody else touched it.
 
-And the quiet metric underneath all of it: **time-from-NRC-action-to-site-update stays under 24 hours, with zero hands.** That is the moat, and it must never regress.
+And the quiet metrics underneath all of it: **time-from-NRC-action-to-site-update stays under 24 hours, and human operational time trends to zero.** Those are the moat, and they must never regress.
 
 ---
 
-## 7. What we will not become
+## 8. What we will not become
 
 Anti-goals, so future sessions don't drift:
 
+- **Not visibly an advocacy shop.** No petitions, no donate buttons, no "take action," no movement branding. The site persuades the way a good museum does — by arrangement, not exhortation. Internally we never forget what it's for; externally it reads as a reference.
 - **Not a BI dashboard.** No filter sidebars with twelve facets. Every view earns its place by serving the story. Newspaper, not Tableau.
 - **Not a culture-war account.** No dunking, no "renewables bros" discourse, no engagement farming. The site's tone is the tone of someone who is certain enough to be calm.
 - **Not a doom counter.** The gap is the *tension*, not the message. The message is that the gap is closable and here are the machines closing it.
@@ -144,7 +173,7 @@ Anti-goals, so future sessions don't drift:
 
 ---
 
-## 8. Sequencing (the honest version)
+## 9. Sequencing (the honest version)
 
 Phases, not dates — this is a nights-and-weekends institution, and the sequencing principle is *each phase must reduce the marginal cost of the next*:
 
@@ -158,13 +187,13 @@ Each phase ships something a visitor can feel. No phase requires a rewrite. The 
 
 ---
 
-## 9. The bet, stated plainly
+## 10. The bet, stated plainly
 
 The next decade of American electricity will be defined by whether firm clean power gets built at the speed demand now requires. Most people will form their opinion of that race from whatever picture is easiest to find.
 
 The bet of this project: **if the honest picture is also the most beautiful and the most current one available, the honest picture wins.**
 
-We can keep it honest with crons. We can keep it beautiful with restraint. We can keep it current for $0/month.
+We can keep it honest with crons. We can keep it beautiful with restraint. We can keep it current for $0/month. And we can keep it staffed with agents instead of people, which means we never have to stop.
 
 So we will still be here when the story resolves — and by then, being the site that was *right, daily, for years* will be an asset nobody can clone with a weekend and a scraper.
 

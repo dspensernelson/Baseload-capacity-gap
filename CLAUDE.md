@@ -6,7 +6,9 @@
 
 ## What This Project Is
 
-A public-facing advocacy visualization showing the gap between retiring US nuclear capacity and new build coming online. Three screens: a map (Hook), a gap chart (the thesis), and a filterable reactor table. Target audience: curious public, advocacy-leaning. Aesthetic target: newspaper graphic, not BI dashboard.
+A **hidden-advocacy** visualization: pro-nuclear persuasion delivered entirely through honest, current, beautifully arranged data. The page itself must never read as advocacy — no CTAs, no "we," reference-work tone; the advocacy is the curation. It shows the gap between retiring US nuclear capacity and new build coming online. Three screens: a map (Hook), a gap chart (the thesis), and a filterable reactor table. Target audience: curious public. Aesthetic target: newspaper graphic, not BI dashboard.
+
+**Operating model:** the end state is fully automated and agent-created/run — crons fetch facts, agents write code and content, the human supplies direction and taste only (see `docs/VISION.md` §6).
 
 **Public URL goal:** A visitor sees three headline numbers, a US reactor map colored by status, a gap chart through ~2045, and a filterable table — all backed by real EIA + NRC data, with at least one live daily cron making it feel alive.
 
@@ -99,6 +101,8 @@ See `docs/data-model.md` for full schema.
 - **No auth, no realtime, no payments in v1** — explicitly deferred to v2
 - **Audience = curious public** — newspaper graphic aesthetic, not BI tool
 - **Nuclear is the hero** — framing is "what quietly holds the lights on," not nuclear vs renewables
+- **Hidden advocacy** — the site never argues and never asks; persuasion is the arrangement of true things. Every element must survive a hostile fact-check
+- **Agent-operated end state** — any recurring human task is a defect; the fix is a cron or an agent (VISION.md §6)
 - **Wind/solar comparison, live district output, ADAMS feeds** — all v2
 
 ---
