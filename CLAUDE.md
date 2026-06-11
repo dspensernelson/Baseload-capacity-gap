@@ -34,6 +34,7 @@ nuclear-pipeline-tracker/
 ├── CHECKLIST.md               ← master task checklist
 ├── DESIGN.md                  ← architecture & data model overview
 ├── docs/
+│   ├── VISION.md              ← long-term product vision (read before proposing new features)
 │   ├── data-model.md          ← full schema reference
 │   ├── agent-runbook.md       ← how to work with Claude Code
 │   ├── session-01.md          ← seed the database
@@ -124,6 +125,8 @@ See `docs/data-model.md` for full schema.
 ---
 
 ## V2 Parking Lot (Do Not Build in V1)
+
+> Sequencing and rationale for all of this now lives in `docs/VISION.md` (five-phase roadmap). The list below remains the quick reference.
 
 - EIA-930 live generation by balancing authority
 - Wind/solar/storage context layer
