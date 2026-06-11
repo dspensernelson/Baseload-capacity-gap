@@ -175,8 +175,8 @@ function DetailPanel({ reactor, onClose }) {
       <Row label="ISO/RTO"    value={reactor.iso_rto ?? '—'} />
 
       {reactor.daily_status && (
-        <div style={{ marginTop: '0.6rem', fontSize: '0.8rem', color: reactor.daily_status.includes('0%') ? 'var(--color-decommissioning)' : 'var(--color-operating)', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
-          ● {reactor.daily_status}
+        <div style={{ marginTop: '0.6rem', fontSize: '0.8rem', color: parseInt(reactor.daily_status, 10) === 0 ? 'var(--color-decommissioning)' : 'var(--color-operating)', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
+          ● {parseInt(reactor.daily_status, 10) === 0 ? 'Offline — 0% power' : reactor.daily_status}
           {reactor.daily_status_updated_at && (
             <span style={{ color: 'var(--color-text-muted)', marginLeft: '0.4rem', fontSize: '0.7rem' }}>
               ({new Date(reactor.daily_status_updated_at).toLocaleDateString()})

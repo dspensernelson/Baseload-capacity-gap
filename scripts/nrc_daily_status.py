@@ -15,9 +15,10 @@ load_dotenv()
 SUPABASE_URL         = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 
+# Case-sensitive: the lowercase URL serves an HTML meta-refresh page, not the data
 NRC_URL = (
     "https://www.nrc.gov/reading-rm/doc-collections/event-status/"
-    "reactor-status/powerreactorstatusforlast365days.txt"
+    "reactor-status/PowerReactorStatusForLast365Days.txt"
 )
 
 # Manual overrides where NRC name doesn't fuzzy-match EIA name
@@ -124,23 +125,36 @@ def fetch_nrc_data():
     return rows
 
 
+def parse_report_date(date_str):
+    # ReportDt looks like "6/10/2026 12:00:00 AM"
+    for fmt in ("%m/%d/%Y %I:%M:%S %p", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
 def get_today_rows(rows):
     if not rows:
         return []
-    # Dates in NRC file are MM/DD/YYYY
-    dates = []
+    dated = []
     for r in rows:
-        date_str = r.get("Date", "").strip()
-        if date_str:
-            try:
-                dates.append(datetime.strptime(date_str, "%m/%d/%Y").date())
-            except ValueError:
-                pass
-    if not dates:
+        d = parse_report_date(r.get("ReportDt", "").strip())
+        if d:
+            dated.append((d, r))
+    if not dated:
         return []
-    latest = max(dates)
-    return [r for r in rows if r.get("Date", "").strip() and
-            datetime.strptime(r["Date"].strip(), "%m/%d/%Y").date() == latest]
+    latest = max(d for d, _ in dated)
+    return [r for d, r in dated if d == latest]
+
+
+def split_unit_field(unit_field: str) -> tuple[str, str]:
+    # NRC "Unit" column combines plant and unit, e.g. "Browns Ferry 1" or "Clinton"
+    parts = unit_field.rsplit(" ", 1)
+    if len(parts) == 2 and parts[1].isdigit():
+        return parts[0], parts[1]
+    return unit_field, ""
 
 
 def match_plant(nrc_name: str, nrc_unit: str, plant_names: list[str]) -> str | None:
@@ -187,9 +201,8 @@ def main():
     now       = datetime.now(timezone.utc).isoformat()
 
     for row in today_rows:
-        nrc_name = row.get("Plant", "").strip()
-        nrc_unit = row.get("Unit", "").strip()
-        power    = row.get("Power", "").strip()
+        nrc_name, nrc_unit = split_unit_field(row.get("Unit", "").strip())
+        power = row.get("Power", "").strip()
 
         matched_name = match_plant(nrc_name, nrc_unit, plant_names)
         if not matched_name:
