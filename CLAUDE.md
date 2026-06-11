@@ -140,5 +140,5 @@ See `docs/data-model.md` for full schema.
 > Update this section at the start of each working session.
 
 **Active session:** —  
-**Last completed:** —  
+**Last completed:** Session 8 — V1 is live at https://nukemap-two.vercel.app (Vercel project `nukemap`, auto-deploys from GitHub `main`). NRC daily cron runs at 8:00 UTC via GitHub Actions and writes to `sync_log`. `license_actions` seeded (28 rows — pending-review rows flagged "verify" in notes).  
 **Blockers:** —

@@ -158,19 +158,19 @@ Track your progress from empty repo to live V1. Check items off as you go.
 
 **Goal: public URL + one live daily cron**
 
-- [ ] Connect GitHub repo to Vercel (or Netlify)
-- [ ] Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in host dashboard env vars
-- [ ] Confirm live site reads from Supabase
-- [ ] Point custom domain (if Student Pack approved) or use free `*.vercel.app` URL
-- [ ] Write NRC daily status cron (Supabase Edge Function OR GitHub Action):
-  - [ ] Fetch NRC daily power reactor status text file
-  - [ ] Parse each unit's power %
-  - [ ] Update `reactors.daily_status`
-  - [ ] Write one row to `sync_log` (source, timestamp, rows updated, any error)
-- [ ] Deploy and verify cron runs successfully
-- [ ] Surface `daily_status` on map detail panel ("100% power" / "offline")
-- [ ] Confirm `sync_log` has a row from the cron run
-- [ ] Share the public URL 🎉
+- [x] Connect GitHub repo to Vercel (or Netlify)
+- [x] Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in host dashboard env vars
+- [x] Confirm live site reads from Supabase
+- [x] Point custom domain (if Student Pack approved) or use free `*.vercel.app` URL — https://nukemap-two.vercel.app
+- [x] Write NRC daily status cron (Supabase Edge Function OR GitHub Action):
+  - [x] Fetch NRC daily power reactor status text file
+  - [x] Parse each unit's power %
+  - [x] Update `reactors.daily_status`
+  - [x] Write one row to `sync_log` (source, timestamp, rows updated, any error)
+- [x] Deploy and verify cron runs successfully (92/94 units matched; Palisades + 2 others unmatched by design)
+- [x] Surface `daily_status` on map detail panel ("100% power" / "offline")
+- [x] Confirm `sync_log` has a row from the cron run
+- [x] Share the public URL 🎉
 
 ---
 
