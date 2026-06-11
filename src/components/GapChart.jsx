@@ -51,16 +51,16 @@ export default function GapChart({ gapSeries, headlines }) {
     <div>
       <ResponsiveContainer width="100%" height={400}>
         <ComposedChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
           <XAxis
             dataKey="year"
-            tick={{ fontFamily: 'var(--font-body)', fontSize: 12 }}
+            tick={{ fontFamily: 'var(--font-body)', fontSize: 12, fill: 'rgba(255,255,255,0.6)' }}
             tickLine={false}
-            axisLine={{ stroke: '#e0e0e0' }}
+            axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
           />
           <YAxis
             tickFormatter={v => `${v} GW`}
-            tick={{ fontFamily: 'var(--font-body)', fontSize: 11 }}
+            tick={{ fontFamily: 'var(--font-body)', fontSize: 11, fill: 'rgba(255,255,255,0.5)' }}
             tickLine={false}
             axisLine={false}
             width={58}
@@ -73,7 +73,7 @@ export default function GapChart({ gapSeries, headlines }) {
             dataKey="gap_gw"
             stackId="1"
             fill="var(--color-amber)"
-            fillOpacity={0.35}
+            fillOpacity={0.85}
             stroke="none"
             name="Capacity gap"
           />
@@ -107,10 +107,6 @@ export default function GapChart({ gapSeries, headlines }) {
         </ComposedChart>
       </ResponsiveContainer>
 
-      <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.75rem' }}>
-        Retirements based on NRC license expiration dates. New build based on announced projects.{' '}
-        <a href="/methodology.html" target="_blank" rel="noopener noreferrer">How we calculated this →</a>
-      </p>
     </div>
   )
 }

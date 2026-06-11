@@ -8,7 +8,6 @@ export default function HeadlineBand({ headlines }) {
 
   return (
     <div style={{
-      borderTop: '1px solid var(--color-border)',
       borderBottom: '1px solid var(--color-border)',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',

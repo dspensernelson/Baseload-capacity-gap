@@ -113,24 +113,24 @@ export default function App() {
         <span style={{ fontSize: '0.875rem', opacity: 0.7 }}>The gap between what's retiring and what's coming online</span>
       </header>
 
-      {/* Hero: Gap Chart */}
-      <section style={{ maxWidth: '1100px', marginTop: '3rem' }} className="centered">
-        <h2 className="section-title">The Gap</h2>
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>
-          US nuclear capacity from now to 2045 — retirements vs. new build.{' '}
-          <a href="https://github.com/DSpEnder77/NukeMap/blob/main/docs/methodology.md"
-             target="_blank" rel="noreferrer"
-             style={{ color: 'var(--color-text-muted)', textDecoration: 'underline' }}>
-            How we calculated this
-          </a>
-        </p>
+      {/* Hero: full-bleed chart banner */}
+      <div style={{ background: 'var(--color-brand)', width: '100%', padding: '2.5rem 3rem 1rem' }}>
+        <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'baseline', gap: '1.25rem' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: '2.25rem', fontWeight: 900, color: '#fff', lineHeight: 1 }}>The Gap</span>
+          <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>
+            US nuclear capacity 2025–2045 —{' '}
+            <a href="https://github.com/DSpEnder77/NukeMap/blob/main/docs/methodology.md"
+               target="_blank" rel="noreferrer"
+               style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'underline' }}>
+              how we calculated this
+            </a>
+          </span>
+        </div>
         <GapChart gapSeries={gapSeries} headlines={headlines} />
-      </section>
-
-      {/* Callouts: three headline numbers */}
-      <div style={{ marginTop: '3rem' }}>
-        <HeadlineBand headlines={headlines} />
       </div>
+
+      {/* Callouts: flush below the banner */}
+      <HeadlineBand headlines={headlines} />
 
       {/* Map + Table side by side */}
       <section style={{ maxWidth: '1400px', marginTop: 'var(--spacing-section)', paddingBottom: '6rem' }} className="centered">
