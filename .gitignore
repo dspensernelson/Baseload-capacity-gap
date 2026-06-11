@@ -1,4 +1,6 @@
 .env
+.claude/settings.local.json
+*.docx
 __pycache__/
 *.pyc
 node_modules/
