@@ -73,9 +73,9 @@ export default function ReactorTable({ reactors }) {
   )
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Filters */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem', alignItems: 'center', flexShrink: 0 }}>
         <Select label="Status" value={statusFilter} onChange={setStatusFilter} options={[
           { value: 'all', label: 'All statuses' },
           { value: 'operating', label: 'Operating' },
@@ -110,7 +110,7 @@ export default function ReactorTable({ reactors }) {
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflow: 'auto', flex: 1 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
             <tr>

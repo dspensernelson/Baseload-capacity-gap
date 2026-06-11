@@ -113,14 +113,8 @@ export default function App() {
         <span style={{ fontSize: '0.875rem', opacity: 0.7 }}>The gap between what's retiring and what's coming online</span>
       </header>
 
-      <HeadlineBand headlines={headlines} />
-
-      <section style={{ maxWidth: 'var(--max-width-map)', marginTop: 'var(--spacing-section)' }} className="centered">
-        <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
-        <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} licenseActionsByReactor={licenseActionsByReactor} />
-      </section>
-
-      <section style={{ maxWidth: 'var(--max-width-chart)', marginTop: 'var(--spacing-section)' }} className="centered">
+      {/* Hero: Gap Chart */}
+      <section style={{ maxWidth: '1100px', marginTop: '3rem' }} className="centered">
         <h2 className="section-title">The Gap</h2>
         <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>
           US nuclear capacity from now to 2045 — retirements vs. new build.{' '}
@@ -133,9 +127,22 @@ export default function App() {
         <GapChart gapSeries={gapSeries} headlines={headlines} />
       </section>
 
-      <section style={{ maxWidth: 'var(--max-width-table)', marginTop: 'var(--spacing-section)', paddingBottom: '6rem' }} className="centered">
-        <h2 className="section-title">Every Reactor</h2>
-        <ReactorTable reactors={filteredReactors} />
+      {/* Callouts: three headline numbers */}
+      <div style={{ marginTop: '3rem' }}>
+        <HeadlineBand headlines={headlines} />
+      </div>
+
+      {/* Map + Table side by side */}
+      <section style={{ maxWidth: '1400px', marginTop: 'var(--spacing-section)', paddingBottom: '6rem' }} className="centered">
+        <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+          <div style={{ flex: '0 0 58%', minWidth: 0 }}>
+            <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} licenseActionsByReactor={licenseActionsByReactor} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, height: '600px' }}>
+            <ReactorTable reactors={filteredReactors} />
+          </div>
+        </div>
       </section>
     </>
   )
