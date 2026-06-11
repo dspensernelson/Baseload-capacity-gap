@@ -1,0 +1,25 @@
+name: NRC License Actions Monthly
+
+on:
+  schedule:
+    - cron: '0 9 1 * *'   # 9am UTC on the 1st of each month
+  workflow_dispatch:       # allow manual trigger from Actions tab
+
+jobs:
+  update-license-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install python-dotenv "supabase==2.9.1" requests
+
+      - name: Run NRC license actions scraper
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/nrc_license_actions.py
