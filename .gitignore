@@ -8,3 +8,6 @@ dist/
 .DS_Store
 
 .vercel
+
+# Internal strategy memo — kept out of the public repo (see local copy)
+docs/VISION.md

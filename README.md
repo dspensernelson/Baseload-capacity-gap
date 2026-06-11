@@ -15,8 +15,7 @@ NRC data that refreshes itself.
 | Retiring by 2035 | Capacity whose NRC operating license expires by end of 2035 | NRC license renewal records |
 | In the pipeline | New build with confirmed status targeting ≤ 2035 | NRC new reactors + DOE ARDP, manually curated |
 
-See [docs/methodology.md](docs/methodology.md) for assumptions and caveats, and
-[docs/VISION.md](docs/VISION.md) for where this project is headed long-term.
+See [docs/methodology.md](docs/methodology.md) for assumptions and caveats.
 
 ## Architecture
 

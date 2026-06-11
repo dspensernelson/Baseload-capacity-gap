@@ -6,9 +6,9 @@
 
 ## What This Project Is
 
-A **hidden-advocacy** visualization: pro-nuclear persuasion delivered entirely through honest, current, beautifully arranged data. The page itself must never read as advocacy — no CTAs, no "we," reference-work tone; the advocacy is the curation. It shows the gap between retiring US nuclear capacity and new build coming online. Three screens: a map (Hook), a gap chart (the thesis), and a filterable reactor table. Target audience: curious public. Aesthetic target: newspaper graphic, not BI dashboard.
+A public-facing, advocacy-leaning data visualization showing the gap between retiring US nuclear capacity and new build coming online. Tone is newspaper-graphic reference: it *shows*, it doesn't editorialize — no CTAs, no "we," and every element must survive a hostile fact-check. Three screens: a map (Hook), a gap chart (the thesis), and a filterable reactor table. Target audience: curious public. Aesthetic target: newspaper graphic, not BI dashboard.
 
-**Operating model:** the end state is fully automated and agent-created/run — crons fetch facts, agents write code and content, the human supplies direction and taste only (see `docs/VISION.md` §6).
+**Operating model:** maximally automated — crons fetch and refresh the data, the build itself is AI-assisted, human input is reserved for direction and editorial curation. Full positioning and roadmap live in `docs/VISION.md` (internal — gitignored, local only).
 
 **Public URL goal:** A visitor sees three headline numbers, a US reactor map colored by status, a gap chart through ~2045, and a filterable table — all backed by real EIA + NRC data, with at least one live daily cron making it feel alive.
 
@@ -36,7 +36,7 @@ nuclear-pipeline-tracker/
 ├── CHECKLIST.md               ← master task checklist
 ├── DESIGN.md                  ← architecture & data model overview
 ├── docs/
-│   ├── VISION.md              ← long-term product vision (read before proposing new features)
+│   ├── VISION.md              ← long-term vision & positioning (internal; gitignored, local only)
 │   ├── data-model.md          ← full schema reference
 │   ├── agent-runbook.md       ← how to work with Claude Code
 │   ├── session-01.md          ← seed the database
@@ -101,8 +101,8 @@ See `docs/data-model.md` for full schema.
 - **No auth, no realtime, no payments in v1** — explicitly deferred to v2
 - **Audience = curious public** — newspaper graphic aesthetic, not BI tool
 - **Nuclear is the hero** — framing is "what quietly holds the lights on," not nuclear vs renewables
-- **Hidden advocacy** — the site never argues and never asks; persuasion is the arrangement of true things. Every element must survive a hostile fact-check
-- **Agent-operated end state** — any recurring human task is a defect; the fix is a cron or an agent (VISION.md §6)
+- **Show, don't tell** — the site presents, it never exhorts; no CTAs, no "we." Every element must survive a hostile fact-check
+- **Automation ratchet** — any recurring manual task is treated as a defect; the fix is a cron or an agent (see VISION.md)
 - **Wind/solar comparison, live district output, ADAMS feeds** — all v2
 
 ---
