@@ -84,6 +84,7 @@ nuclear-pipeline-tracker/
 3. **`decommissioning`** — shutdown details and capacity lost
 4. **`license_actions`** — license renewals, expirations, uprate actions
 5. **`sync_log`** — audit trail for every cron run
+6. **`daily_status_history`** — one row per reactor per NRC report date (power %); the "tape" feeding future sparklines/capacity-factor views. Written forward by the daily cron, backfilled by `scripts/backfill_status_history.py`
 
 **Views:**
 - `headline_numbers` — three summary stats (operating MW, retiring by 2035, pipeline MW)

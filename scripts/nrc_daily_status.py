@@ -106,17 +106,23 @@ def parse_report_date(date_str):
 
 
 def get_today_rows(rows):
+    """Return (latest_report_date, rows_for_that_date)."""
     if not rows:
-        return []
+        return None, []
     dated = []
     for r in rows:
         d = parse_report_date(r.get("ReportDt", "").strip())
         if d:
             dated.append((d, r))
     if not dated:
-        return []
+        return None, []
     latest = max(d for d, _ in dated)
-    return [r for d, r in dated if d == latest]
+    return latest, [r for d, r in dated if d == latest]
+
+
+def parse_power(power_str):
+    """NRC 'Power' is an integer percent; non-numeric notes become None."""
+    return int(power_str) if power_str.isdigit() else None
 
 
 def split_unit_field(unit_field: str) -> tuple[str, str]:
@@ -155,8 +161,8 @@ def main():
     print("Fetching NRC status file…")
     try:
         all_rows = fetch_nrc_data()
-        today_rows = get_today_rows(all_rows)
-        print(f"  Found {len(today_rows)} units for latest date")
+        report_date, today_rows = get_today_rows(all_rows)
+        print(f"  Found {len(today_rows)} units for {report_date}")
     except Exception as e:
         duration = int((time.time() - start) * 1000)
         supabase.table("sync_log").insert({
@@ -166,9 +172,11 @@ def main():
         print(f"ERROR: {e}")
         raise SystemExit(1)
 
-    unmatched = []
-    updates   = 0
-    now       = datetime.now(timezone.utc).isoformat()
+    unmatched     = []
+    updates       = 0
+    history_rows  = []
+    now           = datetime.now(timezone.utc).isoformat()
+    report_iso    = report_date.isoformat() if report_date else None
 
     for row in today_rows:
         nrc_name, nrc_unit = split_unit_field(row.get("Unit", "").strip())
@@ -190,6 +198,7 @@ def main():
         targets = match_by_unit if match_by_unit else candidates
 
         status_str = f"{power}% power" if power.isdigit() else power
+        power_pct  = parse_power(power)
 
         for reactor in targets:
             supabase.table("reactors").update({
@@ -198,16 +207,33 @@ def main():
             }).eq("id", reactor["id"]).execute()
             updates += 1
 
+            if report_iso:
+                history_rows.append({
+                    "reactor_id":  reactor["id"],
+                    "report_date": report_iso,
+                    "power_pct":   power_pct,
+                    "status_text": status_str,
+                })
+
+    # Append today's readings to the history tape (idempotent on reactor_id+date)
+    inserted = 0
+    if history_rows:
+        supabase.table("daily_status_history").upsert(
+            history_rows, on_conflict="reactor_id,report_date"
+        ).execute()
+        inserted = len(history_rows)
+
     duration = int((time.time() - start) * 1000)
     supabase.table("sync_log").insert({
-        "source":       "nrc_daily_status",
-        "status":       "success",
-        "rows_updated": updates,
-        "duration_ms":  duration,
-        "notes":        f"Unmatched: {len(unmatched)}. Names: {', '.join(unmatched[:10])}",
+        "source":        "nrc_daily_status",
+        "status":        "success",
+        "rows_updated":  updates,
+        "rows_inserted": inserted,
+        "duration_ms":   duration,
+        "notes":         f"Report {report_iso}. History rows: {inserted}. Unmatched: {len(unmatched)}. Names: {', '.join(unmatched[:10])}",
     }).execute()
 
-    print(f"Done: {updates} reactors updated, {len(unmatched)} unmatched")
+    print(f"Done: {updates} reactors updated, {inserted} history rows, {len(unmatched)} unmatched")
     if unmatched:
         print("  Unmatched plant names (add to NAME_MAP):")
         for u in unmatched:
