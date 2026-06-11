@@ -1,6 +1,6 @@
 import {
-  ComposedChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ReferenceLine, ResponsiveContainer, Legend,
+  ComposedChart, Area, XAxis, YAxis,
+  Tooltip, ReferenceLine, ResponsiveContainer,
 } from 'recharts'
 
 function toGW(mw) {
@@ -14,9 +14,10 @@ function buildChartData(gapSeries) {
 
   return gapSeries.map(row => {
     const net  = toGW(row.net_capacity_mw)
-    const gap  = +(base - net).toFixed(2)
+    const gap  = Math.max(0, +(base - net).toFixed(2))
     return {
       year:      row.year,
+      base_gw:   base,
       net_gw:    net,
       gap_gw:    gap,
       add_gw:    toGW(row.adding_mw),
@@ -29,11 +30,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload ?? {}
   return (
-    <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.75rem 1rem', fontSize: '0.8rem', fontFamily: 'var(--font-body)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-      <div style={{ fontWeight: 600, marginBottom: '0.4rem' }}>{label}</div>
+    <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.75rem 1rem', fontSize: '0.8rem', fontFamily: 'var(--font-body)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+      <div style={{ fontWeight: 600, marginBottom: '0.4rem', color: 'var(--color-text)' }}>{label}</div>
       <div style={{ color: 'var(--color-operating)' }}>Net capacity: {d.net_gw?.toFixed(1)} GW</div>
-      <div style={{ color: 'var(--color-amber)' }}>Gap from baseline: {d.gap_gw?.toFixed(1)} GW</div>
-      {d.retire_gw > 0 && <div style={{ color: 'var(--color-shutdown)' }}>Retiring this year: {d.retire_gw.toFixed(1)} GW</div>}
+      <div style={{ color: 'var(--color-decommissioning)' }}>Gap from baseline: {d.gap_gw?.toFixed(1)} GW</div>
+      {d.retire_gw > 0 && <div style={{ color: 'var(--color-text-muted)' }}>Retiring this year: {d.retire_gw.toFixed(1)} GW</div>}
       {d.add_gw > 0    && <div style={{ color: 'var(--color-pipeline)' }}>Adding this year: {d.add_gw.toFixed(1)} GW</div>}
     </div>
   )
@@ -48,65 +49,84 @@ export default function GapChart({ gapSeries, headlines }) {
     : null
 
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={400}>
-        <ComposedChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+    <div style={{ position: 'relative', width: '100%', height: 460, background: 'var(--color-operating)' }}>
+      {/* Title + subtitle overlaid inside the green canvas */}
+      <div style={{ position: 'absolute', top: '1.75rem', left: '2.5rem', zIndex: 2, pointerEvents: 'none' }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: '3rem', fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.02em' }}>
+          The Gap
+        </div>
+        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)', marginTop: '0.5rem', maxWidth: '22rem' }}>
+          US nuclear capacity 2025–2045. The amber is what we lose to license expirations faster than we replace it.
+        </div>
+        <a href="https://github.com/DSpEnder77/NukeMap/blob/main/docs/methodology.md"
+           target="_blank" rel="noreferrer"
+           style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'underline', pointerEvents: 'auto' }}>
+          How we calculated this →
+        </a>
+      </div>
+
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
           <XAxis
             dataKey="year"
-            tick={{ fontFamily: 'var(--font-body)', fontSize: 12, fill: 'rgba(255,255,255,0.6)' }}
-            tickLine={false}
-            axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
-          />
-          <YAxis
-            tickFormatter={v => `${v} GW`}
-            tick={{ fontFamily: 'var(--font-body)', fontSize: 11, fill: 'rgba(255,255,255,0.5)' }}
+            tick={{ fontFamily: 'var(--font-body)', fontSize: 12, fill: 'rgba(255,255,255,0.85)' }}
             tickLine={false}
             axisLine={false}
-            width={58}
+            interval="preserveStartEnd"
+            minTickGap={40}
+            height={26}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <YAxis
+            mirror
+            tickFormatter={v => `${v} GW`}
+            tick={{ fontFamily: 'var(--font-body)', fontSize: 11, fill: 'rgba(255,255,255,0.7)' }}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            width={1}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.4)' }} />
 
-          {/* The gap — amber fill representing lost capacity */}
+          {/* The gap — amber wedge cutting in from the bottom */}
           <Area
             type="monotone"
             dataKey="gap_gw"
             stackId="1"
             fill="var(--color-amber)"
-            fillOpacity={0.85}
-            stroke="none"
+            fillOpacity={1}
+            stroke="#fff"
+            strokeWidth={1.5}
+            strokeOpacity={0.5}
             name="Capacity gap"
           />
 
-          {/* Net remaining capacity — green */}
+          {/* Net remaining capacity — fills the rest of the green canvas */}
           <Area
             type="monotone"
             dataKey="net_gw"
             stackId="1"
             fill="var(--color-operating)"
-            fillOpacity={0.8}
-            stroke="var(--color-operating)"
-            strokeWidth={2}
+            fillOpacity={1}
+            stroke="none"
             name="Net capacity"
           />
 
           <ReferenceLine
             x={2035}
-            stroke="var(--color-brand)"
-            strokeDasharray="4 2"
+            stroke="rgba(255,255,255,0.5)"
+            strokeDasharray="4 3"
             strokeWidth={1.5}
             label={{
-              value: retiring2035 ? `← ${retiring2035} GW gap by 2035` : '2035',
+              value: retiring2035 ? `${retiring2035} GW gap by 2035` : '2035',
               position: 'insideTopRight',
-              fill: 'var(--color-amber)',
-              fontSize: 12,
+              fill: '#fff',
+              fontSize: 13,
               fontFamily: 'var(--font-body)',
               fontWeight: 600,
             }}
           />
         </ComposedChart>
       </ResponsiveContainer>
-
     </div>
   )
 }
