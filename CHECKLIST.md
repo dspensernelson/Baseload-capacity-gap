@@ -128,8 +128,8 @@ Track your progress from empty repo to live V1. Check items off as you go.
 - [ ] Label the gap directly on the chart (not in a legend)
 - [ ] Annotate 2035 with a vertical reference line + headline number
 - [ ] Distinguish confirmed vs speculative capacity (solid vs hatched/lighter fill)
-- [ ] Add "how we calculated this" link to a methodology note
-- [ ] Write `docs/methodology.md` explaining the data sources and assumptions
+- [x] Add "how we calculated this" link to a methodology note
+- [x] Write `docs/methodology.md` explaining the data sources and assumptions
 
 ---
 
@@ -179,7 +179,8 @@ Track your progress from empty repo to live V1. Check items off as you go.
 - [ ] EIA-930 live generation by balancing authority
 - [ ] Wind/solar/storage context layer
 - [ ] EIA-923 monthly generation refresh cron
-- [ ] NRC license-renewal / uprate scraper
+- [x] NRC license-renewal scraper (monthly cron, June 2026 — uprate tracking still open)
+- [x] Surface license actions in map detail panel
 - [ ] ADAMS document feed
 - [ ] Mobile layout + shareable deep links
 - [ ] Paperclip agent org setup

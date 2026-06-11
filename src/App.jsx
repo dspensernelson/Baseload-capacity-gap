@@ -123,7 +123,12 @@ export default function App() {
       <section style={{ maxWidth: 'var(--max-width-chart)', marginTop: 'var(--spacing-section)' }} className="centered">
         <h2 className="section-title">The Gap</h2>
         <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>
-          US nuclear capacity from now to 2045 — retirements vs. new build.
+          US nuclear capacity from now to 2045 — retirements vs. new build.{' '}
+          <a href="https://github.com/DSpEnder77/NukeMap/blob/main/docs/methodology.md"
+             target="_blank" rel="noreferrer"
+             style={{ color: 'var(--color-text-muted)', textDecoration: 'underline' }}>
+            How we calculated this
+          </a>
         </p>
         <GapChart gapSeries={gapSeries} headlines={headlines} />
       </section>

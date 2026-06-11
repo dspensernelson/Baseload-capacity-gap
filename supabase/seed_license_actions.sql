@@ -1,8 +1,7 @@
--- Seed: license_actions
--- NRC license renewal / subsequent license renewal (SLR) actions, compiled June 2026.
--- Approved rows carry issued dates and new expirations; under_review rows carry the
--- application date where known. Rows whose notes say "verify" were seeded from
--- secondary knowledge and should be checked against nrc.gov before publishing claims.
+-- Seed: license_actions  ** SUPERSEDED — kept for history only **
+-- license_actions is now rebuilt monthly from nrc.gov by scripts/nrc_license_actions.py
+-- (workflow .github/workflows/nrc-license-monthly.yml). Do not run this file; the
+-- scraper deletes and replaces renewal rows on every run.
 
 INSERT INTO license_actions (reactor_id, action_type, action_date, new_expiration_date, nrc_docket, status, notes) VALUES
 

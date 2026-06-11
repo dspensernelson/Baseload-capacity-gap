@@ -22,7 +22,7 @@ A public-facing advocacy visualization showing the gap between retiring US nucle
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
-| Cron (v1) | Supabase Edge Function OR GitHub Actions | NRC daily status only |
+| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00 UTC, power status) + `nrc-license-monthly.yml` (monthly, license actions). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` |
 
 ---
 
@@ -65,8 +65,9 @@ nuclear-pipeline-tracker/
 |--------|------|-----|
 | EIA v2 API | Operating reactor inventory (~94 units) | `GET /v2/electricity/operating-generator-capacity` with `technology=Nuclear` facet |
 | NRC decommissioning page | Shutdown/decommissioning units | Manual seed in Session 2 |
-| NRC daily power reactor status | Daily power % per unit | Cron in Session 8 (text file parse) |
-| DOE ARDP / NRC new reactors | SMR/new build pipeline | Manual seed in Session 2 |
+| NRC daily power reactor status | Daily power % per unit | Daily cron (`scripts/nrc_daily_status.py`) — NB: URL is case-sensitive, file is `ReportDt\|Unit\|Power` with plant+unit combined |
+| NRC license renewal pages | License actions + authoritative expiration dates | Monthly cron (`scripts/nrc_license_actions.py`) — rebuilds `license_actions`, updates `reactors.license_expiration_date` |
+| DOE ARDP / NRC new reactors | SMR/new build pipeline | Manual seed, curated quarterly (intentionally not automated) |
 
 **EIA API key:** Required. Store in `.env` as `EIA_API_KEY`. Never commit.  
 **Supabase keys:** Store in `.env` as `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`. Never commit.
@@ -127,7 +128,7 @@ See `docs/data-model.md` for full schema.
 - EIA-930 live generation by balancing authority
 - Wind/solar/storage context layer
 - EIA-923 monthly generation refresh cron
-- NRC license-renewal / uprate scraper
+- ~~NRC license-renewal scraper~~ — **built** (June 2026, monthly cron); uprate tracking still open
 - ADAMS document feed / change alerts
 - Mobile layout, shareable deep links, embeddable chart
 - Full Paperclip agent org (Data Engineer, Research, Scraper, Content agents)
@@ -140,5 +141,5 @@ See `docs/data-model.md` for full schema.
 > Update this section at the start of each working session.
 
 **Active session:** —  
-**Last completed:** Session 8 — V1 is live at https://nukemap-two.vercel.app (Vercel project `nukemap`, auto-deploys from GitHub `main`). NRC daily cron runs at 8:00 UTC via GitHub Actions and writes to `sync_log`. `license_actions` seeded (28 rows — pending-review rows flagged "verify" in notes).  
+**Last completed:** Post-V1 automation (June 2026) — V1 live at https://nukemap-two.vercel.app (Vercel `nukemap`, auto-deploys from `main`). Two crons: NRC daily status (08:00 UTC) and NRC license actions (monthly). `license_actions` is now fully scraper-fed from nrc.gov (no manual verification needed); detail panel shows license history + daily power. Headline "retiring by 2035" is ~12.0 GW with authoritative NRC expiration dates.  
 **Blockers:** —
