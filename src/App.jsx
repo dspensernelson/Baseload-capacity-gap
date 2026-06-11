@@ -63,23 +63,35 @@ export default function App() {
   const [reactors, setReactors]   = useState([])
   const [headlines, setHeadlines] = useState(null)
   const [gapSeries, setGapSeries] = useState([])
+  const [licenseActions, setLicenseActions] = useState([])
   const [loading, setLoading]     = useState(true)
   const [selectedISO, setSelectedISO] = useState(null)
 
   useEffect(() => {
     async function load() {
-      const [{ data: r }, { data: h }, { data: g }] = await Promise.all([
+      const [{ data: r }, { data: h }, { data: g }, { data: la }] = await Promise.all([
         supabase.from('reactors').select('*'),
         supabase.from('headline_numbers').select('*').single(),
         supabase.from('gap_series').select('*').order('year'),
+        supabase.from('license_actions').select('*').order('action_date', { ascending: false }),
       ])
       setReactors(r ?? [])
       setHeadlines(h)
       setGapSeries(g ?? [])
+      setLicenseActions(la ?? [])
       setLoading(false)
     }
     load()
   }, [])
+
+  const licenseActionsByReactor = useMemo(() => {
+    const map = {}
+    licenseActions.forEach(a => {
+      if (!a.reactor_id) return
+      ;(map[a.reactor_id] ??= []).push(a)
+    })
+    return map
+  }, [licenseActions])
 
   const filteredReactors = useMemo(
     () => selectedISO ? reactors.filter(r => r.iso_rto === selectedISO) : reactors,
@@ -105,7 +117,7 @@ export default function App() {
 
       <section style={{ maxWidth: 'var(--max-width-map)', marginTop: 'var(--spacing-section)' }} className="centered">
         <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
-        <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} />
+        <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} licenseActionsByReactor={licenseActionsByReactor} />
       </section>
 
       <section style={{ maxWidth: 'var(--max-width-chart)', marginTop: 'var(--spacing-section)' }} className="centered">

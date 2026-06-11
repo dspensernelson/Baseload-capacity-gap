@@ -22,7 +22,7 @@ function reactorsToGeoJSON(reactors) {
   }
 }
 
-export default function Hook({ reactors, setSelectedISO }) {
+export default function Hook({ reactors, setSelectedISO, licenseActionsByReactor = {} }) {
   const mapContainer  = useRef(null)
   const map           = useRef(null)
   const reactorsRef   = useRef(reactors)
@@ -106,7 +106,7 @@ export default function Hook({ reactors, setSelectedISO }) {
     <div style={{ position: 'relative' }}>
       <div ref={mapContainer} style={{ height: '600px', width: '100%', borderRadius: '4px', overflow: 'hidden' }} />
       <Legend />
-      {panel && <DetailPanel reactor={panel} onClose={() => setPanel(null)} />}
+      {panel && <DetailPanel reactor={panel} actions={licenseActionsByReactor[panel.id] ?? []} onClose={() => setPanel(null)} />}
     </div>
   )
 }
@@ -135,8 +135,32 @@ function Legend() {
   )
 }
 
-function DetailPanel({ reactor, onClose }) {
+const ACTION_LABELS = {
+  license_renewal:            'License renewal',
+  subsequent_license_renewal: 'License extension (80 yr)',
+  restart_authorization:      'Restart authorization',
+}
+
+function LicenseActionLine({ action }) {
+  const pending = action.status === 'under_review'
+  const label = ACTION_LABELS[action.action_type] ?? action.action_type?.replace(/_/g, ' ')
+  const year = d => d ? new Date(d).getFullYear() : null
+  return (
+    <div style={{ fontSize: '0.75rem', marginBottom: '0.25rem', color: pending ? 'var(--color-amber)' : 'var(--color-text-muted)' }}>
+      {pending ? '⏳' : '✓'} {label}{' '}
+      {pending
+        ? `under NRC review${year(action.action_date) ? ` (filed ${year(action.action_date)})` : ''}`
+        : `${year(action.action_date) ?? ''}${year(action.new_expiration_date) ? ` → licensed to ${year(action.new_expiration_date)}` : ''}`}
+    </div>
+  )
+}
+
+function DetailPanel({ reactor, actions, onClose }) {
   const statusColor = STATUS_COLORS[reactor.status] ?? '#6c757d'
+  // newest first; the panel shows at most the two most recent actions
+  const shown = [...actions]
+    .sort((a, b) => (b.action_date ?? '').localeCompare(a.action_date ?? ''))
+    .slice(0, 2)
 
   function fmt(dateStr) {
     if (!dateStr) return '—'
@@ -173,6 +197,12 @@ function DetailPanel({ reactor, onClose }) {
       <Row label="Commercial" value={fmt(reactor.commercial_operation_date)} />
       <Row label="License exp" value={fmt(reactor.license_expiration_date)} highlight={isExpiringSoon(reactor.license_expiration_date)} />
       <Row label="ISO/RTO"    value={reactor.iso_rto ?? '—'} />
+
+      {shown.length > 0 && (
+        <div style={{ marginTop: '0.6rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
+          {shown.map(a => <LicenseActionLine key={a.id} action={a} />)}
+        </div>
+      )}
 
       {reactor.daily_status && (
         <div style={{ marginTop: '0.6rem', fontSize: '0.8rem', color: parseInt(reactor.daily_status, 10) === 0 ? 'var(--color-decommissioning)' : 'var(--color-operating)', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
