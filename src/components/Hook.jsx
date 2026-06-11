@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import maplibregl from 'maplibre-gl'
+import isoRegions from '../data/iso-regions.json'
 
 
 const STATUS_COLORS = {
@@ -7,6 +8,29 @@ const STATUS_COLORS = {
   license_renewed:'#52b788',
   decommissioning:'#e76f51',
   shutdown:       '#6c757d',
+}
+
+// One label point per ISO region — placed on the region's largest polygon part
+// so a MultiPolygon doesn't get labelled once per disjoint piece.
+function isoLabelPoints(fc) {
+  const features = fc.features.map(f => {
+    const parts = f.geometry.type === 'MultiPolygon'
+      ? f.geometry.coordinates
+      : [f.geometry.coordinates]
+    let best = null, bestSpan = -1
+    for (const poly of parts) {
+      const ring = poly[0]
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+      for (const [x, y] of ring) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x
+        if (y < minY) minY = y; if (y > maxY) maxY = y
+      }
+      const span = (maxX - minX) * (maxY - minY)
+      if (span > bestSpan) { bestSpan = span; best = [(minX + maxX) / 2, (minY + maxY) / 2] }
+    }
+    return { type: 'Feature', geometry: { type: 'Point', coordinates: best }, properties: f.properties }
+  })
+  return { type: 'FeatureCollection', features }
 }
 
 function reactorsToGeoJSON(reactors) {
@@ -36,15 +60,48 @@ export default function Hook({ reactors, setSelectedISO, licenseActionsByReactor
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-      center: [-98, 39],
-      zoom: 4,
-      minZoom: 3,
+      bounds: [[-125, 24], [-66.5, 49.5]],
+      fitBoundsOptions: { padding: 20 },
+      minZoom: 2.5,
       maxZoom: 10,
     })
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
 
     map.current.on('load', () => {
+      // ISO/RTO region context layer (beneath the reactor pins)
+      map.current.addSource('iso-regions', { type: 'geojson', data: isoRegions })
+      map.current.addLayer({
+        id: 'iso-fill',
+        type: 'fill',
+        source: 'iso-regions',
+        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.1 },
+      })
+      map.current.addLayer({
+        id: 'iso-line',
+        type: 'line',
+        source: 'iso-regions',
+        paint: { 'line-color': ['get', 'color'], 'line-width': 1.2, 'line-opacity': 0.55 },
+      })
+      map.current.addSource('iso-region-labels', { type: 'geojson', data: isoLabelPoints(isoRegions) })
+      map.current.addLayer({
+        id: 'iso-label',
+        type: 'symbol',
+        source: 'iso-region-labels',
+        layout: {
+          'text-field': ['get', 'label'],
+          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+          'text-size': 13,
+          'text-transform': 'uppercase',
+          'text-letter-spacing': 0.08,
+        },
+        paint: {
+          'text-color': ['get', 'color'],
+          'text-halo-color': 'rgba(255,255,255,0.9)',
+          'text-halo-width': 1.5,
+        },
+      })
+
       map.current.addSource('reactors', {
         type: 'geojson',
         data: reactorsToGeoJSON(reactorsRef.current),
@@ -204,16 +261,24 @@ function DetailPanel({ reactor, actions, onClose }) {
         </div>
       )}
 
-      {reactor.daily_status && (
-        <div style={{ marginTop: '0.6rem', fontSize: '0.8rem', color: parseInt(reactor.daily_status, 10) === 0 ? 'var(--color-decommissioning)' : 'var(--color-operating)', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
-          ● {parseInt(reactor.daily_status, 10) === 0 ? 'Offline — 0% power' : reactor.daily_status}
-          {reactor.daily_status_updated_at && (
-            <span style={{ color: 'var(--color-text-muted)', marginLeft: '0.4rem', fontSize: '0.7rem' }}>
-              ({new Date(reactor.daily_status_updated_at).toLocaleDateString()})
-            </span>
-          )}
-        </div>
-      )}
+      {reactor.daily_status && (() => {
+        const pct = parseInt(reactor.daily_status, 10)
+        const offline = pct === 0
+        const cap = parseFloat(reactor.capacity_mw)
+        const outputMW = !isNaN(pct) && !isNaN(cap) ? Math.round((pct / 100) * cap) : null
+        return (
+          <div style={{ marginTop: '0.6rem', fontSize: '0.8rem', color: offline ? 'var(--color-decommissioning)' : 'var(--color-operating)', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
+            ● {offline
+                ? 'Offline — 0% power'
+                : <>{reactor.daily_status}{outputMW != null && <span style={{ color: 'var(--color-text-muted)' }}> · ~{outputMW.toLocaleString()} MW now</span>}</>}
+            {reactor.daily_status_updated_at && (
+              <span style={{ color: 'var(--color-text-muted)', marginLeft: '0.4rem', fontSize: '0.7rem' }}>
+                ({new Date(reactor.daily_status_updated_at).toLocaleDateString()})
+              </span>
+            )}
+          </div>
+        )
+      })()}
     </div>
   )
 }

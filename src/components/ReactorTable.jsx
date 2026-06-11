@@ -16,7 +16,7 @@ function fmtYear(dateStr) {
 
 function fmtMW(mw) {
   if (!mw) return '—'
-  return parseFloat(mw).toLocaleString() + ' MW'
+  return Math.round(parseFloat(mw)).toLocaleString() + ' MW'
 }
 
 export default function ReactorTable({ reactors }) {
@@ -66,7 +66,7 @@ export default function ReactorTable({ reactors }) {
   const Th = ({ col, children }) => (
     <th
       onClick={() => toggleSort(col)}
-      style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)', cursor: 'pointer', whiteSpace: 'nowrap', userSelect: 'none', borderBottom: '2px solid var(--color-border)' }}
+      style={{ padding: '0.4rem 0.5rem', textAlign: 'left', fontSize: '0.62rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--color-text-muted)', cursor: 'pointer', whiteSpace: 'nowrap', userSelect: 'none', borderBottom: '2px solid var(--color-border)', position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}
     >
       {children} {sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : ''}
     </th>
@@ -111,17 +111,14 @@ export default function ReactorTable({ reactors }) {
 
       {/* Table */}
       <div style={{ overflow: 'auto', flex: 1 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
           <thead>
             <tr>
-              <Th col="state">State</Th>
+              <Th col="state">St</Th>
               <Th col="plant_name">Plant</Th>
               <Th col="unit_number">Unit</Th>
-              <Th col="operator">Operator</Th>
-              <Th col="capacity_mw">Capacity</Th>
-              <Th col="commercial_operation_date">Commercial op.</Th>
-              <Th col="license_expiration_date">License exp.</Th>
-              <Th col="iso_rto">ISO/RTO</Th>
+              <Th col="capacity_mw">Cap.</Th>
+              <Th col="license_expiration_date">Lic. exp.</Th>
               <Th col="status">Status</Th>
             </tr>
           </thead>
@@ -135,15 +132,12 @@ export default function ReactorTable({ reactors }) {
                   <td style={td}>{r.state}</td>
                   <td style={{ ...td, fontWeight: 500 }}>{r.plant_name}</td>
                   <td style={td}>{r.unit_number}</td>
-                  <td style={{ ...td, color: 'var(--color-text-muted)' }}>{r.operator ?? '—'}</td>
-                  <td style={td}>{fmtMW(r.capacity_mw)}</td>
-                  <td style={td}>{fmtYear(r.commercial_operation_date)}</td>
+                  <td style={{ ...td, whiteSpace: 'nowrap' }}>{fmtMW(r.capacity_mw)}</td>
                   <td style={{ ...td, color: expiring ? 'var(--color-amber)' : undefined, fontWeight: expiring ? 600 : undefined }}>
                     {fmtYear(r.license_expiration_date)}
                   </td>
-                  <td style={{ ...td, color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>{r.iso_rto ?? '—'}</td>
                   <td style={td}>
-                    <span style={{ display: 'inline-block', padding: '0.15rem 0.55rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 600, background: chip.bg, color: chip.color }}>
+                    <span style={{ display: 'inline-block', padding: '0.1rem 0.45rem', borderRadius: '12px', fontSize: '0.62rem', fontWeight: 600, background: chip.bg, color: chip.color }}>
                       {r.status?.replace('_', ' ')}
                     </span>
                   </td>
@@ -157,7 +151,7 @@ export default function ReactorTable({ reactors }) {
   )
 }
 
-const td = { padding: '0.55rem 0.75rem', borderBottom: '1px solid var(--color-border)' }
+const td = { padding: '0.35rem 0.5rem', borderBottom: '1px solid var(--color-border)' }
 
 function Select({ label, value, onChange, options }) {
   return (
