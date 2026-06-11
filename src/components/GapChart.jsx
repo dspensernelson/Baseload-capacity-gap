@@ -49,20 +49,20 @@ export default function GapChart({ gapSeries, headlines }) {
     : null
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: 460, background: 'var(--color-operating)' }}>
+    <div style={{ position: 'relative', width: '100%', height: 240, background: 'var(--color-operating)' }}>
       {/* Title + subtitle overlaid inside the green canvas */}
-      <div style={{ position: 'absolute', top: '1.75rem', left: '2.5rem', zIndex: 2, pointerEvents: 'none' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: '3rem', fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.02em' }}>
+      <div style={{ position: 'absolute', top: '1.1rem', left: '2.5rem', zIndex: 2, pointerEvents: 'none' }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: '2.25rem', fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.02em' }}>
           The Gap
         </div>
-        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)', marginTop: '0.5rem', maxWidth: '22rem' }}>
-          US nuclear capacity 2025–2045. The amber is what we lose to license expirations faster than we replace it.
+        <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', marginTop: '0.35rem', maxWidth: '20rem' }}>
+          US nuclear capacity 2025–2045 — the amber is what we lose faster than we replace.{' '}
+          <a href="https://github.com/DSpEnder77/NukeMap/blob/main/docs/methodology.md"
+             target="_blank" rel="noreferrer"
+             style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'underline', pointerEvents: 'auto' }}>
+            How we calculated this →
+          </a>
         </div>
-        <a href="https://github.com/DSpEnder77/NukeMap/blob/main/docs/methodology.md"
-           target="_blank" rel="noreferrer"
-           style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'underline', pointerEvents: 'auto' }}>
-          How we calculated this →
-        </a>
       </div>
 
       <ResponsiveContainer width="100%" height="100%">
