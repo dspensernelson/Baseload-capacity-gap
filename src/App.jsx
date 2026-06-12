@@ -4,6 +4,7 @@ import HeadlineBand from './components/HeadlineBand'
 import Hook from './components/Hook'
 import GapChart from './components/GapChart'
 import FleetOutputChart from './components/FleetOutputChart'
+import Dispatch from './components/Dispatch'
 import ReactorTable from './components/ReactorTable'
 
 const ISO_LABELS = {
@@ -58,6 +59,27 @@ function FleetPulse({ reactors }) {
   )
 }
 
+function SiteFooter({ reactors }) {
+  const latest = reactors.reduce((max, r) => {
+    const t = r.daily_status_updated_at ? new Date(r.daily_status_updated_at).getTime() : 0
+    return t > max ? t : max
+  }, 0)
+  const when = latest
+    ? new Date(latest).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '—'
+  return (
+    <footer style={{ borderTop: '1px solid var(--color-border)', padding: '2rem', textAlign: 'center', fontSize: '0.78rem', color: 'var(--color-text-muted)', background: 'var(--color-surface)' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+        <span className="pulse-dot" style={{ width: 7, height: 7 }} />
+        Reactor power status refreshed daily from the U.S. NRC · last update {when}. License records refreshed monthly.
+      </div>
+      <div style={{ marginTop: '0.45rem', opacity: 0.85 }}>
+        The data, charts, and the monthly dispatch update on their own. Sources: U.S. NRC &amp; U.S. EIA.
+      </div>
+    </footer>
+  )
+}
+
 function ISOFilterBar({ reactors, selectedISO, setSelectedISO }) {
   const counts = {}
   reactors.forEach(r => { if (r.iso_rto) counts[r.iso_rto] = (counts[r.iso_rto] || 0) + 1 })
@@ -100,23 +122,26 @@ export default function App() {
   const [gapSeries, setGapSeries] = useState([])
   const [licenseActions, setLicenseActions] = useState([])
   const [fleetSeries, setFleetSeries] = useState([])
+  const [latestReport, setLatestReport] = useState(null)
   const [loading, setLoading]     = useState(true)
   const [selectedISO, setSelectedISO] = useState(null)
 
   useEffect(() => {
     async function load() {
-      const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }] = await Promise.all([
+      const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }, { data: rp }] = await Promise.all([
         supabase.from('reactors').select('*'),
         supabase.from('headline_numbers').select('*').single(),
         supabase.from('gap_series').select('*').order('year'),
         supabase.from('license_actions').select('*').order('action_date', { ascending: false }),
         supabase.from('fleet_output_series').select('*').order('report_date'),
+        supabase.from('reports').select('*').order('published_at', { ascending: false }).limit(1),
       ])
       setReactors(r ?? [])
       setHeadlines(h)
       setGapSeries(g ?? [])
       setLicenseActions(la ?? [])
       setFleetSeries(fs ?? [])
+      setLatestReport(rp?.[0] ?? null)
       setLoading(false)
     }
     load()
@@ -170,6 +195,14 @@ export default function App() {
         </section>
       )}
 
+      {/* Agent-written dispatch — the data, turned into the story */}
+      {latestReport && (
+        <section style={{ maxWidth: '780px', marginTop: 'var(--spacing-section)' }} className="centered">
+          <h2 className="section-title">This Month</h2>
+          <Dispatch report={latestReport} />
+        </section>
+      )}
+
       {/* Map + Table side by side */}
       <section style={{ maxWidth: '1400px', marginTop: 'var(--spacing-section)', paddingBottom: '6rem' }} className="centered">
         <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
@@ -182,6 +215,8 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      <SiteFooter reactors={reactors} />
     </>
   )
 }

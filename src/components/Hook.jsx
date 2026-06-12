@@ -39,11 +39,14 @@ function reactorsToGeoJSON(reactors) {
     type: 'FeatureCollection',
     features: reactors
       .filter(r => r.latitude != null && r.longitude != null)
-      .map(r => ({
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [parseFloat(r.longitude), parseFloat(r.latitude)] },
-        properties: { ...r },
-      })),
+      .map(r => {
+        const p = r.daily_status ? parseInt(r.daily_status, 10) : null
+        return {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [parseFloat(r.longitude), parseFloat(r.latitude)] },
+          properties: { ...r, power_pct: Number.isNaN(p) ? null : p },
+        }
+      }),
   }
 }
 
@@ -114,20 +117,38 @@ export default function Hook({ reactors, setSelectedISO, licenseActionsByReactor
         source: 'reactors',
         paint: {
           'circle-color': [
-            'match', ['get', 'status'],
-            'operating',       STATUS_COLORS.operating,
-            'license_renewed', STATUS_COLORS.license_renewed,
-            'decommissioning', STATUS_COLORS.decommissioning,
-            'shutdown',        STATUS_COLORS.shutdown,
-            '#6c757d',
+            'case',
+            // operating unit currently offline (refueling/outage) → hollow ring
+            ['all',
+              ['any', ['==', ['get', 'status'], 'operating'], ['==', ['get', 'status'], 'license_renewed']],
+              ['==', ['get', 'power_pct'], 0]],
+            '#ffffff',
+            ['match', ['get', 'status'],
+              'operating',       STATUS_COLORS.operating,
+              'license_renewed', STATUS_COLORS.license_renewed,
+              'decommissioning', STATUS_COLORS.decommissioning,
+              'shutdown',        STATUS_COLORS.shutdown,
+              '#6c757d'],
           ],
           'circle-radius': [
             'interpolate', ['linear'], ['to-number', ['get', 'capacity_mw'], 800],
             500, 6, 1300, 14,
           ],
-          'circle-stroke-width': 1.5,
-          'circle-stroke-color': '#fff',
-          'circle-opacity': 0.88,
+          'circle-stroke-width': [
+            'case',
+            ['all',
+              ['any', ['==', ['get', 'status'], 'operating'], ['==', ['get', 'status'], 'license_renewed']],
+              ['==', ['get', 'power_pct'], 0]],
+            2.2, 1.5,
+          ],
+          'circle-stroke-color': [
+            'case',
+            ['all',
+              ['any', ['==', ['get', 'status'], 'operating'], ['==', ['get', 'status'], 'license_renewed']],
+              ['==', ['get', 'power_pct'], 0]],
+            STATUS_COLORS.operating, '#ffffff',
+          ],
+          'circle-opacity': 0.9,
         },
       })
 
@@ -171,10 +192,11 @@ export default function Hook({ reactors, setSelectedISO, licenseActionsByReactor
 
 function Legend() {
   const items = [
-    { label: 'Operating',       color: STATUS_COLORS.operating },
-    { label: 'License renewed', color: STATUS_COLORS.license_renewed },
-    { label: 'Decommissioning', color: STATUS_COLORS.decommissioning },
-    { label: 'Shutdown',        color: STATUS_COLORS.shutdown },
+    { label: 'Operating',          color: STATUS_COLORS.operating },
+    { label: 'License renewed',    color: STATUS_COLORS.license_renewed },
+    { label: 'Offline / refueling', color: STATUS_COLORS.operating, ring: true },
+    { label: 'Decommissioning',    color: STATUS_COLORS.decommissioning },
+    { label: 'Shutdown',           color: STATUS_COLORS.shutdown },
   ]
   return (
     <div style={{
@@ -183,9 +205,14 @@ function Legend() {
       borderRadius: '6px', boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
       fontSize: '0.75rem', fontFamily: 'var(--font-body)',
     }}>
-      {items.map(({ label, color }) => (
+      {items.map(({ label, color, ring }) => (
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: color, display: 'inline-block', border: '1.5px solid #fff', boxShadow: '0 0 0 1px #ccc' }} />
+          <span style={{
+            width: 10, height: 10, borderRadius: '50%', display: 'inline-block',
+            background: ring ? '#fff' : color,
+            border: ring ? `2px solid ${color}` : '1.5px solid #fff',
+            boxShadow: ring ? 'none' : '0 0 0 1px #ccc',
+          }} />
           {label}
         </div>
       ))}

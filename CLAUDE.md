@@ -24,7 +24,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
-| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00 UTC, power status) + `nrc-license-monthly.yml` (monthly, license actions). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` |
+| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-monthly.yml` (monthly, license actions) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` |
 
 ---
 
@@ -78,14 +78,15 @@ nuclear-pipeline-tracker/
 
 ---
 
-## Database Tables (5 total)
+## Database Tables (7 total)
 
 1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
 2. **`new_reactor_projects`** — SMR and new build pipeline (~15–20 rows, manual)
 3. **`decommissioning`** — shutdown details and capacity lost
 4. **`license_actions`** — license renewals, expirations, uprate actions
 5. **`sync_log`** — audit trail for every cron run
-6. **`daily_status_history`** — one row per reactor per NRC report date (power %); the "tape" feeding future sparklines/capacity-factor views. Written forward by the daily cron, backfilled by `scripts/backfill_status_history.py`
+6. **`daily_status_history`** — one row per reactor per NRC report date (power %); the "tape" feeding sparklines, the fleet chart, and capacity-factor math. Written forward by the daily cron, backfilled by `scripts/backfill_status_history.py`
+7. **`reports`** — published monthly "Dispatches" (markdown + stats jsonb), written by `scripts/generate_dispatch.py` and rendered on the site by `Dispatch.jsx`
 
 **Views:**
 - `headline_numbers` — three summary stats (operating MW, retiring by 2035, pipeline MW)

@@ -11,3 +11,6 @@ dist/
 
 # Internal strategy memo — kept out of the public repo (see local copy)
 docs/VISION.md
+
+# Transient watchdog output
+health_report.txt

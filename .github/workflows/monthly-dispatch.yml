@@ -1,0 +1,25 @@
+name: Monthly Dispatch
+
+on:
+  schedule:
+    - cron: '0 10 2 * *'   # 2nd of month, 10am UTC — after the license cron runs on the 1st
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install python-dotenv "supabase==2.9.1" requests
+
+      - name: Generate and publish the monthly dispatch
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/generate_dispatch.py

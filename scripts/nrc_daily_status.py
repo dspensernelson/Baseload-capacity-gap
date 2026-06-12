@@ -25,7 +25,7 @@ NRC_URL = (
 # Keys are normalized NRC plant names (unit number already split off); values are
 # exact reactors.plant_name strings.
 NAME_MAP = {
-    "arkansas nuclear":  "Arkansas Nuclear One",
+    "arkansas":          "Arkansas Nuclear One",  # normalize() strips " nuclear", so key on the bare stem
     "braidwood":         "Braidwood Generation Station",
     "browns ferry":      "Browns Ferry",
     "brunswick":         "Brunswick Nuclear",
