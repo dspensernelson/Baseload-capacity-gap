@@ -34,6 +34,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 nuclear-pipeline-tracker/
 ├── CLAUDE.md                  ← you are here
 ├── CHECKLIST.md               ← master task checklist
+├── TESTING.md                 ← human-in-the-loop QA checklist a second agent can drive
 ├── DESIGN.md                  ← architecture & data model overview
 ├── docs/
 │   ├── VISION.md              ← long-term vision & positioning (internal; gitignored, local only)
