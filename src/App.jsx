@@ -3,6 +3,7 @@ import supabase from './supabase'
 import HeadlineBand from './components/HeadlineBand'
 import Hook from './components/Hook'
 import GapChart from './components/GapChart'
+import FleetOutputChart from './components/FleetOutputChart'
 import ReactorTable from './components/ReactorTable'
 
 const ISO_LABELS = {
@@ -98,21 +99,24 @@ export default function App() {
   const [headlines, setHeadlines] = useState(null)
   const [gapSeries, setGapSeries] = useState([])
   const [licenseActions, setLicenseActions] = useState([])
+  const [fleetSeries, setFleetSeries] = useState([])
   const [loading, setLoading]     = useState(true)
   const [selectedISO, setSelectedISO] = useState(null)
 
   useEffect(() => {
     async function load() {
-      const [{ data: r }, { data: h }, { data: g }, { data: la }] = await Promise.all([
+      const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }] = await Promise.all([
         supabase.from('reactors').select('*'),
         supabase.from('headline_numbers').select('*').single(),
         supabase.from('gap_series').select('*').order('year'),
         supabase.from('license_actions').select('*').order('action_date', { ascending: false }),
+        supabase.from('fleet_output_series').select('*').order('report_date'),
       ])
       setReactors(r ?? [])
       setHeadlines(h)
       setGapSeries(g ?? [])
       setLicenseActions(la ?? [])
+      setFleetSeries(fs ?? [])
       setLoading(false)
     }
     load()
@@ -153,6 +157,18 @@ export default function App() {
 
       {/* Callouts: flush below the banner */}
       <HeadlineBand headlines={headlines} />
+
+      {/* The fleet, actually running — last 12 months from the daily tape */}
+      {fleetSeries.length > 0 && (
+        <section style={{ maxWidth: '1100px', marginTop: 'var(--spacing-section)' }} className="centered">
+          <h2 className="section-title">The Fleet, Last 12 Months</h2>
+          <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+            Daily U.S. nuclear output, summed across every reactor. It runs near capacity all year —
+            the dips are scheduled refueling, not shortfalls. This is the "quietly holds the lights on" part, made literal.
+          </p>
+          <FleetOutputChart series={fleetSeries} />
+        </section>
+      )}
 
       {/* Map + Table side by side */}
       <section style={{ maxWidth: '1400px', marginTop: 'var(--spacing-section)', paddingBottom: '6rem' }} className="centered">
