@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import isoRegions from '../data/iso-regions.json'
+import supabase from '../supabase'
 
 
 const STATUS_COLORS = {
@@ -212,6 +213,50 @@ function LicenseActionLine({ action }) {
   )
 }
 
+// 90-day power-history sparkline, lazy-loaded from daily_status_history.
+function PowerSparkline({ reactorId }) {
+  const [rows, setRows] = useState(null)
+
+  useEffect(() => {
+    let alive = true
+    setRows(null)
+    supabase
+      .from('daily_status_history')
+      .select('report_date, power_pct')
+      .eq('reactor_id', reactorId)
+      .order('report_date', { ascending: false })
+      .limit(90)
+      .then(({ data }) => { if (alive) setRows((data ?? []).reverse()) })
+    return () => { alive = false }
+  }, [reactorId])
+
+  if (!rows || rows.length < 2) return null
+
+  const W = 212, H = 40, pad = 3
+  const vals = rows.map(r => (r.power_pct == null ? 0 : r.power_pct))
+  const n = vals.length
+  const x = i => pad + (i * (W - 2 * pad)) / (n - 1)
+  const y = v => pad + (1 - v / 100) * (H - 2 * pad)
+  const line = vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')
+  const area = `${pad},${H - pad} ${line} ${W - pad},${H - pad}`
+  const avg = Math.round(vals.reduce((a, b) => a + b, 0) / n)
+  const outages = vals.filter(v => v === 0).length
+
+  return (
+    <div style={{ marginTop: '0.6rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
+      <div style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem', display: 'flex', justifyContent: 'space-between' }}>
+        <span>Power · last {n} days</span>
+        <span>avg {avg}%{outages ? ` · ${outages}d offline` : ''}</span>
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+        <polygon points={area} fill="var(--color-operating)" fillOpacity="0.15" />
+        <polyline points={line} fill="none" stroke="var(--color-operating)" strokeWidth="1.5" strokeLinejoin="round" />
+        <circle cx={x(n - 1)} cy={y(vals[n - 1])} r="2.2" fill="var(--color-operating)" />
+      </svg>
+    </div>
+  )
+}
+
 function DetailPanel({ reactor, actions, onClose }) {
   const statusColor = STATUS_COLORS[reactor.status] ?? '#6c757d'
   // newest first; the panel shows at most the two most recent actions
@@ -279,6 +324,8 @@ function DetailPanel({ reactor, actions, onClose }) {
           </div>
         )
       })()}
+
+      <PowerSparkline reactorId={reactor.id} />
     </div>
   )
 }

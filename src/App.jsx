@@ -23,6 +23,40 @@ const ISO_LABELS = {
   SCEG: 'SCEG',
 }
 
+// Fleet-wide "running right now" pulse, computed from the latest daily readings.
+function FleetPulse({ reactors }) {
+  let onlineMW = 0, capMW = 0, running = 0, total = 0
+  reactors.forEach(r => {
+    if (r.status !== 'operating' && r.status !== 'license_renewed') return
+    const cap = parseFloat(r.capacity_mw)
+    if (isNaN(cap)) return
+    capMW += cap
+    total += 1
+    const pct = parseInt(r.daily_status, 10)
+    if (!isNaN(pct)) {
+      onlineMW += cap * pct / 100
+      if (pct > 0) running += 1
+    }
+  })
+  if (!capMW) return null
+  const pctOfFleet = Math.round((onlineMW / capMW) * 100)
+  const onlineGW   = (onlineMW / 1000).toFixed(0)
+
+  return (
+    <div
+      title="Capacity-weighted output from the latest NRC daily power report"
+      style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+    >
+      <span className="pulse-dot" />
+      <span style={{ opacity: 0.9 }}>
+        <strong style={{ fontWeight: 700 }}>{pctOfFleet}%</strong> of the fleet ·{' '}
+        <strong style={{ fontWeight: 700 }}>~{onlineGW} GW</strong> online now
+        <span style={{ opacity: 0.6 }}> · {running}/{total} units running</span>
+      </span>
+    </div>
+  )
+}
+
 function ISOFilterBar({ reactors, selectedISO, setSelectedISO }) {
   const counts = {}
   reactors.forEach(r => { if (r.iso_rto) counts[r.iso_rto] = (counts[r.iso_rto] || 0) + 1 })
@@ -108,9 +142,10 @@ export default function App() {
 
   return (
     <>
-      <header style={{ background: 'var(--color-brand)', color: '#fff', padding: '1rem 2rem', display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
+      <header style={{ background: 'var(--color-brand)', color: '#fff', padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Nuclear Pipeline Tracker</span>
         <span style={{ fontSize: '0.875rem', opacity: 0.7 }}>The gap between what's retiring and what's coming online</span>
+        <FleetPulse reactors={reactors} />
       </header>
 
       {/* Hero: the chart IS the canvas — full bleed, edge to edge */}
