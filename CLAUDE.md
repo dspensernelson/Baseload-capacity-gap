@@ -90,6 +90,7 @@ nuclear-pipeline-tracker/
 **Views:**
 - `headline_numbers` — three summary stats (operating MW, retiring by 2035, pipeline MW)
 - `gap_series` — year-by-year net capacity delta from now to 2045
+- `fleet_output_series` — daily fleet output (capacity × power %) from `daily_status_history`; powers the "Last 12 Months" chart
 
 See `docs/data-model.md` for full schema.
 
