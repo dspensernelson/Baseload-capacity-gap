@@ -1,29 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Routes, Route, NavLink, Link, Navigate } from 'react-router-dom'
 import supabase from './supabase'
-import HeadlineBand from './components/HeadlineBand'
-import Hook from './components/Hook'
-import GapChart from './components/GapChart'
-import FleetOutputChart from './components/FleetOutputChart'
-import Dispatch from './components/Dispatch'
-import ReactorTable from './components/ReactorTable'
-
-const ISO_LABELS = {
-  PJM:  'PJM',
-  MISO: 'MISO',
-  ERCO: 'ERCOT',
-  CISO: 'CAISO',
-  NYIS: 'NYISO',
-  ISNE: 'ISO-NE',
-  SWPP: 'SPP',
-  TVA:  'TVA',
-  SOCO: 'SOCO',
-  DUK:  'Duke',
-  CPLE: 'Duke Progress',
-  FPL:  'FPL',
-  SRP:  'SRP',
-  BPAT: 'BPA',
-  SCEG: 'SCEG',
-}
+import Overview from './pages/Overview'
+import Fleet from './pages/Fleet'
+import Dispatches from './pages/Dispatches'
 
 // Fleet-wide "running right now" pulse, computed from the latest daily readings.
 function FleetPulse({ reactors }) {
@@ -80,41 +60,15 @@ function SiteFooter({ reactors }) {
   )
 }
 
-function ISOFilterBar({ reactors, selectedISO, setSelectedISO }) {
-  const counts = {}
-  reactors.forEach(r => { if (r.iso_rto) counts[r.iso_rto] = (counts[r.iso_rto] || 0) + 1 })
-
-  const pills = Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([code, count]) => ({ code, label: ISO_LABELS[code] ?? code, count }))
-
-  const btnBase = {
-    padding: '0.3rem 0.75rem', borderRadius: '20px', border: '1.5px solid var(--color-border)',
-    fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
-    fontWeight: 500, transition: 'all 0.15s', whiteSpace: 'nowrap',
-  }
-
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' }}>
-      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginRight: '0.25rem' }}>Filter by ISO/RTO:</span>
-      <button
-        onClick={() => setSelectedISO(null)}
-        style={{ ...btnBase, background: !selectedISO ? 'var(--color-brand)' : '#fff', color: !selectedISO ? '#fff' : 'var(--color-text)', borderColor: !selectedISO ? 'var(--color-brand)' : 'var(--color-border)' }}
-      >
-        All
-      </button>
-      {pills.map(({ code, label, count }) => (
-        <button
-          key={code}
-          onClick={() => setSelectedISO(selectedISO === code ? null : code)}
-          style={{ ...btnBase, background: selectedISO === code ? 'var(--color-brand)' : '#fff', color: selectedISO === code ? '#fff' : 'var(--color-text)', borderColor: selectedISO === code ? 'var(--color-brand)' : 'var(--color-border)' }}
-        >
-          {label} <span style={{ opacity: 0.65, fontSize: '0.72rem' }}>{count}</span>
-        </button>
-      ))}
-    </div>
-  )
-}
+const navLinkStyle = ({ isActive }) => ({
+  color: '#fff',
+  textDecoration: 'none',
+  fontSize: '0.85rem',
+  fontWeight: isActive ? 700 : 500,
+  opacity: isActive ? 1 : 0.65,
+  borderBottom: `2px solid ${isActive ? '#fff' : 'transparent'}`,
+  paddingBottom: '2px',
+})
 
 export default function App() {
   const [reactors, setReactors]   = useState([])
@@ -122,7 +76,7 @@ export default function App() {
   const [gapSeries, setGapSeries] = useState([])
   const [licenseActions, setLicenseActions] = useState([])
   const [fleetSeries, setFleetSeries] = useState([])
-  const [latestReport, setLatestReport] = useState(null)
+  const [reports, setReports]     = useState([])
   const [loading, setLoading]     = useState(true)
   const [selectedISO, setSelectedISO] = useState(null)
 
@@ -134,14 +88,14 @@ export default function App() {
         supabase.from('gap_series').select('*').order('year'),
         supabase.from('license_actions').select('*').order('action_date', { ascending: false }),
         supabase.from('fleet_output_series').select('*').order('report_date'),
-        supabase.from('reports').select('*').order('published_at', { ascending: false }).limit(1),
+        supabase.from('reports').select('*').order('published_at', { ascending: false }),
       ])
       setReactors(r ?? [])
       setHeadlines(h)
       setGapSeries(g ?? [])
       setLicenseActions(la ?? [])
       setFleetSeries(fs ?? [])
-      setLatestReport(rp?.[0] ?? null)
+      setReports(rp ?? [])
       setLoading(false)
     }
     load()
@@ -171,50 +125,37 @@ export default function App() {
 
   return (
     <>
-      <header style={{ background: 'var(--color-brand)', color: '#fff', padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>Nuclear Pipeline Tracker</span>
-        <span style={{ fontSize: '0.875rem', opacity: 0.7 }}>The gap between what's retiring and what's coming online</span>
+      <header style={{ background: 'var(--color-brand)', color: '#fff', padding: '0.9rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+        <Link to="/" style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
+          Nuclear Pipeline Tracker
+        </Link>
+        <nav style={{ display: 'flex', gap: '1.1rem', alignItems: 'center' }}>
+          <NavLink to="/" end style={navLinkStyle}>Overview</NavLink>
+          <NavLink to="/fleet" style={navLinkStyle}>The Fleet</NavLink>
+          <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
+        </nav>
         <FleetPulse reactors={reactors} />
       </header>
 
-      {/* Hero: the chart IS the canvas — full bleed, edge to edge */}
-      <GapChart gapSeries={gapSeries} headlines={headlines} />
-
-      {/* Callouts: flush below the banner */}
-      <HeadlineBand headlines={headlines} />
-
-      {/* The fleet, actually running — last 12 months from the daily tape */}
-      {fleetSeries.length > 0 && (
-        <section style={{ maxWidth: '1100px', marginTop: 'var(--spacing-section)' }} className="centered">
-          <h2 className="section-title">The Fleet, Last 12 Months</h2>
-          <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-            Daily U.S. nuclear output, summed across every reactor. It runs near capacity all year —
-            the dips are scheduled refueling, not shortfalls. This is the "quietly holds the lights on" part, made literal.
-          </p>
-          <FleetOutputChart series={fleetSeries} />
-        </section>
-      )}
-
-      {/* Agent-written dispatch — the data, turned into the story */}
-      {latestReport && (
-        <section style={{ maxWidth: '780px', marginTop: 'var(--spacing-section)' }} className="centered">
-          <h2 className="section-title">This Month</h2>
-          <Dispatch report={latestReport} />
-        </section>
-      )}
-
-      {/* Map + Table side by side */}
-      <section style={{ maxWidth: '1400px', marginTop: 'var(--spacing-section)', paddingBottom: '6rem' }} className="centered">
-        <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-          <div style={{ flex: '0 0 58%', minWidth: 0 }}>
-            <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} licenseActionsByReactor={licenseActionsByReactor} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0, height: '600px' }}>
-            <ReactorTable reactors={filteredReactors} />
-          </div>
-        </div>
-      </section>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Overview
+              gapSeries={gapSeries}
+              headlines={headlines}
+              reactors={reactors}
+              filteredReactors={filteredReactors}
+              licenseActionsByReactor={licenseActionsByReactor}
+              selectedISO={selectedISO}
+              setSelectedISO={setSelectedISO}
+            />
+          }
+        />
+        <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
+        <Route path="/dispatches" element={<Dispatches reports={reports} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
       <SiteFooter reactors={reactors} />
     </>

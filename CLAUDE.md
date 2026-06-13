@@ -19,7 +19,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Layer | Tool | Notes |
 |-------|------|-------|
 | Database | Supabase (Postgres) | Free tier. All data lives here. |
-| Frontend | React + Vite | Scaffolded with `npm create vite@latest` |
+| Frontend | React + Vite + react-router | Tabbed pages: Overview (`/`), The Fleet (`/fleet`), Dispatches (`/dispatches`). `vercel.json` rewrites extensionless routes to index.html so deep links survive refresh |
 | Map | MapLibre GL | Free, no token required. Use OpenFreeMap or CARTO free style. |
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
@@ -50,12 +50,13 @@ nuclear-pipeline-tracker/
 │   └── session-08.md          ← deploy & live cron
 ├── scripts/                   ← Python ETL scripts
 ├── src/                       ← React app
-│   ├── components/
-│   │   ├── Hook.jsx           ← map screen
-│   │   ├── GapChart.jsx       ← chart screen
-│   │   └── ReactorTable.jsx   ← table screen
+│   ├── pages/                 ← one per route
+│   │   ├── Overview.jsx       ← gap banner + numbers + map/table (/)
+│   │   ├── Fleet.jsx          ← live pulse + 12-month output chart (/fleet)
+│   │   └── Dispatches.jsx     ← latest + archive of monthly reports (/dispatches)
+│   ├── components/            ← Hook (map), GapChart, FleetOutputChart, Dispatch, HeadlineBand, ReactorTable
 │   ├── supabase.js            ← single Supabase client export
-│   └── App.jsx
+│   └── App.jsx                ← shell: data load, header+nav, Routes, footer
 └── supabase/
     ├── schema.sql             ← all table DDL
     └── functions/             ← edge functions (cron jobs)
