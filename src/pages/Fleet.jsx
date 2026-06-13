@@ -1,5 +1,4 @@
 import FleetOutputChart from '../components/FleetOutputChart'
-import GridMix from '../components/GridMix'
 
 function RightNow({ reactors }) {
   let onlineMW = 0, capMW = 0, running = 0, refueling = 0, total = 0
@@ -48,13 +47,6 @@ export default function Fleet({ fleetSeries, reactors }) {
         <span className="pulse-dot" style={{ width: 8, height: 8 }} /> Right now
       </div>
       <RightNow reactors={reactors} />
-
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '2.5rem', marginBottom: '0.4rem' }}>The 2 a.m. test</h3>
-      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem', maxWidth: '46rem' }}>
-        Who actually keeps the lights on overnight? Here's the whole U.S. grid by source for the last two days.
-        Watch solar vanish to zero every night while nuclear holds the same line around the clock.
-      </p>
-      <GridMix />
 
       {fleetSeries.length > 0 && (
         <>

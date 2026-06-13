@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { Routes, Route, NavLink, Link, Navigate } from 'react-router-dom'
 import supabase from './supabase'
 import Overview from './pages/Overview'
+import MapPage from './pages/MapPage'
 import Fleet from './pages/Fleet'
+import Grid from './pages/Grid'
 import Dispatches from './pages/Dispatches'
 import Reactor from './pages/Reactor'
 
@@ -130,21 +132,22 @@ export default function App() {
         <Link to="/" style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
           Nuclear Pipeline Tracker
         </Link>
-        <nav style={{ display: 'flex', gap: '1.1rem', alignItems: 'center' }}>
+        <nav style={{ display: 'flex', gap: '1.1rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <NavLink to="/" end style={navLinkStyle}>Overview</NavLink>
+          <NavLink to="/map" style={navLinkStyle}>Map</NavLink>
           <NavLink to="/fleet" style={navLinkStyle}>The Fleet</NavLink>
+          <NavLink to="/grid" style={navLinkStyle}>The Grid</NavLink>
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
         </nav>
         <FleetPulse reactors={reactors} />
       </header>
 
       <Routes>
+        <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} />} />
         <Route
-          path="/"
+          path="/map"
           element={
-            <Overview
-              gapSeries={gapSeries}
-              headlines={headlines}
+            <MapPage
               reactors={reactors}
               filteredReactors={filteredReactors}
               licenseActionsByReactor={licenseActionsByReactor}
@@ -154,6 +157,7 @@ export default function App() {
           }
         />
         <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
+        <Route path="/grid" element={<Grid />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
