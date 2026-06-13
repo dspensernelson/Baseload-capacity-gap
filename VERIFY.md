@@ -49,14 +49,22 @@ What is **still manual** (intentionally): the SMR / new-build pipeline (`new_rea
 ### Overview (`/`)
 - Full-bleed green **gap chart** with the amber wedge growing from the bottom-right and a "≈12 GW gap by 2035" marker.
 - Three headline numbers flush below (amber middle number).
+- An **"Explore the map →"** button linking to the Map tab. (No map on this page — it's the lean thesis landing.)
+
+### Map (`/map`)
 - **ISO/RTO filter pills** → clicking one filters **both** the map and the table; count updates; "All" resets.
 - **Map**: continental US, soft ISO region shading with one label each, dots colored by status, **hollow rings = offline/refueling**, legend bottom-left. Click a dot → detail panel (status, live MW, license history, 90-day sparkline, "Full reactor page →"). Click empty area → panel closes.
 - **Table**: 6 columns, **sticky header**, click a header to sort, plant names are **links** to reactor pages.
 
 ### The Fleet (`/fleet`)
 - "Right now" stat band: % of capacity online, GW generating, units running, units offline for refueling.
-- **The 2 a.m. test**: a 48-hour stacked grid-mix chart (nuclear flat at the base; solar swings to zero each night) + an overnight callout comparing nuclear vs solar. Live-ish from EIA-930 (refreshes every 6h). Confirm against the EIA grid monitor (see §4).
 - **12-month output chart**: a line hovering near **~92 GW** under a dashed **~100 GW capacity** reference line, with visible dips for refueling season. Hover → date, GW, capacity-factor %, units offline.
+
+### The Grid (`/grid`)
+- **The 2 a.m. test**: a 48-hour stacked grid-mix chart (nuclear flat at the base; solar swings to zero each night) + an overnight callout comparing nuclear vs solar. Live-ish from EIA-930 (refreshes every 6h). Confirm against the EIA grid monitor (see §4).
+
+### Scenarios (`/scenarios`)
+- Three sliders (future renewals, pipeline delay, pipeline build-out) that **recompute the gap chart live**. Default (0% future renewals) ≈ today's committed reality; dragging renewals up closes the gap (history says nearly all reactors renew). Labeled a model, not a forecast.
 
 ### Dispatches (`/dispatches`)
 - The latest auto-generated monthly **Dispatch** (dated, "auto-generated"), with three sections (fleet / license front / pipeline) and real numbers matching the headline figures.

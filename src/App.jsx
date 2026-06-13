@@ -6,6 +6,7 @@ import MapPage from './pages/MapPage'
 import Fleet from './pages/Fleet'
 import Grid from './pages/Grid'
 import Dispatches from './pages/Dispatches'
+import Scenarios from './pages/Scenarios'
 import Reactor from './pages/Reactor'
 
 // Fleet-wide "running right now" pulse, computed from the latest daily readings.
@@ -138,6 +139,7 @@ export default function App() {
           <NavLink to="/fleet" style={navLinkStyle}>The Fleet</NavLink>
           <NavLink to="/grid" style={navLinkStyle}>The Grid</NavLink>
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
+          <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
         </nav>
         <FleetPulse reactors={reactors} />
       </header>
@@ -159,6 +161,7 @@ export default function App() {
         <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
         <Route path="/grid" element={<Grid />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} />} />
+        <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
