@@ -72,11 +72,11 @@ export default function Overview({
       {/* Map + Table side by side */}
       <section style={{ maxWidth: '1400px', marginTop: 'var(--spacing-section)', paddingBottom: '5rem' }} className="centered">
         <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-          <div style={{ flex: '0 0 58%', minWidth: 0 }}>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 440px', minWidth: 0 }}>
             <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} licenseActionsByReactor={licenseActionsByReactor} />
           </div>
-          <div style={{ flex: 1, minWidth: 0, height: '600px' }}>
+          <div style={{ flex: '1 1 340px', minWidth: 0, height: '600px' }}>
             <ReactorTable reactors={filteredReactors} />
           </div>
         </div>

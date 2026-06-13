@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { reactorSlug } from '../lib/slug'
 
 const STATUS_COLORS = {
   operating:       { bg: '#d1fae5', color: '#065f46' },
@@ -130,7 +132,9 @@ export default function ReactorTable({ reactors }) {
               return (
                 <tr key={r.id} style={{ background: i % 2 === 0 ? '#fff' : 'var(--color-surface)' }}>
                   <td style={td}>{r.state}</td>
-                  <td style={{ ...td, fontWeight: 500 }}>{r.plant_name}</td>
+                  <td style={{ ...td, fontWeight: 500 }}>
+                    <Link to={`/reactor/${reactorSlug(r)}`} style={{ color: 'var(--color-brand)', textDecoration: 'none' }}>{r.plant_name}</Link>
+                  </td>
                   <td style={td}>{r.unit_number}</td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>{fmtMW(r.capacity_mw)}</td>
                   <td style={{ ...td, color: expiring ? 'var(--color-amber)' : undefined, fontWeight: expiring ? 600 : undefined }}>

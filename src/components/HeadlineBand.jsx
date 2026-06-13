@@ -10,8 +10,9 @@ export default function HeadlineBand({ headlines }) {
     <div style={{
       borderBottom: '1px solid var(--color-border)',
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr',
-      padding: '1.5rem 3rem',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+      gap: '1rem',
+      padding: '1.5rem clamp(1rem, 4vw, 3rem)',
       background: 'var(--color-surface)',
     }}>
       <Stat

@@ -1,7 +1,9 @@
 import { useRef, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import maplibregl from 'maplibre-gl'
 import isoRegions from '../data/iso-regions.json'
 import supabase from '../supabase'
+import { reactorSlug } from '../lib/slug'
 
 
 const STATUS_COLORS = {
@@ -226,7 +228,7 @@ const ACTION_LABELS = {
   restart_authorization:      'Restart authorization',
 }
 
-function LicenseActionLine({ action }) {
+export function LicenseActionLine({ action }) {
   const pending = action.status === 'under_review'
   const label = ACTION_LABELS[action.action_type] ?? action.action_type?.replace(/_/g, ' ')
   const year = d => d ? new Date(d).getFullYear() : null
@@ -241,7 +243,7 @@ function LicenseActionLine({ action }) {
 }
 
 // 90-day power-history sparkline, lazy-loaded from daily_status_history.
-function PowerSparkline({ reactorId }) {
+export function PowerSparkline({ reactorId }) {
   const [rows, setRows] = useState(null)
 
   useEffect(() => {
@@ -353,6 +355,13 @@ function DetailPanel({ reactor, actions, onClose }) {
       })()}
 
       <PowerSparkline reactorId={reactor.id} />
+
+      <Link
+        to={`/reactor/${reactorSlug(reactor)}`}
+        style={{ display: 'inline-block', marginTop: '0.7rem', fontSize: '0.78rem', color: 'var(--color-brand)', textDecoration: 'none', fontWeight: 500 }}
+      >
+        Full reactor page →
+      </Link>
     </div>
   )
 }

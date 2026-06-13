@@ -19,7 +19,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Layer | Tool | Notes |
 |-------|------|-------|
 | Database | Supabase (Postgres) | Free tier. All data lives here. |
-| Frontend | React + Vite + react-router | Tabbed pages: Overview (`/`), The Fleet (`/fleet`), Dispatches (`/dispatches`). `vercel.json` rewrites extensionless routes to index.html so deep links survive refresh |
+| Frontend | React + Vite + react-router | Pages: Overview (`/`), The Fleet (`/fleet`), Dispatches (`/dispatches`), reactor permalinks (`/reactor/:slug`). `vercel.json` rewrites extensionless routes to index.html so deep links survive refresh |
 | Map | MapLibre GL | Free, no token required. Use OpenFreeMap or CARTO free style. |
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
@@ -53,7 +53,9 @@ nuclear-pipeline-tracker/
 │   ├── pages/                 ← one per route
 │   │   ├── Overview.jsx       ← gap banner + numbers + map/table (/)
 │   │   ├── Fleet.jsx          ← live pulse + 12-month output chart (/fleet)
-│   │   └── Dispatches.jsx     ← latest + archive of monthly reports (/dispatches)
+│   │   ├── Dispatches.jsx     ← latest + archive of monthly reports (/dispatches)
+│   │   └── Reactor.jsx        ← per-unit permalink: detail + sparkline + license history (/reactor/:slug)
+│   ├── lib/slug.js            ← reactorSlug() for permalinks (plant_name + unit → "browns-ferry-1")
 │   ├── components/            ← Hook (map), GapChart, FleetOutputChart, Dispatch, HeadlineBand, ReactorTable
 │   ├── supabase.js            ← single Supabase client export
 │   └── App.jsx                ← shell: data load, header+nav, Routes, footer

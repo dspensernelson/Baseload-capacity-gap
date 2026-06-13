@@ -4,6 +4,7 @@ import supabase from './supabase'
 import Overview from './pages/Overview'
 import Fleet from './pages/Fleet'
 import Dispatches from './pages/Dispatches'
+import Reactor from './pages/Reactor'
 
 // Fleet-wide "running right now" pulse, computed from the latest daily readings.
 function FleetPulse({ reactors }) {
@@ -154,6 +155,7 @@ export default function App() {
         />
         <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} />} />
+        <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
