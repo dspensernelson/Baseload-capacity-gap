@@ -24,7 +24,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
-| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-monthly.yml` (monthly, license actions) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` |
+| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-monthly.yml` (monthly, license actions) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
 
 ---
 
@@ -76,13 +76,14 @@ nuclear-pipeline-tracker/
 | NRC daily power reactor status | Daily power % per unit | Daily cron (`scripts/nrc_daily_status.py`) — NB: URL is case-sensitive, file is `ReportDt\|Unit\|Power` with plant+unit combined |
 | NRC license renewal pages | License actions + authoritative expiration dates | Monthly cron (`scripts/nrc_license_actions.py`) — rebuilds `license_actions`, updates `reactors.license_expiration_date` |
 | DOE ARDP / NRC new reactors | SMR/new build pipeline | Manual seed, curated quarterly (intentionally not automated) |
+| EIA-930 Hourly Electric Grid Monitor | US48 hourly generation by fuel type | `eia930-generation.yml` every 6h (`scripts/eia930_generation.py`) — feeds the 2 a.m. grid-mix view |
 
 **EIA API key:** Required. Store in `.env` as `EIA_API_KEY`. Never commit.  
 **Supabase keys:** Store in `.env` as `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`. Never commit.
 
 ---
 
-## Database Tables (7 total)
+## Database Tables (8 total)
 
 1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
 2. **`new_reactor_projects`** — SMR and new build pipeline (~15–20 rows, manual)
@@ -91,6 +92,7 @@ nuclear-pipeline-tracker/
 5. **`sync_log`** — audit trail for every cron run
 6. **`daily_status_history`** — one row per reactor per NRC report date (power %); the "tape" feeding sparklines, the fleet chart, and capacity-factor math. Written forward by the daily cron, backfilled by `scripts/backfill_status_history.py`
 7. **`reports`** — published monthly "Dispatches" (markdown + stats jsonb), written by `scripts/generate_dispatch.py` and rendered on the site by `Dispatch.jsx`
+8. **`generation_hourly`** — EIA-930 US48 hourly net generation by fuel type (period_utc, fueltype, mwh); powers the 2 a.m. grid-mix view (`GridMix.jsx`). Not watchdog-monitored (degrades gracefully)
 
 **Views:**
 - `headline_numbers` — three summary stats (operating MW, retiring by 2035, pipeline MW)

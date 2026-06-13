@@ -55,6 +55,7 @@ What is **still manual** (intentionally): the SMR / new-build pipeline (`new_rea
 
 ### The Fleet (`/fleet`)
 - "Right now" stat band: % of capacity online, GW generating, units running, units offline for refueling.
+- **The 2 a.m. test**: a 48-hour stacked grid-mix chart (nuclear flat at the base; solar swings to zero each night) + an overnight callout comparing nuclear vs solar. Live-ish from EIA-930 (refreshes every 6h). Confirm against the EIA grid monitor (see §4).
 - **12-month output chart**: a line hovering near **~92 GW** under a dashed **~100 GW capacity** reference line, with visible dips for refueling season. Hover → date, GW, capacity-factor %, units offline.
 
 ### Dispatches (`/dispatches`)
