@@ -35,6 +35,7 @@ nuclear-pipeline-tracker/
 ├── CLAUDE.md                  ← you are here
 ├── CHECKLIST.md               ← master task checklist
 ├── TESTING.md                 ← usability checklist a second instance runs the user through one item at a time
+├── VERIFY.md                  ← living "expected behavior + data fact-check" reference (run the 5-min pass regularly)
 ├── DESIGN.md                  ← architecture & data model overview
 ├── docs/
 │   ├── VISION.md              ← long-term vision & positioning (internal; gitignored, local only)
