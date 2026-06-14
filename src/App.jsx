@@ -8,6 +8,7 @@ import Grid from './pages/Grid'
 import Dispatches from './pages/Dispatches'
 import Scenarios from './pages/Scenarios'
 import Reactor from './pages/Reactor'
+import DataExport from './pages/DataExport'
 
 // Fleet-wide "running right now" pulse, computed from the latest daily readings.
 function FleetPulse({ reactors }) {
@@ -59,6 +60,11 @@ function SiteFooter({ reactors }) {
       </div>
       <div style={{ marginTop: '0.45rem', opacity: 0.85 }}>
         The data, charts, and the monthly dispatch update on their own. Sources: U.S. NRC &amp; U.S. EIA.
+      </div>
+      <div style={{ marginTop: '0.6rem' }}>
+        <Link to="/data" style={{ color: 'var(--color-brand)', textDecoration: 'none' }}>Open data</Link>
+        {' · '}
+        <a href="/methodology.html" target="_blank" rel="noreferrer" style={{ color: 'var(--color-brand)' }}>Methodology</a>
       </div>
     </footer>
   )
@@ -183,6 +189,7 @@ export default function App() {
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
+        <Route path="/data" element={<DataExport />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
