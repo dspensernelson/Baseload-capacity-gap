@@ -164,7 +164,7 @@ export default function App() {
         />
         <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
         <Route path="/grid" element={<Grid reactors={reactors} />} />
-        <Route path="/dispatches" element={<Dispatches reports={reports} />} />
+        <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
