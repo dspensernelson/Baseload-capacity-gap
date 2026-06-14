@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Routes, Route, NavLink, Link, Navigate } from 'react-router-dom'
+import { Routes, Route, NavLink, Link, Navigate, useLocation } from 'react-router-dom'
 import supabase from './supabase'
 import Overview from './pages/Overview'
 import MapPage from './pages/MapPage'
@@ -121,6 +121,14 @@ export default function App() {
     () => selectedISO ? reactors.filter(r => r.iso_rto === selectedISO) : reactors,
     [reactors, selectedISO]
   )
+
+  const location = useLocation()
+  useEffect(() => {
+    if (location.pathname.startsWith('/reactor/')) return  // the reactor page sets its own title
+    const titles = { '/': 'Overview', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios' }
+    const t = titles[location.pathname]
+    document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
+  }, [location.pathname])
 
   if (loading) {
     return (

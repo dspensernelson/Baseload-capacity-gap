@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { reactorSlug } from '../lib/slug'
 import { PowerSparkline, LicenseActionLine } from '../components/Hook'
@@ -23,6 +24,10 @@ function Fact({ label, value }) {
 export default function Reactor({ reactors, licenseActionsByReactor }) {
   const { slug } = useParams()
   const reactor = reactors.find(r => reactorSlug(r) === slug)
+
+  useEffect(() => {
+    if (reactor) document.title = `${reactor.plant_name} ${reactor.unit_number} · Nuclear Pipeline Tracker`
+  }, [reactor])
 
   if (!reactor) {
     return (
