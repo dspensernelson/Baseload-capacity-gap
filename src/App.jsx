@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Routes, Route, NavLink, Link, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, NavLink, Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import supabase from './supabase'
 import Overview from './pages/Overview'
 import MapPage from './pages/MapPage'
@@ -83,7 +83,15 @@ export default function App() {
   const [reports, setReports]     = useState([])
   const [projects, setProjects]   = useState([])
   const [loading, setLoading]     = useState(true)
-  const [selectedISO, setSelectedISO] = useState(null)
+
+  // ISO filter is URL-backed so /map?iso=PJM is a shareable, filtered view.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedISO = searchParams.get('iso')
+  const setSelectedISO = iso => setSearchParams(prev => {
+    const p = new URLSearchParams(prev)
+    if (iso) p.set('iso', iso); else p.delete('iso')
+    return p
+  }, { replace: true })
 
   useEffect(() => {
     async function load() {
