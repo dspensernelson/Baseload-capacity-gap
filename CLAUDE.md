@@ -39,6 +39,7 @@ nuclear-pipeline-tracker/
 ├── DESIGN.md                  ← architecture & data model overview
 ├── docs/
 │   ├── VISION.md              ← long-term vision & positioning (internal; gitignored, local only)
+│   ├── ROADMAP.md             ← 10-year horizons, invariants, and what to architecture-proof now
 │   ├── ROADMAP.md             ← the 10-year horizons, invariants & risk plan (directional)
 │   ├── data-model.md          ← full schema reference
 │   ├── agent-runbook.md       ← how to work with Claude Code
