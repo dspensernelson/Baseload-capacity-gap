@@ -55,18 +55,18 @@ function ISOFilterBar({ reactors, selectedISO, setSelectedISO }) {
   )
 }
 
-export default function MapPage({ reactors, filteredReactors, licenseActionsByReactor, selectedISO, setSelectedISO }) {
+export default function MapPage({ reactors, filteredReactors, projects, licenseActionsByReactor, selectedISO, setSelectedISO }) {
   return (
     <section style={{ maxWidth: '1400px', marginTop: '2.5rem', paddingBottom: '5rem' }} className="centered">
       <h2 className="section-title">Every Reactor</h2>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', maxWidth: '46rem' }}>
-        Every U.S. power reactor, colored by status, sized by capacity. Hollow rings are units offline for refueling.
-        Click any reactor — on the map or in the table — for its full page.
+        Every U.S. power reactor, colored by status, sized by capacity. Hollow rings are units offline for refueling;
+        blue pins are new build and restarts in the pipeline. Click any reactor — on the map or in the table — for its full page.
       </p>
       <ISOFilterBar reactors={reactors} selectedISO={selectedISO} setSelectedISO={setSelectedISO} />
       <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 440px', minWidth: 0 }}>
-          <Hook reactors={filteredReactors} setSelectedISO={setSelectedISO} licenseActionsByReactor={licenseActionsByReactor} />
+          <Hook reactors={filteredReactors} projects={projects} setSelectedISO={setSelectedISO} licenseActionsByReactor={licenseActionsByReactor} />
         </div>
         <div style={{ flex: '1 1 340px', minWidth: 0, height: '600px' }}>
           <ReactorTable reactors={filteredReactors} />

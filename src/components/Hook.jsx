@@ -52,13 +52,29 @@ function reactorsToGeoJSON(reactors) {
   }
 }
 
-export default function Hook({ reactors, setSelectedISO, licenseActionsByReactor = {} }) {
+function projectsToGeoJSON(projects) {
+  return {
+    type: 'FeatureCollection',
+    features: projects
+      .filter(p => p.latitude != null && p.longitude != null)
+      .map(p => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [parseFloat(p.longitude), parseFloat(p.latitude)] },
+        properties: { ...p },
+      })),
+  }
+}
+
+export default function Hook({ reactors, projects = [], setSelectedISO, licenseActionsByReactor = {} }) {
   const mapContainer  = useRef(null)
   const map           = useRef(null)
   const reactorsRef   = useRef(reactors)
+  const projectsRef   = useRef(projects)
   const [panel, setPanel] = useState(null)
+  const [pipelinePanel, setPipelinePanel] = useState(null)
 
   reactorsRef.current = reactors
+  projectsRef.current = projects
 
   useEffect(() => {
     if (map.current) return
@@ -154,20 +170,36 @@ export default function Hook({ reactors, setSelectedISO, licenseActionsByReactor
         },
       })
 
-      map.current.on('click', 'reactor-circles', e => {
-        setPanel(e.features[0].properties)
+      // New-build pipeline pins (restarts + SMRs), rendered above operating reactors
+      map.current.addSource('pipeline', { type: 'geojson', data: projectsToGeoJSON(projectsRef.current) })
+      map.current.addLayer({
+        id: 'pipeline-circles',
+        type: 'circle',
+        source: 'pipeline',
+        paint: {
+          'circle-color': ['case', ['==', ['get', 'confidence'], 'confirmed'], '#457b9d', '#ffffff'],
+          'circle-radius': ['interpolate', ['linear'], ['to-number', ['get', 'capacity_mw'], 300], 35, 5, 2200, 15],
+          'circle-stroke-color': '#457b9d',
+          'circle-stroke-width': 2,
+          'circle-opacity': 0.92,
+        },
       })
 
-      map.current.on('mouseenter', 'reactor-circles', () => {
-        map.current.getCanvas().style.cursor = 'pointer'
+      map.current.on('click', 'reactor-circles', e => {
+        setPanel(e.features[0].properties); setPipelinePanel(null)
       })
-      map.current.on('mouseleave', 'reactor-circles', () => {
-        map.current.getCanvas().style.cursor = ''
+      map.current.on('click', 'pipeline-circles', e => {
+        setPipelinePanel(e.features[0].properties); setPanel(null)
       })
+
+      for (const layer of ['reactor-circles', 'pipeline-circles']) {
+        map.current.on('mouseenter', layer, () => { map.current.getCanvas().style.cursor = 'pointer' })
+        map.current.on('mouseleave', layer, () => { map.current.getCanvas().style.cursor = '' })
+      }
 
       map.current.on('click', e => {
-        const features = map.current.queryRenderedFeatures(e.point, { layers: ['reactor-circles'] })
-        if (!features.length) setPanel(null)
+        const features = map.current.queryRenderedFeatures(e.point, { layers: ['reactor-circles', 'pipeline-circles'] })
+        if (!features.length) { setPanel(null); setPipelinePanel(null) }
       })
     })
 
@@ -183,11 +215,18 @@ export default function Hook({ reactors, setSelectedISO, licenseActionsByReactor
     if (src) src.setData(reactorsToGeoJSON(reactors))
   }, [reactors])
 
+  useEffect(() => {
+    if (!map.current) return
+    const src = map.current.getSource('pipeline')
+    if (src) src.setData(projectsToGeoJSON(projects))
+  }, [projects])
+
   return (
     <div style={{ position: 'relative' }}>
       <div ref={mapContainer} style={{ height: '600px', width: '100%', borderRadius: '4px', overflow: 'hidden' }} />
       <Legend />
       {panel && <DetailPanel reactor={panel} actions={licenseActionsByReactor[panel.id] ?? []} onClose={() => setPanel(null)} />}
+      {pipelinePanel && <PipelinePanel project={pipelinePanel} onClose={() => setPipelinePanel(null)} />}
     </div>
   )
 }
@@ -199,6 +238,8 @@ function Legend() {
     { label: 'Offline / refueling', color: STATUS_COLORS.operating, ring: true },
     { label: 'Decommissioning',    color: STATUS_COLORS.decommissioning },
     { label: 'Shutdown',           color: STATUS_COLORS.shutdown },
+    { label: 'New build',          color: '#457b9d' },
+    { label: 'Planned (early)',    color: '#457b9d', ring: true },
   ]
   return (
     <div style={{
@@ -362,6 +403,30 @@ function DetailPanel({ reactor, actions, onClose }) {
       >
         Full reactor page →
       </Link>
+    </div>
+  )
+}
+
+function PipelinePanel({ project, onClose }) {
+  const cap = parseFloat(project.capacity_mw)
+  const confirmed = project.confidence === 'confirmed'
+  return (
+    <div style={{
+      position: 'absolute', top: '1rem', right: '1rem',
+      width: '260px', background: '#fff',
+      borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+      padding: '1.1rem 1.25rem', fontFamily: 'var(--font-body)', zIndex: 10,
+    }}>
+      <button onClick={onClose} style={{ position: 'absolute', top: '0.6rem', right: '0.8rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: '#999' }}>×</button>
+      <div style={{ display: 'inline-block', padding: '0.15rem 0.55rem', borderRadius: '12px', background: '#457b9d', color: '#fff', fontSize: '0.62rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>New build</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, marginBottom: '0.1rem', paddingRight: '1rem' }}>{project.project_name}</div>
+      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.75rem' }}>{project.developer}</div>
+      <Row label="Type" value={project.reactor_type} />
+      <Row label="State" value={project.state} />
+      <Row label="Capacity" value={!isNaN(cap) ? `${Math.round(cap).toLocaleString()} MW` : '—'} />
+      <Row label="Target online" value={project.target_online_year} />
+      <Row label="Stage" value={project.stage?.replace(/_/g, ' ')} />
+      <Row label="Confidence" value={confirmed ? 'Confirmed' : 'Speculative'} highlight={!confirmed} />
     </div>
   )
 }
