@@ -9,6 +9,7 @@ import Dispatches from './pages/Dispatches'
 import Scenarios from './pages/Scenarios'
 import Reactor from './pages/Reactor'
 import DataExport from './pages/DataExport'
+import EmbedGap from './pages/EmbedGap'
 
 // Fleet-wide "running right now" pulse, computed from the latest daily readings.
 function FleetPulse({ reactors }) {
@@ -144,6 +145,8 @@ export default function App() {
     document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
   }, [location.pathname])
 
+  const isEmbed = location.pathname.startsWith('/embed')
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'var(--font-body)', color: 'var(--color-text-muted)' }}>
@@ -154,7 +157,7 @@ export default function App() {
 
   return (
     <>
-      <header style={{ background: 'var(--color-brand)', color: '#fff', padding: '0.9rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+      {!isEmbed && (<header style={{ background: 'var(--color-brand)', color: '#fff', padding: '0.9rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
         <Link to="/" style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
           Nuclear Pipeline Tracker
         </Link>
@@ -167,7 +170,7 @@ export default function App() {
           <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
         </nav>
         <FleetPulse reactors={reactors} />
-      </header>
+      </header>)}
 
       <Routes>
         <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} />} />
@@ -190,10 +193,11 @@ export default function App() {
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="/data" element={<DataExport />} />
+        <Route path="/embed/gap" element={<EmbedGap gapSeries={gapSeries} headlines={headlines} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      <SiteFooter reactors={reactors} />
+      {!isEmbed && <SiteFooter reactors={reactors} />}
     </>
   )
 }

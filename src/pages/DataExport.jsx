@@ -79,6 +79,11 @@ export default function DataExport() {
         <code style={{ wordBreak: 'break-all' }}>{base}/rest/v1/&lt;table&gt;?select=*</code> (the browser anon key is
         embedded in this app). All editorial math lives in the views above, so the numbers you see are the numbers you get.
       </p>
+
+      <div style={{ marginTop: '1.75rem' }}>
+        <strong style={{ fontSize: '0.85rem' }}>Embed the gap chart</strong>
+        <pre style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.75rem', fontSize: '0.72rem', overflowX: 'auto', marginTop: '0.4rem' }}>{`<iframe src="https://nukemap-two.vercel.app/embed/gap" width="100%" height="320" style="border:0" title="Nuclear Pipeline Tracker — The Gap"></iframe>`}</pre>
+      </div>
     </section>
   )
 }
