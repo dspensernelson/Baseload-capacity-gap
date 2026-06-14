@@ -1,4 +1,5 @@
 import FleetOutputChart from '../components/FleetOutputChart'
+import CapacityFactor from '../components/CapacityFactor'
 
 function RightNow({ reactors }) {
   let onlineMW = 0, capMW = 0, running = 0, refueling = 0, total = 0
@@ -58,8 +59,11 @@ export default function Fleet({ fleetSeries, reactors }) {
         </>
       )}
 
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '2.75rem', marginBottom: '0.6rem' }}>Who ran hardest, last 90 days</h3>
+      <CapacityFactor />
+
       <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '2rem' }}>
-        Tip: click any reactor on the <a href="/" style={{ color: 'var(--color-brand)' }}>Overview</a> map to see its 90-day power history.
+        Tip: click any reactor on the <a href="/map" style={{ color: 'var(--color-brand)' }}>map</a> to see its 90-day power history.
       </p>
     </section>
   )
