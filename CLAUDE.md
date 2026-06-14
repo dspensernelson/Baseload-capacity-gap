@@ -55,7 +55,7 @@ nuclear-pipeline-tracker/
 │   │   ├── Overview.jsx       ← the thesis: gap banner + numbers + "explore the map" (/)
 │   │   ├── MapPage.jsx        ← every reactor: map + table + ISO filter (/map)
 │   │   ├── Fleet.jsx          ← our fleet's performance: live pulse + 12-month output (/fleet)
-│   │   ├── Grid.jsx           ← nuclear vs. the grid: the 2 a.m. test + generation mix (/grid)
+│   │   ├── Grid.jsx           ← nuclear vs. the grid: the 2 a.m. test + replacement math (/grid)
 │   │   ├── Dispatches.jsx     ← what changed: latest + archive of monthly reports (/dispatches)
 │   │   ├── Scenarios.jsx      ← what-ifs: drag-the-levers gap explorer (/scenarios)
 │   │   └── Reactor.jsx        ← per-unit permalink: detail + sparkline + license history (/reactor/:slug)

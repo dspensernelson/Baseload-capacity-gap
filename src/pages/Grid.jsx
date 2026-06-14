@@ -1,6 +1,7 @@
 import GridMix from '../components/GridMix'
+import ReplacementMath from '../components/ReplacementMath'
 
-export default function Grid() {
+export default function Grid({ reactors = [] }) {
   return (
     <section style={{ maxWidth: '1100px', marginTop: '3rem', paddingBottom: '4rem' }} className="centered">
       <h2 className="section-title">The Grid</h2>
@@ -16,10 +17,12 @@ export default function Grid() {
       </p>
       <GridMix />
 
-      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '2.5rem' }}>
-        More comparisons coming here — including the "what would it take to replace this reactor?" math
-        (the honest capacity-vs-energy exchange rate).
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '3rem', marginBottom: '0.4rem' }}>What would it take to replace one?</h3>
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '46rem' }}>
+        Capacity and energy aren't the same thing. Here's the honest exchange rate between a reactor and the wind or
+        solar it would take to match its output over a year.
       </p>
+      <ReplacementMath reactors={reactors} />
     </section>
   )
 }

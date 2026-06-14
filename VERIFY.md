@@ -62,6 +62,7 @@ What is **still manual** (intentionally): the SMR / new-build pipeline (`new_rea
 
 ### The Grid (`/grid`)
 - **The 2 a.m. test**: a 48-hour stacked grid-mix chart (nuclear flat at the base; solar swings to zero each night) + an overnight callout comparing nuclear vs solar. Live-ish from EIA-930 (refreshes every 6h). Confirm against the EIA grid monitor (see §4).
+- **Replacement math**: pick a reactor → the GW of wind or solar (plus turbines / land) needed to match its annual energy, using EIA capacity factors (nuclear 93%, wind 35%, solar 24%). Energy-only, clearly caveated. Changing the dropdown recomputes everything.
 
 ### Scenarios (`/scenarios`)
 - Three sliders (future renewals, pipeline delay, pipeline build-out) that **recompute the gap chart live**. Default (0% future renewals) ≈ today's committed reality; dragging renewals up closes the gap (history says nearly all reactors renew). Labeled a model, not a forecast.
