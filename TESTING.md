@@ -22,7 +22,7 @@
 ## 1. The hero chart (top banner)
 Look at the big green banner at the very top.
 **Expect:** "The Gap" title sits inside the green; an amber wedge grows in from the bottom-right;
-"12.0 GW gap by 2035" label is on the chart; year labels run along the bottom.
+"13.2 GW gap by 2035" label is on the chart; year labels run along the bottom.
 **Result:** ⬜
 
 ## 2. Chart hover
@@ -32,7 +32,7 @@ Move your mouse across the chart.
 
 ## 3. The three headline numbers
 Look just below the banner.
-**Expect:** 101.9 GW (Operating Today) · 12.0 GW (Retiring by 2035, amber & biggest) · 2.0 GW (In the Pipeline).
+**Expect:** 101.9 GW (Operating Today) · 13.2 GW (Retiring by 2035, amber & biggest) · 2.0 GW (In the Pipeline).
 **Result:** ⬜
 
 ## 4. Map — opening view

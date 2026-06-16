@@ -125,6 +125,22 @@ def run_checks(sb):
     if not (90000 <= op <= 115000):
         errors.append(f"Operating capacity out of range: {op:.0f} MW (expected 90,000–115,000).")
 
+    # 5 — every operating reactor needs a license expiration date, or it silently
+    # drops out of "retiring by 2035" (the Watts Bar bug, June 2026).
+    nl = with_retry(lambda: sb.table("reactors").select("id", count="exact")
+                    .in_("status", ["operating", "license_renewed"])
+                    .is_("license_expiration_date", "null").execute())
+    if (nl.count or 0) > 0:
+        errors.append(f"{nl.count} operating reactor(s) missing a license expiration date — they vanish from 'retiring by 2035'.")
+
+    # 6 — the pipeline table is capacity ARRIVING only; a renewal/SLR row means an
+    # existing operating plant got mislabeled as new build (the Diablo Canyon bug).
+    projs = with_retry(lambda: sb.table("new_reactor_projects").select("project_name").execute()).data
+    bad = [p["project_name"] for p in (projs or [])
+           if any(k in (p.get("project_name") or "").lower() for k in ("slr", "renewal", "license renew"))]
+    if bad:
+        errors.append(f"new_reactor_projects has renewal/SLR rows (not new build): {', '.join(bad)}")
+
     return sb
 
 

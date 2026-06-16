@@ -15,7 +15,7 @@ US nuclear capacity is quietly retiring faster than new build is coming online. 
 ```
 ┌─────────────────────────────────────────────┐
 │  HEADLINE BAND                              │
-│  97 GW operating  │  -12 GW by 2035  │  +4 GW pipeline  │
+│  102 GW operating │  -13 GW by 2035  │  +2 GW pipeline  │
 └─────────────────────────────────────────────┘
 
 ┌──────────────────────────────┐
