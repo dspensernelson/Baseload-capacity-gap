@@ -91,7 +91,7 @@ nuclear-pipeline-tracker/
 ## Database Tables (8 total)
 
 1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
-2. **`new_reactor_projects`** — SMR and new build pipeline (~15–20 rows, manual)
+2. **`new_reactor_projects`** — SMR and new build pipeline (~10 rows, manual). **Capacity *arriving* only**: new builds + restarts of shut-down units. **Never** existing operating plants being renewed (SLRs like Diablo Canyon/Clinton/Seabrook) — those are already in `reactors` + `license_actions`; adding them double-counts the operating fleet and inflates the pipeline number.
 3. **`decommissioning`** — shutdown details and capacity lost
 4. **`license_actions`** — license renewals, expirations, uprate actions
 5. **`sync_log`** — audit trail for every cron run

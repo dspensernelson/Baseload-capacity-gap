@@ -17,7 +17,7 @@
 - [ ] Site loads at the live URL; no blank screen, no "Loading…" stuck forever.
 - [ ] **Header pulse** reads something like `~90–100% of the fleet · ~90–100 GW online now · ~90/94 units running`. (Lower in spring/fall refueling season is normal; **0% or 0/94 is a red flag**.)
 - [ ] **Footer** "last update" date is **today or yesterday**. (Older than ~2 days = the daily cron is stuck.)
-- [ ] **Overview** numbers: Operating ≈ **101.9 GW**, Retiring by 2035 ≈ **12 GW**, Pipeline ≈ **4.2 GW**.
+- [ ] **Overview** numbers: Operating ≈ **101.9 GW**, Retiring by 2035 ≈ **12 GW**, Pipeline ≈ **2.0 GW**.
 - [ ] **Map** shows the lower-48 with green dots; a few may be hollow rings (refueling). Not all-gray, not empty.
 - [ ] Click one reactor → panel opens with data + a sparkline.
 - [ ] No open **⚠️ Watchdog** issue in GitHub → the pipeline is healthy (see §3).
@@ -90,7 +90,7 @@ Spot-check a couple of these on each deeper audit. **NRC and EIA are the ground 
 | **A unit's license expiration** | matches NRC | same NRC list-of-power-reactor-units page (has expiration dates) |
 | **License renewals / 80-yr (SLR) approvals** | matches NRC | NRC renewal — nrc.gov/reactors/operating/licensing/renewal/subsequent-license-renewal.html and …/applications.html |
 | **Retiring by 2035** (~12 GW) | sum of net capacity for units whose license expires ≤ 2035 and have **not** been renewed | derive from the NRC list; every approved renewal should *reduce* this number |
-| **Pipeline** (~4.2 GW) ← MANUAL | announced/under-construction new build (e.g., Vogtle complete; SMRs in NRC review) | NRC **New Reactors** nrc.gov/reactors/new-reactors.html · DOE **ARDP** energy.gov/ne/advanced-reactor-demonstration-program |
+| **Pipeline** (~2.0 GW) ← MANUAL | capacity *arriving* — new SMRs + restarts of shut-down units (Palisades, TMI-1). **Not** existing plants getting renewed (those belong in the operating fleet) | NRC **New Reactors** nrc.gov/reactors/new-reactors.html · DOE **ARDP** energy.gov/ne/advanced-reactor-demonstration-program |
 | **Decommissioning / shutdown units** | matches NRC | NRC **Decommissioning** — nrc.gov/info-finder/decommissioning/power-reactor/ |
 | **Fleet ~92% capacity factor / output** | US nuclear runs ~92–93% CF | EIA **Hourly Electric Grid Monitor** eia.gov/electricity/gridmonitor/ · EIA "Nuclear explained" |
 

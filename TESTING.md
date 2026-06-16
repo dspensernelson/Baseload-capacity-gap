@@ -32,7 +32,7 @@ Move your mouse across the chart.
 
 ## 3. The three headline numbers
 Look just below the banner.
-**Expect:** 101.9 GW (Operating Today) · 12.0 GW (Retiring by 2035, amber & biggest) · 4.2 GW (In the Pipeline).
+**Expect:** 101.9 GW (Operating Today) · 12.0 GW (Retiring by 2035, amber & biggest) · 2.0 GW (In the Pipeline).
 **Result:** ⬜
 
 ## 4. Map — opening view
