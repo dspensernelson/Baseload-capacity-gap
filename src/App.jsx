@@ -10,6 +10,7 @@ import Scenarios from './pages/Scenarios'
 import Reactor from './pages/Reactor'
 import DataExport from './pages/DataExport'
 import EmbedGap from './pages/EmbedGap'
+import Sources from './pages/Sources'
 
 // Fleet-wide "running right now" pulse, computed from the latest daily readings.
 function FleetPulse({ reactors }) {
@@ -63,9 +64,7 @@ function SiteFooter({ reactors }) {
         The data, charts, and the monthly dispatch update on their own. Sources: U.S. NRC &amp; U.S. EIA.
       </div>
       <div style={{ marginTop: '0.6rem' }}>
-        <Link to="/data" style={{ color: 'var(--color-brand)', textDecoration: 'none' }}>Open data</Link>
-        {' · '}
-        <a href="/methodology.html" target="_blank" rel="noreferrer" style={{ color: 'var(--color-brand)' }}>Methodology</a>
+        <Link to="/sources" style={{ color: 'var(--color-brand)', textDecoration: 'none' }}>How we know every number →</Link>
       </div>
     </footer>
   )
@@ -140,7 +139,7 @@ export default function App() {
   const location = useLocation()
   useEffect(() => {
     if (location.pathname.startsWith('/reactor/')) return  // the reactor page sets its own title
-    const titles = { '/': 'Overview', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios' }
+    const titles = { '/': 'Overview', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
     const t = titles[location.pathname]
     document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
   }, [location.pathname])
@@ -168,6 +167,8 @@ export default function App() {
           <NavLink to="/grid" style={navLinkStyle}>The Grid</NavLink>
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
           <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
+          <NavLink to="/data" style={navLinkStyle}>The Data</NavLink>
+          <NavLink to="/sources" style={navLinkStyle}>The Sources</NavLink>
         </nav>
         <FleetPulse reactors={reactors} />
       </header>)}
@@ -193,6 +194,7 @@ export default function App() {
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="/data" element={<DataExport />} />
+        <Route path="/sources" element={<Sources />} />
         <Route path="/embed/gap" element={<EmbedGap gapSeries={gapSeries} headlines={headlines} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

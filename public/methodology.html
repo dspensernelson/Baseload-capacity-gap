@@ -3,82 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How We Calculated This — Nuclear Pipeline Tracker</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 680px; margin: 3rem auto; padding: 0 1.5rem; line-height: 1.7; color: #1a1a1a; }
-    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
-    h2 { font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5rem; color: #1d3557; }
-    p  { margin-bottom: 1rem; color: #444; }
-    a  { color: #1d3557; }
-    .back { font-size: 0.85rem; margin-bottom: 2rem; display: block; }
-  </style>
+  <title>How We Calculated This — moved to The Sources</title>
+  <link rel="canonical" href="/sources" />
+  <meta http-equiv="refresh" content="0; url=/sources" />
+  <script>window.location.replace('/sources')</script>
+  <style>body{font-family:system-ui,sans-serif;max-width:680px;margin:3rem auto;padding:0 1.5rem;line-height:1.7;color:#1a1a1a}a{color:#1d3557}</style>
 </head>
 <body>
-  <a class="back" href="/">← Back to Nuclear Pipeline Tracker</a>
-  <h1>How We Calculated This</h1>
-
-  <h2>Operating Capacity</h2>
-  <p>
-    Sourced from the EIA v2 API (<code>operating-generator-capacity</code> endpoint),
-    filtered to nuclear technology and operating status. Data reflects the most recent
-    monthly snapshot. Units: nameplate capacity in MW.
-  </p>
-
-  <h2>Retirements</h2>
-  <p>
-    Based on NRC license expiration dates for each operating reactor unit. We do not assume
-    license renewals unless already formally approved by the NRC. If a license has expired but
-    the plant is still operating under a renewal application, we use the requested new expiration
-    date where known.
-  </p>
-  <p>
-    A reactor retiring in year X means its full nameplate capacity is subtracted from the
-    running total in that year. We use the license expiration date, not a shutdown date forecast.
-  </p>
-  <p>
-    License expiration dates are refreshed monthly from NRC license-renewal records. When the NRC
-    approves a renewal or 80-year extension, the new expiration date flows in automatically and that
-    capacity shifts later on the chart — no manual editing.
-  </p>
-
-  <h2>New Build</h2>
-  <p>
-    Based on projects with active NRC review, DOE ARDP funding, or confirmed construction starts.
-    <strong>"Confirmed"</strong> means the project is under construction or holds a construction
-    permit or license. <strong>"Speculative"</strong> means the developer has announced intent and
-    engaged with regulators, but no construction license exists.
-  </p>
-  <p>
-    Projects are credited in the year their developer has publicly targeted for commercial operation.
-    These dates frequently slip.
-  </p>
-
-  <h2>The Gap</h2>
-  <p>
-    Net capacity by year = operating base today − cumulative retiring capacity + cumulative new build.
-    The amber area on the chart represents the difference between the current operating baseline and
-    projected net capacity in each future year.
-  </p>
-
-  <h2>What This Is Not</h2>
-  <p>
-    This is a snapshot, not a forecast. It does not account for: unannounced license renewal
-    applications, policy changes, grid demand shifts, or projects cancelled after this data was
-    compiled. License renewals, if approved, would shift retirement curves to the right.
-    Project cancellations would widen the gap further.
-  </p>
-
-  <h2>Data Sources</h2>
-  <ul style="color:#444; padding-left:1.5rem; margin-bottom:1rem;">
-    <li>EIA v2 API — <a href="https://www.eia.gov/opendata/" target="_blank">eia.gov/opendata</a></li>
-    <li>NRC Operating Reactor Licensing — <a href="https://www.nrc.gov/reactors/operating.html" target="_blank">nrc.gov</a></li>
-    <li>DOE ARDP — <a href="https://www.energy.gov/ne/advanced-reactor-demonstration-program" target="_blank">energy.gov/ne/ardp</a></li>
-    <li>NRC New Reactors — <a href="https://www.nrc.gov/reactors/new-reactors.html" target="_blank">nrc.gov/reactors/new-reactors</a></li>
-  </ul>
-
-  <p style="font-size:0.8rem; color:#999; margin-top:2rem;">
-    Reactor power status updated daily and license actions refreshed monthly, both from NRC.
-    Reactor inventory and capacity seeded from EIA.
-  </p>
+  <p>The methodology now lives on <a href="/sources">The Sources</a> — how we know every number: each
+     figure's definition, exact formula, primary source, and the weekly reconciliation. Redirecting…</p>
 </body>
 </html>

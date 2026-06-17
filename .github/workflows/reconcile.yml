@@ -1,0 +1,88 @@
+name: Numbers Reconciliation
+
+# Re-derives every headline number from its atomic rows and compares to what the
+# live views publish; checks 100% provenance completeness; enforces the Watts Bar
+# and Diablo Canyon invariants. Quiet by design: opens a labeled GitHub issue only
+# on drift, closes it when clean. Never fails the run (alerting is the issue).
+
+on:
+  schedule:
+    - cron: '30 13 * * 1'   # Mondays 13:30 UTC — weekly traceability sweep
+  workflow_run:
+    workflows: ["NRC License Actions Monthly"]   # renewals move "retiring by 2035"
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install python-dotenv "supabase==2.9.1" requests
+
+      - name: Run reconciliation
+        id: check
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python scripts/reconcile.py
+          echo "status=$(cat reconcile_status.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Open / update reconciliation issue (drift found)
+        if: steps.check.outputs.status == 'drift'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = 'See the Actions log.';
+            try { report = fs.readFileSync('reconcile_report.txt', 'utf8'); } catch (e) {}
+            const title = '⚠️ Reconciliation: a published number no longer traces to its source';
+            const body = [
+              report, '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '', '_Opened automatically by Numbers Reconciliation._',
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', labels: 'reconcile',
+            });
+            if (existing.data.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.data[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['reconcile'],
+              });
+            }
+
+      - name: Close reconciliation issue (all numbers trace)
+        if: steps.check.outputs.status == 'pass'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', labels: 'reconcile',
+            });
+            for (const issue of open.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, body: '✅ All numbers reconcile again — closing automatically.',
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, state: 'closed',
+              });
+            }

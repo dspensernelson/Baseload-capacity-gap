@@ -57,7 +57,7 @@ export default function GapChart({ gapSeries, headlines }) {
         </div>
         <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', marginTop: '0.35rem', maxWidth: '20rem' }}>
           US nuclear capacity 2025–2045 — the amber is what we lose faster than we replace.{' '}
-          <a href="/methodology.html"
+          <a href="/sources"
              target="_blank" rel="noreferrer"
              style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'underline', pointerEvents: 'auto' }}>
             How we calculated this →

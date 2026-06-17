@@ -144,7 +144,7 @@ export default function Scenarios({ reactors }) {
           </ResponsiveContainer>
           <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.6rem' }}>
             Green = projected nuclear capacity; amber = how far below today's fleet it falls. Built from NRC license
-            expirations + announced new build. A model, not a forecast — see <a href="/methodology.html" target="_blank" rel="noreferrer" style={{ color: 'var(--color-brand)' }}>methodology</a>.
+            expirations + announced new build. A model, not a forecast — see <a href="/sources" style={{ color: 'var(--color-brand)' }}>how we know every number</a>.
           </p>
         </div>
       </div>

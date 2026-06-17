@@ -21,6 +21,7 @@
 - [ ] **Map** shows the lower-48 with green dots; a few may be hollow rings (refueling). Not all-gray, not empty.
 - [ ] Click one reactor → panel opens with data + a sparkline.
 - [ ] No open **⚠️ Watchdog** issue in GitHub → the pipeline is healthy (see §3).
+- [ ] **`/sources`** shows a green "Last reconciled ⟨recent date⟩ — every headline traced back to its source" badge. (Amber/“under review” = the reconcile job found drift; see §3.)
 - [ ] No red runs in the GitHub **Actions** tab in the last day.
 
 If all of the above pass, the system is working. The sections below are for when something looks off, or for a deeper periodic audit.
@@ -32,6 +33,7 @@ If all of the above pass, the system is working. The sections below are for when
 These run on their own and will tell you if something breaks, so **silence = healthy**:
 
 - **Watchdog** (`Pipeline Health Watchdog` workflow) runs after every data cron + daily at 13:00 UTC. It checks freshness + sanity and **opens a GitHub issue only when something is genuinely wrong**, then **auto-closes it** when healthy. So: *no watchdog issue = data is fresh and sane.* It will not email you for transient blips.
+- **Reconciliation** (`Numbers Reconciliation` workflow) runs weekly + after the license cron. It re-derives every headline number *independently* from the atomic reactor rows and compares to what the live views publish, checks 100% provenance completeness, and re-enforces the Watts Bar + Diablo Canyon invariants. Opens a `reconcile`-labeled issue **only on drift**; the public `/sources` page shows the last-reconciled date and every number's formula + source. Receipts in the `reconciliation_log` table.
 - **`sync_log` table** (Supabase) records every cron run — source, status, rows, timestamp, notes. This is the audit trail; check it when you want proof a job ran.
 - **Crons**: daily power (08:00 UTC), monthly license (1st), monthly dispatch (2nd). All free, all logged.
 
@@ -94,7 +96,7 @@ Spot-check a couple of these on each deeper audit. **NRC and EIA are the ground 
 | **Decommissioning / shutdown units** | matches NRC | NRC **Decommissioning** — nrc.gov/info-finder/decommissioning/power-reactor/ |
 | **Fleet ~92% capacity factor / output** | US nuclear runs ~92–93% CF | EIA **Hourly Electric Grid Monitor** eia.gov/electricity/gridmonitor/ · EIA "Nuclear explained" |
 
-**Known, expected discrepancy:** our "Operating today" uses EIA **nameplate** capacity (~101.9 GW); you'll also see US nuclear quoted around **~97 GW** (net summer capacity). Both are correct — different definitions. This is noted in [methodology](public/methodology.html); don't treat the ~5% gap as a bug.
+**Known, expected discrepancy:** our "Operating today" uses EIA **nameplate** capacity (~101.9 GW); you'll also see US nuclear quoted around **~97 GW** (net summer capacity). Both are correct — different definitions. This is noted on **The Sources** (`/sources`, the nameplate-vs-net entry); don't treat the ~5% gap as a bug.
 
 ---
 
@@ -118,4 +120,4 @@ Spot-check a couple of these on each deeper audit. **NRC and EIA are the ground 
 - **Supabase** — tables: `reactors`, `new_reactor_projects`, `decommissioning`, `license_actions`, `sync_log`, `daily_status_history`, `reports`; views: `headline_numbers`, `gap_series`, `fleet_output_series`
 - **GitHub Actions** — cron runs + the watchdog (red run or open issue = look here)
 - **`sync_log`** — every job's receipt (what ran, when, how many rows, errors)
-- **Methodology** — /methodology.html (how each number is computed) · `docs/methodology.md`
+- **The Sources** (`/sources`) — the public methodology: how each number is defined, computed & sourced, plus the weekly reconciliation. Internal notes: `docs/methodology.md` · `docs/PROVENANCE.md`. (`/methodology.html` now redirects here.)

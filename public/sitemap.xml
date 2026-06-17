@@ -7,4 +7,5 @@
   <url><loc>https://nukemap-two.vercel.app/dispatches</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://nukemap-two.vercel.app/scenarios</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://nukemap-two.vercel.app/data</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://nukemap-two.vercel.app/sources</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
 </urlset>

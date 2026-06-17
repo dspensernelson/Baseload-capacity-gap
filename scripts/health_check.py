@@ -141,6 +141,19 @@ def run_checks(sb):
     if bad:
         errors.append(f"new_reactor_projects has renewal/SLR rows (not new build): {', '.join(bad)}")
 
+    # 7 — provenance completeness: every curated row must cite a source (the audit
+    # trail). A sourceless row is a published number nobody can trace — the class of
+    # gap the Diablo Canyon and Watts Bar errors fell through. The weekly reconcile
+    # job checks this too; mirroring it here makes the daily watchdog catch it fast.
+    prov_missing = 0
+    for tbl in ("reactors", "new_reactor_projects", "decommissioning", "license_actions"):
+        m = with_retry(lambda t=tbl: sb.table(t).select("id", count="exact")
+                       .or_("source.is.null,source_url.is.null,verified_at.is.null").execute())
+        prov_missing += (m.count or 0)
+    if prov_missing > 0:
+        errors.append(f"{prov_missing} curated row(s) missing source/URL/verified_at — "
+                      f"a published number with no provenance.")
+
     return sb
 
 

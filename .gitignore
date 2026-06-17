@@ -12,6 +12,8 @@ dist/
 # Internal strategy memo — kept out of the public repo (see local copy)
 docs/VISION.md
 
-# Transient watchdog output
+# Transient watchdog / reconcile output
 health_report.txt
 health_status.txt
+reconcile_report.txt
+reconcile_status.txt

@@ -19,12 +19,12 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Layer | Tool | Notes |
 |-------|------|-------|
 | Database | Supabase (Postgres) | Free tier. All data lives here. |
-| Frontend | React + Vite + react-router | Tabs: Overview (`/`), Map (`/map`), The Fleet (`/fleet`), The Grid (`/grid`), Dispatches (`/dispatches`), Scenarios (`/scenarios`); plus reactor permalinks (`/reactor/:slug`). `vercel.json` rewrites extensionless routes to index.html so deep links survive refresh |
+| Frontend | React + Vite + react-router | Tabs: Overview (`/`), Map (`/map`), The Fleet (`/fleet`), The Grid (`/grid`), Dispatches (`/dispatches`), Scenarios (`/scenarios`), The Data (`/data`), The Sources (`/sources`); plus reactor permalinks (`/reactor/:slug`). `vercel.json` rewrites extensionless routes to index.html so deep links survive refresh |
 | Map | MapLibre GL | Free, no token required. Use OpenFreeMap or CARTO free style. |
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
-| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-monthly.yml` (monthly, license actions) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
+| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-monthly.yml` (monthly, license actions) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
 
 ---
 
@@ -88,7 +88,7 @@ nuclear-pipeline-tracker/
 
 ---
 
-## Database Tables (8 total)
+## Database Tables (10 total)
 
 1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
 2. **`new_reactor_projects`** — SMR and new build pipeline (~10 rows, manual). **Capacity *arriving* only**: new builds + restarts of shut-down units. **Never** existing operating plants being renewed (SLRs like Diablo Canyon/Clinton/Seabrook) — those are already in `reactors` + `license_actions`; adding them double-counts the operating fleet and inflates the pipeline number.
@@ -98,11 +98,16 @@ nuclear-pipeline-tracker/
 6. **`daily_status_history`** — one row per reactor per NRC report date (power %); the "tape" feeding sparklines, the fleet chart, and capacity-factor math. Written forward by the daily cron, backfilled by `scripts/backfill_status_history.py`
 7. **`reports`** — published monthly "Dispatches" (markdown + stats jsonb), written by `scripts/generate_dispatch.py` and rendered on the site by `Dispatch.jsx`
 8. **`generation_hourly`** — EIA-930 US48 hourly net generation by fuel type (period_utc, fueltype, mwh); powers the 2 a.m. grid-mix view (`GridMix.jsx`). Not watchdog-monitored (degrades gracefully)
+9. **`metric_lineage`** — one row per number shown on the site: label, definition, exact formula, primary source + URL. The spine of the audit trail; read by `reconcile.py`, rendered on `/sources`
+10. **`reconciliation_log`** — append-only receipt from `reconcile.py` (per-metric: our value vs independently re-derived value, delta, pass/drift)
+
+**Provenance columns:** `reactors`, `new_reactor_projects`, `decommissioning`, `license_actions` each carry `source`, `source_url`, `source_date`, `verified_at`, `provenance_note`. **Every curated row must cite a source** (watchdog- and reconcile-enforced). Full process in `docs/PROVENANCE.md`.
 
 **Views:**
 - `headline_numbers` — three summary stats (operating MW, retiring by 2035, pipeline MW)
 - `gap_series` — year-by-year net capacity delta from now to 2045
 - `fleet_output_series` — daily fleet output (capacity × power %) from `daily_status_history`; powers the "Last 12 Months" chart
+- `reactor_cf_90d` — per-unit average power % over the last 90 days (the Fleet "who ran hardest" table)
 
 See `docs/data-model.md` for full schema.
 
@@ -116,9 +121,10 @@ See `docs/data-model.md` for full schema.
 - **No auth, no realtime, no payments in v1** — explicitly deferred to v2
 - **Audience = curious public** — newspaper graphic aesthetic, not BI tool
 - **Nuclear is the hero** — framing is "what quietly holds the lights on," not nuclear vs renewables
-- **Tab theory (placement rule)** — one tab per visitor question: Overview = the argument · Map = places · The Fleet = our own performance · The Grid = nuclear vs. other sources · Dispatches = change over time · Scenarios = what-ifs. Place a new feature by this rule; don't bolt it onto whatever page is handy.
+- **Tab theory (placement rule)** — one tab per visitor question: Overview = the argument · Map = places · The Fleet = our own performance · The Grid = nuclear vs. other sources · Dispatches = change over time · Scenarios = what-ifs · The Data = download the raw records · The Sources = how every number is defined, computed & sourced. Place a new feature by this rule; don't bolt it onto whatever page is handy.
 - **Show, don't tell** — the site presents, it never exhorts; no CTAs, no "we." Every element must survive a hostile fact-check
 - **Automation ratchet** — any recurring manual task is treated as a defect; the fix is a cron or an agent (see VISION.md)
+- **Provenance / traceability** — every curated row carries `source`/`source_url`/`verified_at`; every public number is registered in `metric_lineage` with its exact formula + primary source; `reconcile.py` (weekly) re-derives the headlines from atomic rows into `reconciliation_log`; `/sources` renders it. **Never** add a curated row without provenance, or a visible number without a `metric_lineage` entry. If you change a SQL view's formula, update the matching `metric_lineage.formula` in the same commit. See `docs/PROVENANCE.md`
 - **Wind/solar comparison, live district output, ADAMS feeds** — all v2
 
 ---
@@ -164,5 +170,5 @@ See `docs/data-model.md` for full schema.
 > Update this section at the start of each working session.
 
 **Active session:** —  
-**Last completed:** Post-V1 automation (June 2026) — V1 live at https://nukemap-two.vercel.app (Vercel `nukemap`, auto-deploys from `main`). Two crons: NRC daily status (08:00 UTC) and NRC license actions (monthly). `license_actions` is now fully scraper-fed from nrc.gov (no manual verification needed); detail panel shows license history + daily power. Headline "retiring by 2035" is ~13.2 GW with authoritative NRC expiration dates.  
+**Last completed:** Post-V1 automation (June 2026) — V1 live at https://nukemap-two.vercel.app (Vercel `nukemap`, auto-deploys from `main`). Two crons: NRC daily status (08:00 UTC) and NRC license actions (monthly). `license_actions` is now fully scraper-fed from nrc.gov (no manual verification needed); detail panel shows license history + daily power. Headline "retiring by 2035" is ~13.2 GW with authoritative NRC expiration dates. **Provenance/audit-trail system added (June 2026):** every curated row carries a source (`source`/`source_url`/`verified_at`), every public number is registered in `metric_lineage` and cross-checked weekly by `scripts/reconcile.py` (→ `reconciliation_log`), and `/sources` renders the whole audit trail. Headlines now: Operating 101.9 GW / Retiring-by-2035 13.2 GW / Pipeline 2.0 GW. See `docs/PROVENANCE.md`.  
 **Blockers:** —

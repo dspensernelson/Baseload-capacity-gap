@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import supabase from '../supabase'
 
 const DATASETS = [
@@ -9,6 +10,8 @@ const DATASETS = [
   { table: 'fleet_output_series', label: 'Daily fleet output',  desc: 'Daily summed U.S. nuclear generation, trailing ~year.' },
   { table: 'new_reactor_projects', label: 'New-build pipeline', desc: 'Restarts and SMR / new-build projects.' },
   { table: 'generation_hourly',   label: 'Hourly grid mix',     desc: 'EIA-930 U.S. generation by fuel type, recent hours.' },
+  { table: 'metric_lineage',      label: 'Number lineage',      desc: 'Every figure on the site: its definition, exact formula, and primary source.' },
+  { table: 'reconciliation_log',  label: 'Reconciliation log',  desc: 'Weekly check that each headline still matches its source — our value vs an independent re-derivation.' },
 ]
 
 function toCSV(rows) {
@@ -53,11 +56,21 @@ export default function DataExport() {
 
   return (
     <section style={{ maxWidth: '820px', marginTop: '3rem', paddingBottom: '4rem' }} className="centered">
-      <h2 className="section-title">Open data</h2>
-      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', maxWidth: '46rem', marginBottom: '2rem' }}>
-        It's all public records, re-plumbed — and it's yours. Download any dataset as CSV or JSON. Free to use,
-        attribution appreciated. Sources: U.S. NRC and U.S. EIA.
+      <h2 className="section-title">The Data</h2>
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', maxWidth: '46rem', marginBottom: '1.25rem' }}>
+        Everything behind the charts — all public records, re-plumbed, and it's yours. Download any dataset as CSV or
+        JSON, free to use (attribution appreciated). And every number is traceable back to its primary source.
+        Sources: U.S. NRC and U.S. EIA.
       </p>
+
+      <Link to="/sources" style={{
+        display: 'block', textDecoration: 'none', marginBottom: '2rem',
+        padding: '0.85rem 1.1rem', borderRadius: '8px',
+        background: 'rgba(45,106,79,0.08)', border: '1px solid var(--color-border)',
+        color: 'var(--color-operating)', fontWeight: 600, fontSize: '0.9rem',
+      }}>
+        ✓ How we know every number — each figure's definition, exact formula, source, and the weekly reconciliation →
+      </Link>
 
       {DATASETS.map(d => (
         <div key={d.table} style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 0', borderBottom: '1px solid var(--color-border)' }}>

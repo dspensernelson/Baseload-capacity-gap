@@ -95,9 +95,9 @@ Use the Status dropdown, State dropdown, and the "Search operator…" box.
 **Expect:** each narrows the table correctly; they stack; the count reflects what's shown.
 **Result:** ⬜
 
-## 16. Methodology link (just fixed)
-Click **"How we calculated this →"** in the banner.
-**Expect:** opens a methodology page **on this site** (URL ends `/methodology.html`) — **NOT** github.com. It's styled and has a "← Back" link.
+## 16. "How we calculated this" link
+Click **"How we calculated this →"** in the green banner.
+**Expect:** opens **The Sources** tab (`/sources`) — the live audit trail: every number's definition, exact formula, source, and the last-reconciled date. (The old `/methodology.html` now redirects here.)
 **Result:** ⬜
 
 ## 17. Responsiveness (known weak spot)

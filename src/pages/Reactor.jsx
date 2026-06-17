@@ -91,7 +91,7 @@ export default function Reactor({ reactors, licenseActionsByReactor }) {
 
       <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: '2rem' }}>
         Power status from the U.S. NRC daily report; license records from NRC renewal filings. See{' '}
-        <a href="/methodology.html" target="_blank" rel="noreferrer" style={{ color: 'var(--color-brand)' }}>how we calculated this</a>.
+        <a href="/sources" style={{ color: 'var(--color-brand)' }}>how we calculated this</a>.
       </p>
     </section>
   )
