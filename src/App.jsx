@@ -6,6 +6,8 @@ import MapPage from './pages/MapPage'
 import Fleet from './pages/Fleet'
 import Grid from './pages/Grid'
 import Incidents from './pages/Incidents'
+import Safety from './pages/Safety'
+import History from './pages/History'
 import Dispatches from './pages/Dispatches'
 import Scenarios from './pages/Scenarios'
 import Reactor from './pages/Reactor'
@@ -140,7 +142,7 @@ export default function App() {
   const location = useLocation()
   useEffect(() => {
     if (location.pathname.startsWith('/reactor/')) return  // the reactor page sets its own title
-    const titles = { '/': 'Overview', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/incidents': 'Incidents', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
+    const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
     const t = titles[location.pathname]
     document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
   }, [location.pathname])
@@ -163,10 +165,12 @@ export default function App() {
         </Link>
         <nav style={{ display: 'flex', gap: '1.1rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <NavLink to="/" end style={navLinkStyle}>Overview</NavLink>
+          <NavLink to="/history" style={navLinkStyle}>History</NavLink>
           <NavLink to="/map" style={navLinkStyle}>Map</NavLink>
           <NavLink to="/fleet" style={navLinkStyle}>The Fleet</NavLink>
           <NavLink to="/grid" style={navLinkStyle}>The Grid</NavLink>
           <NavLink to="/incidents" style={navLinkStyle}>Incidents</NavLink>
+          <NavLink to="/safety" style={navLinkStyle}>Safety</NavLink>
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
           <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
           <NavLink to="/data" style={navLinkStyle}>The Data</NavLink>
@@ -177,6 +181,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} />} />
+        <Route path="/history" element={<History />} />
         <Route
           path="/map"
           element={
@@ -193,6 +198,7 @@ export default function App() {
         <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
         <Route path="/grid" element={<Grid reactors={reactors} />} />
         <Route path="/incidents" element={<Incidents />} />
+        <Route path="/safety" element={<Safety />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />

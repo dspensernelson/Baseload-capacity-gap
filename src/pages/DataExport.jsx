@@ -15,6 +15,7 @@ const DATASETS = [
   { table: 'energy_safety',       label: 'Energy safety',       desc: 'Deaths per TWh and lifecycle emissions by source (OWID / IPCC).' },
   { table: 'notable_accidents',   label: 'Notable accidents',   desc: 'Major energy accidents with sourced, ranged death tolls.' },
   { table: 'incidents',           label: 'Event notifications', desc: 'Live NRC event-notification wire — events reported at U.S. plants.' },
+  { table: 'history_milestones',  label: 'History timeline',    desc: 'Key milestones in the history of nuclear power, sourced.' },
 ]
 
 function toCSV(rows) {
