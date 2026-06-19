@@ -156,7 +156,9 @@ def main():
             if html and sample is None:
                 raw = BeautifulSoup(html, "html.parser").get_text("\n") if BeautifulSoup else html
                 sample = re.sub(r'\s+', ' ', raw)[:600]
-                print("RAWBEGIN\n" + raw[:4500] + "\nRAWEND", flush=True)
+                idx = raw.find("Event Number")
+                slice_ = re.sub(r'\n[ \t]*\n+', '\n', raw[idx:idx + 3500]) if idx >= 0 else raw[:3500]
+                print("RAWBEGIN\n" + slice_ + "\nRAWEND", flush=True)
             for ev in parse_report(html, rd):
                 ev["reactor_id"] = match(ev.get("facility"))
                 rows.append(ev)
