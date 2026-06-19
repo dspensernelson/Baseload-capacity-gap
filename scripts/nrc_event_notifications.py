@@ -154,7 +154,9 @@ def main():
             rd = report_date_from_url(url)
             html = get(url)
             if html and sample is None:
-                sample = re.sub(r'\s+', ' ', (BeautifulSoup(html, "html.parser").get_text(" ") if BeautifulSoup else html))[:600]
+                raw = BeautifulSoup(html, "html.parser").get_text("\n") if BeautifulSoup else html
+                sample = re.sub(r'\s+', ' ', raw)[:600]
+                print("RAWBEGIN\n" + raw[:4500] + "\nRAWEND", flush=True)
             for ev in parse_report(html, rd):
                 ev["reactor_id"] = match(ev.get("facility"))
                 rows.append(ev)
