@@ -15,7 +15,7 @@ import os
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import requests
 from dotenv import load_dotenv
 from supabase import create_client
@@ -69,17 +69,15 @@ def _date(s, fmt="%m/%d/%Y"):
 
 
 def find_report_urls(limit=REPORT_DAYS):
-    year = datetime.now(timezone.utc).year
-    found = {}
-    for y in (year, year - 1):
-        html = get(f"{BASE}/{y}/index") or get(f"{BASE}/{y}/")
-        if html:
-            for m in re.finditer(r'(\d{8})en\.html', html):
-                found[m.group(1)] = f"{BASE}/{y}/{m.group(1)}en.html"
-        if found:
-            break
-    urls = [found[d] for d in sorted(found, reverse=True)[:limit]]
-    return urls or [f"{BASE}/en.html"]
+    # NRC publishes one dated report per business day at {BASE}/{YYYY}/{YYYYMMDD}en.html.
+    # Build the last `limit` calendar days directly (weekends 404 and are skipped) — far more
+    # robust than scraping the index. Also include the rolling current report.
+    today = datetime.now(timezone.utc).date()
+    urls = [f"{BASE}/en.html"]
+    for i in range(limit):
+        d = today - timedelta(days=i)
+        urls.append(f"{BASE}/{d.year}/{d.strftime('%Y%m%d')}en.html")
+    return urls
 
 
 def parse_report(html, report_date):
@@ -177,8 +175,11 @@ def main():
     rows, sample = [], None
     try:
         match = build_reactor_matcher()
+        fetched = 0
         for url in find_report_urls():
             html = get(url)
+            if html:
+                fetched += 1
             if html and sample is None:
                 sample = re.sub(r'\s+', ' ', (BeautifulSoup(html, "html.parser").get_text(" ") if BeautifulSoup else html))[:500]
             for ev in parse_report(html, report_date_from_url(url)):
@@ -202,7 +203,7 @@ def main():
             "status": "success" if not low else "partial",
             "rows_inserted": inserted,
             "duration_ms": int((datetime.now(timezone.utc) - started).total_seconds() * 1000),
-            "notes": (f"PARSED 0 facility events. sample: {sample}" if low else f"upserted {inserted} plant event notifications"),
+            "notes": (f"PARSED 0 facility events from {fetched} reports. sample: {sample}" if low else f"upserted {inserted} plant events from {fetched} reports"),
         }).execute()
         print(f"{'PARTIAL' if low else 'OK'} — {inserted} plant event notifications")
     except Exception as e:  # noqa: BLE001 — never crash the cron
