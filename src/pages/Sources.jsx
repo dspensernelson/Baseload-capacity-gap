@@ -21,7 +21,8 @@ const SECTIONS = [
   { min: 30, max: 39, title: 'The fleet',              sub: 'The Fleet' },
   { min: 40, max: 49, title: 'The grid',               sub: 'The Grid' },
   { min: 50, max: 59, title: 'What-if scenarios',      sub: 'Scenarios' },
-  { min: 60, max: 99, title: 'Definitions',            sub: 'Methodology' },
+  { min: 60, max: 69, title: 'Safety & emissions',     sub: 'Incidents' },
+  { min: 70, max: 99, title: 'Definitions',            sub: 'Methodology' },
 ]
 
 function fmtDate(s) {

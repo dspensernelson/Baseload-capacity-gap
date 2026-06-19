@@ -1,0 +1,32 @@
+name: NRC Event Notifications
+
+# Pulls the NRC daily Event Notification reports into the `incidents` table — the
+# live "something happened" feed. Idempotent (upsert on event_number). Runs from
+# GitHub Actions, which (unlike the dev sandbox) can reach nrc.gov.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'    # daily 09:00 UTC, just after the 08:00 power-status cron
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  events:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 python-dotenv "supabase==2.9.1"
+
+      - name: Scrape NRC event notifications
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/nrc_event_notifications.py

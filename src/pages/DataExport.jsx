@@ -12,6 +12,9 @@ const DATASETS = [
   { table: 'generation_hourly',   label: 'Hourly grid mix',     desc: 'EIA-930 U.S. generation by fuel type, recent hours.' },
   { table: 'metric_lineage',      label: 'Number lineage',      desc: 'Every figure on the site: its definition, exact formula, and primary source.' },
   { table: 'reconciliation_log',  label: 'Reconciliation log',  desc: 'Weekly check that each headline still matches its source — our value vs an independent re-derivation.' },
+  { table: 'energy_safety',       label: 'Energy safety',       desc: 'Deaths per TWh and lifecycle emissions by source (OWID / IPCC).' },
+  { table: 'notable_accidents',   label: 'Notable accidents',   desc: 'Major energy accidents with sourced, ranged death tolls.' },
+  { table: 'incidents',           label: 'Event notifications', desc: 'Live NRC event-notification wire — events reported at U.S. plants.' },
 ]
 
 function toCSV(rows) {
