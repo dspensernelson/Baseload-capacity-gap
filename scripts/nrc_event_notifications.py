@@ -27,7 +27,7 @@ except Exception:
 
 UA = {"User-Agent": "Mozilla/5.0 (compatible; NukeMapBot/1.0; +https://nukemap-two.vercel.app)"}
 BASE = "https://www.nrc.gov/reading-rm/doc-collections/event-status/event"
-REPORT_DAYS = 8
+REPORT_DAYS = 30
 
 LABELS = ("Event Number", "Rep Org", "Licensee", "Facility", "Region", "City", "State",
           "County", "License #", "Agreement", "Docket", "NRC Notified By", "HQ OPS Officer",
@@ -118,12 +118,15 @@ def parse_report(html, report_date):
         if not facility:                       # skip Agreement-State materials/medical reports
             continue
         yyyymmdd = (report_date or "").replace("-", "")
+        unit_raw = _clean(e.get("Unit")) or ""
+        units = re.findall(r'\[(\d+)\]', unit_raw)
+        unit = ", ".join(units) if units else (unit_raw if re.fullmatch(r'\d{1,2}', unit_raw) else None)
         recs.append({
             "event_number": _clean(e.get("Event Number")),
             "report_date": report_date,
             "facility": facility,
             "state": _clean(e.get("State")),
-            "unit": _clean(e.get("Unit")),
+            "unit": unit,
             "rx_type": _clean(e.get("RX Type")),
             "region": _clean(e.get("Region")),
             "emergency_class": _clean(e.get("Emergency Class")),
