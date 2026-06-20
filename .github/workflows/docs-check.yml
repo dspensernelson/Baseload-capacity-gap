@@ -1,0 +1,20 @@
+name: Docs Check
+
+# Fails the build if the documentation drifts from the code (undocumented tables,
+# unmentioned crons). Static — no secrets, no database. See scripts/docs_check.py.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  docs-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python scripts/docs_check.py

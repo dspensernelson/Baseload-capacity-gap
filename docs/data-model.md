@@ -1,238 +1,119 @@
-# Nuclear Pipeline Tracker — Data Model
+# Data Model
 
-Full schema for all 5 tables and 2 views. Copy DDL directly into the Supabase SQL editor.
+The complete schema as it runs in production: **14 tables, 4 views**. Generated against
+the live database. Every `CREATE TABLE` here has a matching artifact under `supabase/`
+(see [REBUILD.md](REBUILD.md) for the apply order); `scripts/docs_check.py` fails if a
+live table is missing from this file.
 
----
-
-## Table: `reactors`
-
-The core entity. One row per reactor unit (a plant may have multiple units).
-
-```sql
-CREATE TABLE reactors (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  eia_plant_id          TEXT NOT NULL,
-  unit_number           TEXT NOT NULL,
-  plant_name            TEXT NOT NULL,
-  operator              TEXT,
-  state                 TEXT,
-  iso_rto               TEXT,           -- e.g. 'PJM', 'MISO', 'ERCOT', 'CAISO', null if none
-  latitude              NUMERIC(9,6),
-  longitude             NUMERIC(9,6),
-  capacity_mw           NUMERIC(8,2),
-  commercial_operation_date DATE,
-  license_expiration_date   DATE,
-  status                TEXT NOT NULL DEFAULT 'operating',
-                        -- 'operating' | 'shutdown' | 'decommissioning' | 'license_renewed'
-  daily_status          TEXT,           -- '100% power' / '0% (offline)' / etc. Updated by cron
-  daily_status_updated_at TIMESTAMPTZ,
-  created_at            TIMESTAMPTZ DEFAULT now(),
-  updated_at            TIMESTAMPTZ DEFAULT now(),
-  UNIQUE (eia_plant_id, unit_number)
-);
-```
-
-**Key fields:**
-- `eia_plant_id` + `unit_number` — natural key used for upserts
-- `iso_rto` — enables regional filtering on the map
-- `daily_status` — updated by the NRC cron each day; drives the "live" feel
-- `capacity_mw` — drives pin size on the map
+Groups: **core entities** · **automated feeds** · **provenance system** · **curated reference** · **content** · **views**.
 
 ---
 
-## Table: `new_reactor_projects`
+## Core entities
 
-SMR and new-build pipeline. ~15–20 rows, seeded manually, updated quarterly.
+### `reactors` — the central entity (94 rows)
+One row per operating US reactor unit. Capacity & location seeded from EIA; license dates
+from NRC; daily power % updated by the daily cron.
 
-```sql
-CREATE TABLE new_reactor_projects (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_name          TEXT NOT NULL,
-  developer             TEXT,
-  reactor_type          TEXT,           -- e.g. 'AP1000', 'BWRX-300', 'Xe-100'
-  state                 TEXT,
-  latitude              NUMERIC(9,6),
-  longitude             NUMERIC(9,6),
-  capacity_mw           NUMERIC(8,2),
-  target_online_year    INTEGER,
-  stage                 TEXT,           -- 'early_stage' | 'nrc_review' | 'under_construction' | 'licensed'
-  confidence            TEXT,           -- 'confirmed' | 'speculative'
-  doe_ardp_funded       BOOLEAN DEFAULT false,
-  notes                 TEXT,
-  created_at            TIMESTAMPTZ DEFAULT now(),
-  updated_at            TIMESTAMPTZ DEFAULT now()
-);
-```
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `eia_plant_id`, `unit_number` | text | natural key (`UNIQUE`), used for upserts |
+| `plant_name`, `operator`, `state`, `iso_rto` | text | |
+| `latitude`, `longitude` | numeric | map placement |
+| `capacity_mw` | numeric | nameplate (drives pin size + headline math) |
+| `commercial_operation_date`, `license_expiration_date` | date | |
+| `status` | text | `operating` \| `shutdown` \| `decommissioning` \| `license_renewed` |
+| `daily_status`, `daily_status_updated_at` | text/ts | latest NRC power %, set by the daily cron |
+| `source`, `source_url`, `source_date`, `verified_at`, `provenance_note` | — | provenance (see below) |
+| `created_at`, `updated_at` | ts | |
 
-**Key fields:**
-- `target_online_year` — used in `gap_series` view to compute additions per year
-- `confidence` — drives solid vs hatched rendering on the gap chart
-- `doe_ardp_funded` — flag for potential annotation on the chart
+### `new_reactor_projects` — the pipeline (7 rows, **manual**)
+SMR/new-build + restarts. **Capacity *arriving* only** — never existing plants being
+renewed (that double-counts the fleet). `target_online_year` + `confidence` feed the headline & gap.
+Columns: `id`, `project_name`, `developer`, `reactor_type`, `state`, `latitude`, `longitude`,
+`capacity_mw`, `target_online_year`, `stage`, `confidence`, `doe_ardp_funded`, `notes`, provenance, timestamps.
 
----
+### `decommissioning` — shutdown units (10 rows)
+Historical closures + restart-possible flags. Columns: `id`, `reactor_id` (FK), `plant_name`,
+`unit_number`, `shutdown_date`, `decommission_complete_date`, `capacity_mw_lost`, `reason`,
+`restart_possible`, `notes`, provenance, `created_at`.
 
-## Table: `decommissioning`
-
-One row per shut or decommissioning unit. Tracks capacity lost.
-
-```sql
-CREATE TABLE decommissioning (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  reactor_id            UUID REFERENCES reactors(id),
-  plant_name            TEXT NOT NULL,
-  unit_number           TEXT,
-  shutdown_date         DATE,
-  decommission_complete_date DATE,
-  capacity_mw_lost      NUMERIC(8,2),
-  reason                TEXT,           -- 'license_expiration' | 'economic' | 'regulatory' | 'restart_pending'
-  restart_possible      BOOLEAN DEFAULT false,
-  notes                 TEXT,
-  created_at            TIMESTAMPTZ DEFAULT now()
-);
-```
-
-**Example rows to seed:**
-| Plant | Shutdown | Capacity MW | Notes |
-|-------|----------|-------------|-------|
-| Palisades | 2022 | 811 | Restart bid pending |
-| Indian Point 2 | 2020 | 1028 | |
-| Indian Point 3 | 2021 | 1041 | |
-| Diablo Canyon 1 | deferred | 1118 | License extended |
-| Diablo Canyon 2 | deferred | 1122 | License extended |
+### `license_actions` — NRC renewals/SLRs (118 rows)
+Scraper-fed. Columns: `id`, `reactor_id` (FK), `action_type`, `action_date`, `new_expiration_date`,
+`capacity_change_mw`, `nrc_docket`, `status`, `notes`, provenance, `created_at`.
 
 ---
 
-## Table: `license_actions`
+## Automated feeds
 
-Tracks renewals, expirations, and uprate actions per reactor unit.
+### `sync_log` — the cron audit trail (every run)
+`id`, `source`, `run_at`, `rows_updated`, `rows_inserted`, `status`, `error_message`,
+`duration_ms`, `notes`. **Every cron writes one row here — non-negotiable.**
 
-```sql
-CREATE TABLE license_actions (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  reactor_id            UUID REFERENCES reactors(id),
-  action_type           TEXT NOT NULL,  -- 'initial_license' | 'first_renewal' | 'second_renewal' | 'uprate' | 'expiration'
-  action_date           DATE,
-  new_expiration_date   DATE,
-  capacity_change_mw    NUMERIC(8,2),   -- positive for uprate, null otherwise
-  nrc_docket            TEXT,
-  status                TEXT,           -- 'approved' | 'pending' | 'expired'
-  notes                 TEXT,
-  created_at            TIMESTAMPTZ DEFAULT now()
-);
-```
+### `daily_status_history` — the tape (~34k rows, append-only)
+One row per reactor per NRC report date. The un-recreatable asset (never prune).
+`id`, `reactor_id` (FK), `report_date`, `power_pct`, `status_text`, `recorded_at`.
 
----
+### `generation_hourly` — EIA-930 grid mix (~4k rows)
+`period_utc`+`fueltype` PK, `mwh`, `updated_at`. Powers the 2 a.m. view. Degrades gracefully.
 
-## Table: `sync_log`
-
-Audit trail for every automated data update. Write one row per cron run, always.
-
-```sql
-CREATE TABLE sync_log (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  source                TEXT NOT NULL,  -- 'nrc_daily_status' | 'eia_seed' | etc.
-  run_at                TIMESTAMPTZ DEFAULT now(),
-  rows_updated          INTEGER,
-  rows_inserted         INTEGER,
-  status                TEXT NOT NULL,  -- 'success' | 'partial' | 'error'
-  error_message         TEXT,
-  duration_ms           INTEGER,
-  notes                 TEXT
-);
-```
-
-**Rule:** Every cron run writes one row here. If the cron fails, the row captures the error. This is the single source of truth for data freshness.
+### `incidents` — the live NRC event wire (11 rows, grows daily)
+NRC Event Notifications, plant events only (filtered to rows with a `Facility`).
+`event_number` PK, `event_date`, `report_date`, `facility`, `unit`, `state`, `region`,
+`rx_type`, `emergency_class`, `notification_basis`, `description`, `reactor_id` (best-effort FK),
+provenance, `created_at`.
 
 ---
 
-## View: `headline_numbers`
+## Provenance system
 
-The three numbers in the headline band. Called once on page load.
+### `metric_lineage` — every public number (24 rows)
+The machine-readable spine read by `reconcile.py` and rendered on `/sources`.
+`metric_key` PK, `label`, `surface`, `definition`, `formula`, `unit`, `source_object`,
+`primary_source`, `primary_source_url`, `constants`, `last_value`, `last_reconciled_at`,
+`reconcile_status`, `notes`, `sort_order`, `updated_at`.
 
-```sql
-CREATE OR REPLACE VIEW headline_numbers AS
-SELECT
-  (SELECT COALESCE(SUM(capacity_mw), 0)
-   FROM reactors
-   WHERE status = 'operating') AS operating_mw,
+### `reconciliation_log` — the reconciliation receipt (append-only)
+`id`, `run_at`, `metric_key`, `our_value`, `independent_value`, `delta`, `status`, `detail`.
 
-  (SELECT COALESCE(SUM(capacity_mw), 0)
-   FROM reactors
-   WHERE status IN ('operating', 'license_renewed')
-     AND license_expiration_date <= '2035-12-31') AS retiring_by_2035_mw,
-
-  (SELECT COALESCE(SUM(capacity_mw), 0)
-   FROM new_reactor_projects
-   WHERE target_online_year <= 2035
-     AND confidence = 'confirmed') AS confirmed_pipeline_mw;
-```
-
-**Verification:** `operating_mw` should be ~97,000 (97 GW). If it's wildly off, check for a MW/GW unit bug in the seed data.
+**Provenance columns** (on `reactors`, `new_reactor_projects`, `decommissioning`,
+`license_actions`, and the curated reference tables): `source`, `source_url`, `source_date`,
+`verified_at`, `provenance_note`. Completeness is watchdog-enforced.
 
 ---
 
-## View: `gap_series`
+## Curated reference (manual, sourced)
 
-Year-by-year net capacity delta from now to 2045. Feeds the Gap Chart directly.
+### `energy_safety` — deaths/TWh + emissions by source (8 rows)
+`energy_source` PK, `category` (combustion|clean), `deaths_per_twh`, `ghg_co2e_per_kwh`,
+`note`, `sort_order`, provenance. Source: OWID / IPCC AR5.
 
-```sql
-CREATE OR REPLACE VIEW gap_series AS
-WITH years AS (
-  SELECT generate_series(2025, 2045) AS year
-),
-retirements AS (
-  SELECT
-    EXTRACT(YEAR FROM license_expiration_date)::INT AS year,
-    SUM(capacity_mw) AS retiring_mw
-  FROM reactors
-  WHERE status IN ('operating', 'license_renewed')
-    AND license_expiration_date IS NOT NULL
-  GROUP BY 1
-),
-additions AS (
-  SELECT
-    target_online_year AS year,
-    SUM(capacity_mw) AS adding_mw
-  FROM new_reactor_projects
-  WHERE target_online_year IS NOT NULL
-  GROUP BY 1
-),
-operating_base AS (
-  SELECT SUM(capacity_mw) AS base_mw
-  FROM reactors
-  WHERE status = 'operating'
-)
-SELECT
-  y.year,
-  COALESCE(r.retiring_mw, 0) AS retiring_mw,
-  COALESCE(a.adding_mw, 0) AS adding_mw,
-  (SELECT base_mw FROM operating_base)
-    - SUM(COALESCE(r.retiring_mw, 0)) OVER (ORDER BY y.year)
-    + SUM(COALESCE(a.adding_mw, 0)) OVER (ORDER BY y.year) AS net_capacity_mw
-FROM years y
-LEFT JOIN retirements r ON r.year = y.year
-LEFT JOIN additions a ON a.year = y.year
-ORDER BY y.year;
-```
+### `notable_accidents` — the famous accidents (4 rows)
+`slug` PK, `name`, `energy_source`, `year`, `location`, `ines_level`, `deaths_low`,
+`deaths_high`, `deaths_label`, `summary`, `sort_order`, provenance. Source: UNSCEAR / Japan gov / OWID.
 
-**What to verify:** Eyeball the first few rows in the SQL editor. 2025 should be close to operating base. The line should trend down, with bumps where new builds come online.
+### `history_milestones` — the History timeline (18 rows)
+`slug` PK, `year`, `year_label`, `title`, `description`, `category`, `sort_order`, provenance.
+Source: WNA / DOE / NRC / EIA / UNSCEAR.
 
 ---
 
-## EIA Field Mapping
+## Content
 
-When seeding from the EIA API, map response fields to `reactors` columns as follows:
+### `reports` — the monthly Dispatches (1 row, grows monthly)
+`id`, `kind`, `period`, `title`, `body` (markdown), `stats` (jsonb), `published_at`.
 
-| EIA Field | `reactors` Column | Notes |
-|-----------|-------------------|-------|
-| `plantid` | `eia_plant_id` | String |
-| `generatorid` | `unit_number` | |
-| `plantName` | `plant_name` | |
-| `entityName` | `operator` | |
-| `stateid` | `state` | 2-letter code |
-| `latitude` | `latitude` | May be null — patch manually |
-| `longitude` | `longitude` | May be null — patch manually |
-| `nameplate_capacity_mw` | `capacity_mw` | |
-| `operating_year` | `commercial_operation_date` | Construct as `YYYY-01-01` if only year available |
+---
 
-Set `status = 'operating'` for everything from this endpoint. Shutdown status is applied manually in Session 2.
+## Views (all editorial math lives here)
+
+| View | Returns | Feeds |
+|---|---|---|
+| `headline_numbers` | `operating_mw`, `retiring_by_2035_mw`, `confirmed_pipeline_mw` | the three headline numbers |
+| `gap_series` | per-year `retiring_mw`, `adding_mw`, `net_capacity_mw` (2025–2045) | the gap chart |
+| `fleet_output_series` | per-day `output_mw`, `capacity_mw`, `units_offline`, `units_reporting` | the 12-month fleet chart |
+| `reactor_cf_90d` | per-unit `avg_power_90d`, `offline_days`, `days` (last 90 d) | Fleet "who ran hardest" |
+
+Exact formulas are registered in `metric_lineage` and shown on [`/sources`](https://nukemap-two.vercel.app/sources).
+**Rule:** if you change a view's formula, update its `metric_lineage` row in the same commit.

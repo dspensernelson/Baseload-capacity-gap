@@ -88,7 +88,7 @@ nuclear-pipeline-tracker/
 
 ---
 
-## Database Tables (10 total)
+## Database Tables (14 total)
 
 1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
 2. **`new_reactor_projects`** — SMR and new build pipeline (~10 rows, manual). **Capacity *arriving* only**: new builds + restarts of shut-down units. **Never** existing operating plants being renewed (SLRs like Diablo Canyon/Clinton/Seabrook) — those are already in `reactors` + `license_actions`; adding them double-counts the operating fleet and inflates the pipeline number.
@@ -100,6 +100,10 @@ nuclear-pipeline-tracker/
 8. **`generation_hourly`** — EIA-930 US48 hourly net generation by fuel type (period_utc, fueltype, mwh); powers the 2 a.m. grid-mix view (`GridMix.jsx`). Not watchdog-monitored (degrades gracefully)
 9. **`metric_lineage`** — one row per number shown on the site: label, definition, exact formula, primary source + URL. The spine of the audit trail; read by `reconcile.py`, rendered on `/sources`
 10. **`reconciliation_log`** — append-only receipt from `reconcile.py` (per-metric: our value vs independently re-derived value, delta, pass/drift)
+11. **`energy_safety`** — deaths/TWh + lifecycle emissions by source (OWID/IPCC); powers Safety
+12. **`notable_accidents`** — TMI/Chernobyl/Fukushima/Banqiao with sourced, ranged tolls; powers Safety
+13. **`incidents`** — live NRC Event Notifications (plant events); written by `nrc_event_notifications.py` (daily), powers Incidents
+14. **`history_milestones`** — the History timeline (sourced, 1938 → the gap)
 
 **Provenance columns:** `reactors`, `new_reactor_projects`, `decommissioning`, `license_actions` each carry `source`, `source_url`, `source_date`, `verified_at`, `provenance_note`. **Every curated row must cite a source** (watchdog- and reconcile-enforced). Full process in `docs/PROVENANCE.md`.
 
@@ -125,6 +129,7 @@ See `docs/data-model.md` for full schema.
 - **Show, don't tell** — the site presents, it never exhorts; no CTAs, no "we." Every element must survive a hostile fact-check
 - **Automation ratchet** — any recurring manual task is treated as a defect; the fix is a cron or an agent (see VISION.md)
 - **Provenance / traceability** — every curated row carries `source`/`source_url`/`verified_at`; every public number is registered in `metric_lineage` with its exact formula + primary source; `reconcile.py` (weekly) re-derives the headlines from atomic rows into `reconciliation_log`; `/sources` renders it. **Never** add a curated row without provenance, or a visible number without a `metric_lineage` entry. If you change a SQL view's formula, update the matching `metric_lineage.formula` in the same commit. See `docs/PROVENANCE.md`
+- **Documentation freshness** — docs are kept true the way numbers are: `scripts/docs_check.py` fails on drift (undocumented tables, unmentioned crons). Follow the freshness contract in `docs/INDEX.md` — new table → `data-model.md` + a `supabase/*.sql`; new cron → README; notable decision → an ADR in `docs/decisions/`. Start doc work at `docs/INDEX.md`
 - **Wind/solar comparison, live district output, ADAMS feeds** — all v2
 
 ---

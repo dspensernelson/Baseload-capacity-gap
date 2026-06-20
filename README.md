@@ -1,54 +1,93 @@
 # Nuclear Pipeline Tracker
 
-**Live site: https://nukemap-two.vercel.app**
+**Live: https://nukemap-two.vercel.app**
 
-A public-facing visualization of the gap between retiring US nuclear capacity and
-new build coming online — backed by real EIA and NRC data that refreshes itself,
-with no one at the wheel. It shows; it doesn't editorialize.
+A public, self-updating visualization of the American nuclear transition — every
+reactor, every megawatt, every regulatory event — backed by real NRC and EIA data
+that refreshes itself with no one at the wheel. It *shows*; it doesn't editorialize.
+Every number on the site is traceable to a primary source on the live [Sources](https://nukemap-two.vercel.app/sources) page.
 
-## The three numbers
+> New here? Read [`docs/INDEX.md`](docs/INDEX.md) — it maps every document to who it's for.
+> Rebuilding from scratch? [`docs/REBUILD.md`](docs/REBUILD.md) takes you zero → live.
 
-| Number | Meaning | Source |
-|--------|---------|--------|
-| Operating today | Sum of nameplate capacity, all operating units | EIA-860 via EIA v2 API |
-| Retiring by 2035 | Capacity whose NRC operating license expires by end of 2035 | NRC license renewal records |
-| In the pipeline | New build with confirmed status | NRC new reactors + DOE ARDP, manually curated |
+---
 
-See [docs/methodology.md](docs/methodology.md) for assumptions and caveats, and
-[VERIFY.md](VERIFY.md) for the expected-behavior + data fact-check checklist.
+## The thesis, in three numbers
 
-## What's inside (six tabs)
+| Number | Meaning | Primary source |
+|--------|---------|----------------|
+| **Operating today** (~102 GW) | nameplate capacity of all operating units | EIA-860M |
+| **Retiring by 2035** (~13 GW) | capacity whose NRC license expires ≤ 2035 and isn't renewed past it | NRC List of Power Reactor Units |
+| **In the pipeline** (~2 GW) | confirmed new build + restarts arriving by 2035 | NRC New Reactors + DOE ARDP (curated) |
+
+US nuclear capacity is retiring faster than new build is arriving. The site makes that
+gap visible — and then surrounds it with the context that makes it legible.
+
+---
+
+## What's inside (eleven tabs)
 
 | Tab | What it answers |
 |-----|-----------------|
-| **Overview** | The gap thesis — a full-bleed gap chart through 2045 + the three headline numbers |
-| **Map** | Every US reactor (live-colored by power status) and new-build/restart pins, a filterable table, and a page per reactor |
-| **The Fleet** | What the fleet is doing now (live pulse), a year of daily output, and 90-day "who ran hardest" lists |
-| **The Grid** | Nuclear vs. the whole grid — the "2 a.m. test" (hourly generation mix) and the capacity-vs-energy replacement math |
-| **Dispatches** | An auto-written monthly report + a regulatory radar of NRC license activity |
-| **Scenarios** | A drag-the-levers explorer: change renewal/pipeline assumptions and watch the gap recompute live |
+| **Overview** (`/`) | the gap thesis — a full-bleed gap chart through 2045 + the three headline numbers |
+| **History** (`/history`) | how we got here — a sourced timeline of nuclear power, 1938 → the gap |
+| **Map** (`/map`) | every US reactor (live-colored by power status) + new-build pins, a filterable table, and a page per reactor |
+| **The Fleet** (`/fleet`) | what the fleet is doing now (live pulse), a year of daily output, 90-day "who ran hardest" |
+| **The Grid** (`/grid`) | nuclear vs. the whole grid — the "2 a.m. test" (hourly mix) + capacity-vs-energy replacement math |
+| **Incidents** (`/incidents`) | the live NRC event-notification wire — every reportable plant event, pulled in daily |
+| **Safety** (`/safety`) | is nuclear actually safe? the honest accident record + deaths-per-TWh across all sources |
+| **Dispatches** (`/dispatches`) | an auto-written monthly report + a regulatory radar of NRC license activity |
+| **Scenarios** (`/scenarios`) | drag-the-levers gap explorer — change renewal/pipeline assumptions, watch the gap recompute |
+| **The Data** (`/data`) | every table as CSV/JSON, the open REST API, embed snippets |
+| **The Sources** (`/sources`) | the public audit trail — every number's definition, formula, source, and last-verified date |
 
-## Architecture
+Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/gap`).
 
-- **Database** — Supabase (Postgres). All editorial math lives in SQL views
-  (`headline_numbers`, `gap_series`, `fleet_output_series`, `reactor_cf_90d`); React only renders.
+---
+
+## Architecture (one minute)
+
+- **Database** — Supabase (Postgres), 14 tables + 4 views. *All* editorial math lives in
+  SQL views (`headline_numbers`, `gap_series`, `fleet_output_series`, `reactor_cf_90d`);
+  React only renders. Public read-only via RLS + the anon key.
 - **Frontend** — React + Vite + react-router (tabbed pages + reactor permalinks),
-  MapLibre GL (map), Recharts (charts). Deployed on Vercel; every push to `main`
-  auto-deploys. `vercel.json` rewrites client routes so deep links survive refresh.
-- **Automation** — GitHub Actions crons keep the data fresh with zero manual
-  upkeep, and a watchdog makes sure they actually run. Every run writes an audit
-  row to `sync_log`.
+  MapLibre GL (map), Recharts (charts). On Vercel; every push to `main` auto-deploys.
+- **Automation** — 7 GitHub Actions crons keep the data fresh with zero manual upkeep;
+  a **watchdog** confirms they ran; a weekly **reconciliation** re-derives every headline
+  from atomic rows and proves it still matches its source. Every run writes to `sync_log`.
 
-| Cron | Schedule | What it does |
-|------|----------|--------------|
-| `nrc-daily.yml` | daily 08:00 UTC | NRC power reactor status → `reactors.daily_status` (94 units) + appends to `daily_status_history` |
-| `nrc-license-monthly.yml` | monthly, 1st | Scrapes NRC renewal pages → rebuilds `license_actions`, pushes authoritative expiration dates into `reactors` |
-| `eia930-generation.yml` | every 6 h | EIA-930 hourly US generation by fuel type → `generation_hourly` (the 2 a.m. view) |
-| `monthly-dispatch.yml` | monthly, 2nd | Drafts the plain-English Dispatch → `reports` |
-| `health-check.yml` | after each cron + daily | Watchdog: checks freshness/sanity, opens a GitHub issue only if something breaks, closes it when healthy |
+Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/data-model.md`](docs/data-model.md).
 
-What stays manual by design: `new_reactor_projects` (~10–20 rows of editorial
-judgment about which SMR/new-build projects are credible; revisit quarterly).
+### The crons
+
+| Workflow | Schedule | What it does |
+|----------|----------|--------------|
+| `nrc-daily.yml` | daily 08:00 UTC | NRC power status → `reactors.daily_status` (94 units) + appends `daily_status_history` |
+| `nrc-license-monthly.yml` | monthly, 1st | NRC renewal pages → rebuilds `license_actions`, updates `reactors` expiration dates |
+| `eia930-generation.yml` | every 6 h | EIA-930 hourly US generation by fuel → `generation_hourly` (the 2 a.m. view) |
+| `nrc-events.yml` | daily 09:00 UTC | NRC Event Notifications → `incidents` (the live wire) |
+| `monthly-dispatch.yml` | monthly, 2nd | drafts the plain-English Dispatch → `reports` |
+| `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
+| `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure |
+
+**Manual by design:** `new_reactor_projects` (~7 rows of editorial judgment about which
+SMR/new-build projects are credible) and the curated reference tables (`energy_safety`,
+`notable_accidents`, `history_milestones`). Everything a cron *can* fetch, it does.
+
+---
+
+## Provenance — every number survives a hostile fact-check
+
+This is the product's spine, not a feature. Every curated row carries its source; every
+public number is registered in `metric_lineage` with its exact formula + primary source;
+`scripts/reconcile.py` re-derives the headlines weekly and logs the result; the public
+`/sources` page renders it all. See [`docs/PROVENANCE.md`](docs/PROVENANCE.md).
+
+The same discipline guards the docs: [`scripts/docs_check.py`](scripts/docs_check.py)
+(run in CI by `docs-check.yml`) fails if the documentation drifts from the code — undocumented
+tables, unmentioned crons.
+
+---
 
 ## Local development
 
@@ -57,28 +96,35 @@ npm install
 npm run dev          # frontend at localhost:5173
 ```
 
-Copy `.env.example` to `.env` and fill in the Supabase keys (and `EIA_API_KEY`
-for the EIA scripts). The Python ETL under `scripts/` needs
-`pip install requests python-dotenv supabase==2.9.1` and the same `.env`; the
-crons run them on GitHub Actions using repo secrets `SUPABASE_URL`,
-`SUPABASE_SERVICE_KEY`, and `EIA_API_KEY`.
+Copy `.env.example` → `.env` with Supabase keys (and `EIA_API_KEY` for the EIA scripts).
+The Python ETL under `scripts/` needs `pip install requests beautifulsoup4 python-dotenv "supabase==2.9.1"`
+and the same `.env`; the crons run them on GitHub Actions using repo secrets
+`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY`.
 
-`supabase/*.sql` holds the table DDL and views; `scripts/seed_reactors.py` seeds
-the reactor inventory from the EIA API, and `scripts/backfill_status_history.py`
-backfills the trailing year of daily power data.
+To stand up the whole thing from nothing, follow [`docs/REBUILD.md`](docs/REBUILD.md).
+
+---
 
 ## Repo map
 
 ```
 src/
-  pages/                Overview, MapPage, Fleet, Grid, Dispatches, Scenarios, Reactor
-  components/           Hook (map), GapChart, FleetOutputChart, GridMix, ReplacementMath,
-                        CapacityFactor, Dispatch, HeadlineBand, ReactorTable
-  lib/slug.js           reactor permalink slugs
-scripts/                Python ETL + crons' scripts + the watchdog
-supabase/               table DDL + views
-.github/workflows/      the crons + watchdog
-docs/                   data model, methodology, session build log
-CLAUDE.md               working context for AI-assisted sessions
-VERIFY.md / TESTING.md  health-pass checklist + UI walkthrough
+  pages/             Overview, History, MapPage, Fleet, Grid, Incidents, Safety,
+                     Dispatches, Scenarios, Reactor, DataExport (The Data), Sources, EmbedGap
+  components/        Hook (map), GapChart, FleetOutputChart, GridMix, ReplacementMath,
+                     CapacityFactor, Dispatch, HeadlineBand, ReactorTable
+  lib/slug.js        reactor permalink slugs
+scripts/             Python ETL, the cron scripts, the watchdog, reconcile, docs_check
+supabase/            table DDL + views + seeds (apply order in docs/REBUILD.md)
+.github/workflows/   the 7 crons + watchdog
+docs/                INDEX, ARCHITECTURE, REBUILD, data-model, PROVENANCE, SOURCES,
+                     ROADMAP, methodology, decisions/ (ADRs), history/ (V1 build log)
+CLAUDE.md            working context for AI-assisted sessions (the agent's entry point)
+CHANGELOG.md         how the project evolved
+VERIFY.md / TESTING.md   health-pass checklist + UI walkthrough
 ```
+
+---
+
+*Built and maintained by AI agents working from `CLAUDE.md` and the docs. The data is
+public records, re-plumbed — free to use and embed with attribution.*

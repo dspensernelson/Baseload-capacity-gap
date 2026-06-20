@@ -1,5 +1,11 @@
 # Agent Runbook — Working with Claude Code on Nuclear Pipeline Tracker
 
+> 🏺 **Historical (V1 build log).** This describes the original 8-session, human-in-the-loop
+> manual build. The project is now **agent-built and agent-run** — for current process see
+> [`CLAUDE.md`](../CLAUDE.md) (working context), [`ARCHITECTURE.md`](ARCHITECTURE.md), and
+> [`REBUILD.md`](REBUILD.md). Kept as a period artifact; the `docs/session-01..08.md` files
+> are the matching build narrative. Don't follow this as current process.
+
 How to get the most out of Claude Code across the 8 build sessions. Read this before starting any session.
 
 ---
