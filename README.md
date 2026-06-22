@@ -25,21 +25,18 @@ gap visible — and then surrounds it with the context that makes it legible.
 
 ---
 
-## What's inside (eleven tabs)
+## What's inside (five sections + footer)
 
-| Tab | What it answers |
-|-----|-----------------|
-| **Overview** (`/`) | the gap thesis — a full-bleed gap chart through 2045 + the three headline numbers |
-| **History** (`/history`) | how we got here — a sourced timeline of nuclear power, 1938 → the gap |
-| **Map** (`/map`) | every US reactor (live-colored by power status) + new-build pins, a filterable table, and a page per reactor |
-| **The Fleet** (`/fleet`) | what the fleet is doing now (live pulse), a year of daily output, 90-day "who ran hardest" |
-| **The Grid** (`/grid`) | nuclear vs. the whole grid — the "2 a.m. test" (hourly mix) + capacity-vs-energy replacement math |
-| **Incidents** (`/incidents`) | the live NRC event-notification wire — every reportable plant event, pulled in daily |
-| **Safety** (`/safety`) | is nuclear actually safe? the honest accident record + deaths-per-TWh across all sources |
-| **Dispatches** (`/dispatches`) | an auto-written monthly report + a regulatory radar of NRC license activity |
-| **Scenarios** (`/scenarios`) | drag-the-levers gap explorer — change renewal/pipeline assumptions, watch the gap recompute |
-| **The Data** (`/data`) | every table as CSV/JSON, the open REST API, embed snippets |
-| **The Sources** (`/sources`) | the public audit trail — every number's definition, formula, source, and last-verified date |
+The nav groups eleven surfaces into five sections; the two trust/utility surfaces live in the footer.
+
+| Section | Surfaces | What it answers |
+|---------|----------|-----------------|
+| **Overview** (`/`) | the full-bleed gap chart through 2045 + the three headline numbers | what's the story? |
+| **History** (`/history`) | a sourced timeline of nuclear power, 1938 → the gap | how we got here |
+| **The Fleet** ▾ | **Map** (`/map`) · **Performance** (`/fleet`) · **Incidents** (`/incidents`) | the operating reality — where reactors are, how they're running, what just happened |
+| **The Case** ▾ | **Safety** (`/safety`) · **The Grid** (`/grid`) · **Scenarios** (`/scenarios`) | the argument in context — how safe, vs. other sources, and the what-if explorer |
+| **Dispatches** (`/dispatches`) | an auto-written monthly report + a regulatory radar of NRC license activity | what changed |
+| *footer* | **The Data** (`/data`) · **The Sources** (`/sources`) | the open data export, and the public audit trail (every number's formula + source) |
 
 Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/gap`).
 

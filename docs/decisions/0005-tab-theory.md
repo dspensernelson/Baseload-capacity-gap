@@ -18,6 +18,13 @@ records · The Sources = how we know.
 
 ## Consequences
 - Clean information architecture; each view earns its place by serving the story.
-- Now 11 tabs — watch for crowding; if it grows, group under a menu rather than abandon the rule.
 - "Newspaper, not Tableau" stays enforceable: a proposed feature that doesn't answer a clear
   visitor question doesn't ship.
+
+## Update (June 2026) — grouping applied
+At 11 surfaces the flat nav stopped reading like a newspaper. As anticipated, we **grouped
+rather than abandoned the rule**: five top-level sections — Overview · History · **The Fleet ▾**
+(Map · Performance · Incidents) · **The Case ▾** (Safety · The Grid · Scenarios) · Dispatches —
+with the two trust/utility surfaces (The Data, The Sources) moved to the footer. Every surface
+still answers exactly one visitor question; the dropdowns just organize them. New surfaces slot
+into the section whose question they extend.

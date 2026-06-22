@@ -67,7 +67,9 @@ function SiteFooter({ reactors }) {
         The data, charts, and the monthly dispatch update on their own. Sources: U.S. NRC &amp; U.S. EIA.
       </div>
       <div style={{ marginTop: '0.6rem' }}>
-        <Link to="/sources" style={{ color: 'var(--color-brand)', textDecoration: 'none' }}>How we know every number →</Link>
+        <Link to="/data" style={{ color: 'var(--color-brand)', textDecoration: 'none' }}>The Data</Link>
+        {' · '}
+        <Link to="/sources" style={{ color: 'var(--color-brand)', textDecoration: 'none' }}>The Sources</Link>
       </div>
     </footer>
   )
@@ -82,6 +84,43 @@ const navLinkStyle = ({ isActive }) => ({
   borderBottom: `2px solid ${isActive ? '#fff' : 'transparent'}`,
   paddingBottom: '2px',
 })
+
+// A grouped nav section: a label that reveals a small dropdown of routes, highlighted
+// when any child route is active. Opens on hover, toggles on click (touch-friendly).
+function NavSection({ label, items }) {
+  const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
+  const active = items.some(it => pathname === it.to || pathname.startsWith(it.to + '/'))
+  return (
+    <div onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} style={{ position: 'relative' }}>
+      <button onClick={() => setOpen(o => !o)} style={{
+        color: '#fff', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+        fontSize: '0.85rem', fontWeight: active ? 700 : 500, opacity: active ? 1 : 0.65,
+        borderBottom: `2px solid ${active ? '#fff' : 'transparent'}`, paddingBottom: '2px',
+        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+      }}>
+        {label}<span style={{ fontSize: '0.6em', opacity: 0.8 }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, paddingTop: '8px', zIndex: 100 }}>
+          <div style={{
+            background: 'var(--color-brand)', borderRadius: '8px', padding: '0.35rem', minWidth: '160px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.14)',
+          }}>
+            {items.map(it => (
+              <NavLink key={it.to} to={it.to} onClick={() => setOpen(false)} style={({ isActive }) => ({
+                display: 'block', padding: '0.45rem 0.65rem', borderRadius: '6px', whiteSpace: 'nowrap',
+                color: '#fff', textDecoration: 'none', fontSize: '0.85rem',
+                fontWeight: isActive ? 700 : 500, background: isActive ? 'rgba(255,255,255,0.14)' : 'transparent',
+                opacity: isActive ? 1 : 0.85,
+              })}>{it.label}</NavLink>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function App() {
   const [reactors, setReactors]   = useState([])
@@ -166,15 +205,9 @@ export default function App() {
         <nav style={{ display: 'flex', gap: '1.1rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <NavLink to="/" end style={navLinkStyle}>Overview</NavLink>
           <NavLink to="/history" style={navLinkStyle}>History</NavLink>
-          <NavLink to="/map" style={navLinkStyle}>Map</NavLink>
-          <NavLink to="/fleet" style={navLinkStyle}>The Fleet</NavLink>
-          <NavLink to="/grid" style={navLinkStyle}>The Grid</NavLink>
-          <NavLink to="/incidents" style={navLinkStyle}>Incidents</NavLink>
-          <NavLink to="/safety" style={navLinkStyle}>Safety</NavLink>
+          <NavSection label="The Fleet" items={[{ to: '/map', label: 'Map' }, { to: '/fleet', label: 'Performance' }, { to: '/incidents', label: 'Incidents' }]} />
+          <NavSection label="The Case" items={[{ to: '/safety', label: 'Safety' }, { to: '/grid', label: 'The Grid' }, { to: '/scenarios', label: 'Scenarios' }]} />
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
-          <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
-          <NavLink to="/data" style={navLinkStyle}>The Data</NavLink>
-          <NavLink to="/sources" style={navLinkStyle}>The Sources</NavLink>
         </nav>
         <FleetPulse reactors={reactors} />
       </header>)}
