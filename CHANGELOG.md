@@ -5,6 +5,17 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Demand-growth band on the gap chart — June 2026
+The first move toward VISION's V2 thesis ("the Race"): a low-high band showing how much new
+firm capacity nationwide electricity demand growth implies, EIA AEO2026 reference case
+(0.9-1.6%/yr through 2050) baselined to the actual 2024 high (4,430 TWh). Converted to GW
+using the same 90% capacity-factor yardstick already disclosed in `ReplacementMath.jsx` —
+explicitly not a claim nuclear alone must cover the growth. New `demand_forecast` table
+(curated, annual-refresh) + `demand_growth_series` view; registered in `metric_lineage`.
+Caught and fixed a real bug during build: a stacked Recharts `Area` series with `null`
+values across the whole dataset silently breaks the chart's domain calculation — would have
+blanked the hero chart for every visitor pre-migration. See [ADR-0014](docs/decisions/0014-demand-growth-band.md).
+
 ## Regulatory Radar weekly digest — June 2026
 VISION Surface 3, scoped to what's already in the database. The license cron moved from
 monthly to weekly (`nrc-license-weekly.yml`, renamed from `nrc-license-monthly.yml`) — a

@@ -3,7 +3,7 @@
 The current architecture now lives in:
 
 - **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** — how the pieces fit today
-- **[`docs/data-model.md`](docs/data-model.md)** — the full schema (14 tables, 4 views)
+- **[`docs/data-model.md`](docs/data-model.md)** — the full schema (15 tables, 5 views)
 - **[`docs/decisions/`](docs/decisions/)** — the *why* behind each choice (ADRs)
 - **[`docs/SOURCES.md`](docs/SOURCES.md)** — where the data comes from
 

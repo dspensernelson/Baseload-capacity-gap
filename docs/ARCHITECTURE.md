@@ -22,8 +22,8 @@ frontend. See [ADR-0012](decisions/0012-thin-distribution-functions.md).
  EXTERNAL SOURCES            AUTOMATION (GitHub Actions)        STORE (Supabase)         READ (Vercel)
  ────────────────            ───────────────────────────        ────────────────         ─────────────
  NRC power status    ─┐
- NRC license pages    │      nrc-daily        (08:00)           14 tables                React + Vite
- NRC event notices    ├────► nrc-license-wk   (Mon)      ──────► 4 views          ◄─────── react-router
+ NRC license pages    │      nrc-daily        (08:00)           15 tables                React + Vite
+ NRC event notices    ├────► nrc-license-wk   (Mon)      ──────► 5 views          ◄─────── react-router
  EIA-860M / 930       │      eia930           (6h)               (editorial math   anon   MapLibre / Recharts
  DOE / OWID / IPCC   ─┘      nrc-events       (09:00)            = views only)     key    11 tabs + permalinks
                             monthly-dispatch  (2nd)                  │                        │
@@ -52,14 +52,15 @@ for any aggregated number — React never re-aggregates.
 ## The three subsystems
 
 ### 1. The data plane (tables + crons)
-14 tables in four shapes: **core entities** (`reactors`, `new_reactor_projects`,
+15 tables in four shapes: **core entities** (`reactors`, `new_reactor_projects`,
 `decommissioning`, `license_actions`), **automated feeds** (`daily_status_history`,
 `generation_hourly`, `incidents`, `sync_log`), **curated reference** (`energy_safety`,
-`notable_accidents`, `history_milestones`), and **the provenance pair** (`metric_lineage`,
+`notable_accidents`, `history_milestones`, `demand_forecast`), and **the provenance pair** (`metric_lineage`,
 `reconciliation_log`). Seven crons keep them fresh ([README](../README.md#the-crons)).
 
 ### 2. The editorial plane (views)
 Every number a visitor sees that isn't a raw row is a **SQL view**: `headline_numbers`,
+`demand_growth_series`,
 `gap_series`, `fleet_output_series`, `reactor_cf_90d`. This is the single auditable place
 the math lives. Changing a number means changing a view — and its `metric_lineage` row.
 

@@ -44,7 +44,7 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
 
 ## Architecture (one minute)
 
-- **Database** — Supabase (Postgres), 14 tables + 4 views. *All* editorial math lives in
+- **Database** — Supabase (Postgres), 15 tables + 5 views. *All* editorial math lives in
   SQL views (`headline_numbers`, `gap_series`, `fleet_output_series`, `reactor_cf_90d`);
   React only renders. Public read-only via RLS + the anon key.
 - **Frontend** — React + Vite + react-router (tabbed pages + reactor permalinks),

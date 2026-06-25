@@ -1,6 +1,6 @@
 # Data Model
 
-The complete schema as it runs in production: **14 tables, 4 views**. Generated against
+The complete schema as it runs in production: **15 tables, 5 views**. Generated against
 the live database. Every `CREATE TABLE` here has a matching artifact under `supabase/`
 (see [REBUILD.md](REBUILD.md) for the apply order); `scripts/docs_check.py` fails if a
 live table is missing from this file.
@@ -97,6 +97,12 @@ The machine-readable spine read by `reconcile.py` and rendered on `/sources`.
 `slug` PK, `year`, `year_label`, `title`, `description`, `category`, `sort_order`, provenance.
 Source: WNA / DOE / NRC / EIA / UNSCEAR.
 
+### `demand_forecast` — the demand-growth assumption (1 row)
+`id`, `scenario`, `baseline_year`, `baseline_twh`, `growth_rate_low`, `growth_rate_high`,
+provenance, `created_at`. Feeds `demand_growth_series` — the band on the Overview gap chart.
+Source: EIA AEO2026 reference case + Today in Energy (2024 baseline). See
+[ADR-0014](decisions/0014-demand-growth-band.md).
+
 ---
 
 ## Content
@@ -117,6 +123,7 @@ written by `scripts/generate_dispatch.py`) and `weekly_radar` (the Regulatory Ra
 |---|---|---|
 | `headline_numbers` | `operating_mw`, `retiring_by_2035_mw`, `confirmed_pipeline_mw` | the three headline numbers |
 | `gap_series` | per-year `retiring_mw`, `adding_mw`, `net_capacity_mw` (2025–2045) | the gap chart |
+| `demand_growth_series` | per-year `demand_mw_low`, `demand_mw_high` (2025–2045) | the gap chart's demand-growth band |
 | `fleet_output_series` | per-day `output_mw`, `capacity_mw`, `units_offline`, `units_reporting` | the 12-month fleet chart |
 | `reactor_cf_90d` | per-unit `avg_power_90d`, `offline_days`, `days` (last 90 d) | Fleet "who ran hardest" |
 

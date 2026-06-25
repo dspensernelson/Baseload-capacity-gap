@@ -90,7 +90,7 @@ nuclear-pipeline-tracker/
 
 ---
 
-## Database Tables (14 total)
+## Database Tables (15 total)
 
 1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
 2. **`new_reactor_projects`** — SMR and new build pipeline (~10 rows, manual). **Capacity *arriving* only**: new builds + restarts of shut-down units. **Never** existing operating plants being renewed (SLRs like Diablo Canyon/Clinton/Seabrook) — those are already in `reactors` + `license_actions`; adding them double-counts the operating fleet and inflates the pipeline number.
@@ -106,12 +106,14 @@ nuclear-pipeline-tracker/
 12. **`notable_accidents`** — TMI/Chernobyl/Fukushima/Banqiao with sourced, ranged tolls; powers Safety
 13. **`incidents`** — live NRC Event Notifications (plant events); written by `nrc_event_notifications.py` (daily), powers Incidents
 14. **`history_milestones`** — the History timeline (sourced, 1938 → the gap)
+15. **`demand_forecast`** — the EIA AEO reference-case demand-growth assumption (1 row, curated, annual-refresh) behind the demand-growth band on the Overview gap chart; feeds `demand_growth_series`. See ADR-0014
 
 **Provenance columns:** `reactors`, `new_reactor_projects`, `decommissioning`, `license_actions` each carry `source`, `source_url`, `source_date`, `verified_at`, `provenance_note`. **Every curated row must cite a source** (watchdog- and reconcile-enforced). Full process in `docs/PROVENANCE.md`.
 
 **Views:**
 - `headline_numbers` — three summary stats (operating MW, retiring by 2035, pipeline MW)
 - `gap_series` — year-by-year net capacity delta from now to 2045
+- `demand_growth_series` — year-by-year low/high implied new firm capacity from EIA demand growth (the gap chart's demand band, ADR-0014)
 - `fleet_output_series` — daily fleet output (capacity × power %) from `daily_status_history`; powers the "Last 12 Months" chart
 - `reactor_cf_90d` — per-unit average power % over the last 90 days (the Fleet "who ran hardest" table)
 

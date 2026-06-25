@@ -128,6 +128,7 @@ export default function App() {
   const [gapSeries, setGapSeries] = useState([])
   const [licenseActions, setLicenseActions] = useState([])
   const [fleetSeries, setFleetSeries] = useState([])
+  const [demandSeries, setDemandSeries] = useState([])
   const [reports, setReports]     = useState([])
   const [projects, setProjects]   = useState([])
   const [loading, setLoading]     = useState(true)
@@ -143,12 +144,13 @@ export default function App() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }, { data: rp }, { data: np }] = await Promise.all([
+      const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }, { data: ds }, { data: rp }, { data: np }] = await Promise.all([
         supabase.from('reactors').select('*'),
         supabase.from('headline_numbers').select('*').single(),
         supabase.from('gap_series').select('*').order('year'),
         supabase.from('license_actions').select('*').order('action_date', { ascending: false }),
         supabase.from('fleet_output_series').select('*').order('report_date'),
+        supabase.from('demand_growth_series').select('*').order('year'),
         supabase.from('reports').select('*').order('published_at', { ascending: false }),
         supabase.from('new_reactor_projects').select('*'),
       ])
@@ -157,6 +159,7 @@ export default function App() {
       setGapSeries(g ?? [])
       setLicenseActions(la ?? [])
       setFleetSeries(fs ?? [])
+      setDemandSeries(ds ?? [])
       setReports(rp ?? [])
       setProjects(np ?? [])
       setLoading(false)
@@ -214,7 +217,7 @@ export default function App() {
       </header>)}
 
       <Routes>
-        <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} />} />
+        <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} demandSeries={demandSeries} />} />
         <Route path="/history" element={<History />} />
         <Route
           path="/map"

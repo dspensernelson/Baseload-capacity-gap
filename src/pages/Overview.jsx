@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom'
 import HeadlineBand from '../components/HeadlineBand'
 import GapChart from '../components/GapChart'
 
-export default function Overview({ gapSeries, headlines }) {
+export default function Overview({ gapSeries, headlines, demandSeries }) {
   return (
     <>
       {/* Hero: the chart IS the canvas — full bleed, edge to edge */}
-      <GapChart gapSeries={gapSeries} headlines={headlines} />
+      <GapChart gapSeries={gapSeries} headlines={headlines} demandSeries={demandSeries} />
 
       {/* Callouts: flush below the banner */}
       <HeadlineBand headlines={headlines} />
