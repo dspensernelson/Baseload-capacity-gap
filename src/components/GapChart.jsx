@@ -94,6 +94,7 @@ export default function GapChart({ gapSeries, headlines, demandSeries = [] }) {
             height={26}
           />
           <YAxis
+            yAxisId="capacity"
             mirror
             tickFormatter={v => `${v} GW`}
             tick={{ fontFamily: 'var(--font-body)', fontSize: 11, fill: 'rgba(255,255,255,0.7)' }}
@@ -102,12 +103,18 @@ export default function GapChart({ gapSeries, headlines, demandSeries = [] }) {
             tickMargin={8}
             width={1}
           />
+          {/* Independent scale for the demand band — its 2045 high end (~220 GW) is
+              ~2x the nuclear fleet's own capacity. Sharing one axis would squash the
+              actual gap (the chart's whole point) into a sliver. Hidden: it's a
+              translucent overlay, not a thing visitors need to read off an axis. */}
+          <YAxis yAxisId="demand" hide domain={[0, 'auto']} />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.4)' }} />
 
           {/* The gap — amber wedge cutting in from the bottom */}
           <Area
             type="monotone"
             dataKey="gap_gw"
+            yAxisId="capacity"
             stackId="1"
             fill="var(--color-amber)"
             fillOpacity={1}
@@ -121,6 +128,7 @@ export default function GapChart({ gapSeries, headlines, demandSeries = [] }) {
           <Area
             type="monotone"
             dataKey="net_gw"
+            yAxisId="capacity"
             stackId="1"
             fill="var(--color-operating)"
             fillOpacity={1}
@@ -128,13 +136,14 @@ export default function GapChart({ gapSeries, headlines, demandSeries = [] }) {
             name="Net capacity"
           />
 
-          {/* Demand-growth band — independent stack, translucent overlay, the EIA
+          {/* Demand-growth band — own axis + own stack, translucent overlay, the EIA
               AEO2026 reference-case low/high range converted to implied new firm
               capacity (see ADR-0014). Not part of the nuclear capacity stack above. */}
-          <Area type="monotone" dataKey="demand_low_gw" stackId="2" fill="transparent" stroke="none" />
+          <Area type="monotone" dataKey="demand_low_gw" yAxisId="demand" stackId="2" fill="transparent" stroke="none" />
           <Area
             type="monotone"
             dataKey="demand_band_gw"
+            yAxisId="demand"
             stackId="2"
             fill="var(--color-demand)"
             fillOpacity={0.32}
@@ -147,6 +156,7 @@ export default function GapChart({ gapSeries, headlines, demandSeries = [] }) {
 
           <ReferenceLine
             x={2035}
+            yAxisId="capacity"
             stroke="rgba(255,255,255,0.5)"
             strokeDasharray="4 3"
             strokeWidth={1.5}
