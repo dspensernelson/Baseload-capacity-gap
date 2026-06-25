@@ -35,7 +35,7 @@ These run on their own and will tell you if something breaks, so **silence = hea
 - **Watchdog** (`Pipeline Health Watchdog` workflow) runs after every data cron + daily at 13:00 UTC. It checks freshness + sanity and **opens a GitHub issue only when something is genuinely wrong**, then **auto-closes it** when healthy. So: *no watchdog issue = data is fresh and sane.* It will not email you for transient blips.
 - **Reconciliation** (`Numbers Reconciliation` workflow) runs weekly + after the license cron. It re-derives every headline number *independently* from the atomic reactor rows and compares to what the live views publish, checks 100% provenance completeness, and re-enforces the Watts Bar + Diablo Canyon invariants. Opens a `reconcile`-labeled issue **only on drift**; the public `/sources` page shows the last-reconciled date and every number's formula + source. Receipts in the `reconciliation_log` table.
 - **`sync_log` table** (Supabase) records every cron run — source, status, rows, timestamp, notes. This is the audit trail; check it when you want proof a job ran.
-- **Crons**: daily power (08:00 UTC), monthly license (1st), monthly dispatch (2nd). All free, all logged.
+- **Crons**: daily power (08:00 UTC), weekly license + Regulatory Radar (Mon 09:00 UTC), monthly dispatch (2nd). All free, all logged.
 
 What is **still manual** (intentionally): the SMR / new-build pipeline (`new_reactor_projects`) is editor-curated. That's the one dataset worth a human eye each quarter (see §4, Pipeline row).
 

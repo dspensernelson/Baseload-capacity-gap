@@ -24,7 +24,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
-| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-monthly.yml` (monthly, license actions) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
+| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-weekly.yml` (weekly Mon, license actions + the Regulatory Radar digest) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
 | Distribution | Vercel Functions | `api/og.js` (Edge, `@vercel/og` — live share card from `headline_numbers`) + `api/rss.js` (Node — Dispatches feed from `reports`, served at `/rss.xml`). Both read-only, anon key only, no service key. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md) |
 
 ---
@@ -81,7 +81,7 @@ nuclear-pipeline-tracker/
 | EIA v2 API | Operating reactor inventory (~94 units) | `GET /v2/electricity/operating-generator-capacity` with `technology=Nuclear` facet |
 | NRC decommissioning page | Shutdown/decommissioning units | Manual seed in Session 2 |
 | NRC daily power reactor status | Daily power % per unit | Daily cron (`scripts/nrc_daily_status.py`) — NB: URL is case-sensitive, file is `ReportDt\|Unit\|Power` with plant+unit combined |
-| NRC license renewal pages | License actions + authoritative expiration dates | Monthly cron (`scripts/nrc_license_actions.py`) — rebuilds `license_actions`, updates `reactors.license_expiration_date` |
+| NRC license renewal pages | License actions + authoritative expiration dates | Weekly cron (`scripts/nrc_license_actions.py`) — rebuilds `license_actions`, updates `reactors.license_expiration_date`, then `scripts/generate_radar.py` diffs it into the Regulatory Radar digest |
 | DOE ARDP / NRC new reactors | SMR/new build pipeline | Manual seed, curated quarterly (intentionally not automated) |
 | EIA-930 Hourly Electric Grid Monitor | US48 hourly generation by fuel type | `eia930-generation.yml` every 6h (`scripts/eia930_generation.py`) — feeds the 2 a.m. grid-mix view |
 
@@ -98,7 +98,7 @@ nuclear-pipeline-tracker/
 4. **`license_actions`** — license renewals, expirations, uprate actions
 5. **`sync_log`** — audit trail for every cron run
 6. **`daily_status_history`** — one row per reactor per NRC report date (power %); the "tape" feeding sparklines, the fleet chart, and capacity-factor math. Written forward by the daily cron, backfilled by `scripts/backfill_status_history.py`
-7. **`reports`** — published monthly "Dispatches" (markdown + stats jsonb), written by `scripts/generate_dispatch.py` and rendered on the site by `Dispatch.jsx`
+7. **`reports`** — published monthly "Dispatches" + the weekly Regulatory Radar digest (`kind` distinguishes them; markdown + stats jsonb), written by `scripts/generate_dispatch.py` / `scripts/generate_radar.py` and rendered on the site by `Dispatch.jsx` / `Dispatches.jsx`
 8. **`generation_hourly`** — EIA-930 US48 hourly net generation by fuel type (period_utc, fueltype, mwh); powers the 2 a.m. grid-mix view (`GridMix.jsx`). Not watchdog-monitored (degrades gracefully)
 9. **`metric_lineage`** — one row per number shown on the site: label, definition, exact formula, primary source + URL. The spine of the audit trail; read by `reconcile.py`, rendered on `/sources`
 10. **`reconciliation_log`** — append-only receipt from `reconcile.py` (per-metric: our value vs independently re-derived value, delta, pass/drift)

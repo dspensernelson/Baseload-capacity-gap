@@ -8,7 +8,7 @@ provenance is on the live [`/sources`](https://nukemap-two.vercel.app/sources) p
 |---|---|---|---|---|
 | **NRC Power Reactor Status Report** | nrc.gov/reading-rm/doc-collections/event-status/reactor-status/ | daily power % per unit | `nrc_daily_status.py` | daily 08:00 UTC |
 | **NRC List of Power Reactor Units** | nrc.gov/reactors/operating/list-power-reactor-units.html | operating count, license expirations | reference + license cron | — |
-| **NRC license-renewal pages** | nrc.gov/reactors/operating/licensing/renewal/applications.html | `license_actions`, `reactors.license_expiration_date` | `nrc_license_actions.py` | monthly, 1st |
+| **NRC license-renewal pages** | nrc.gov/reactors/operating/licensing/renewal/applications.html | `license_actions`, `reactors.license_expiration_date`, the Regulatory Radar digest | `nrc_license_actions.py` + `generate_radar.py` | weekly, Mon |
 | **NRC Event Notification Reports** | nrc.gov/reading-rm/doc-collections/event-status/event/ | `incidents` (the live wire) | `nrc_event_notifications.py` | daily 09:00 UTC |
 | **NRC Decommissioning info-finder** | nrc.gov/info-finder/decommissioning/power-reactor/ | `decommissioning` | manual seed | quarterly |
 | **NRC New Reactors** | nrc.gov/reactors/new-reactors.html | `new_reactor_projects` | manual curation | quarterly |

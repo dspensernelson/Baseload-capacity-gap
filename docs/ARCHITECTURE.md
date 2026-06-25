@@ -23,7 +23,7 @@ frontend. See [ADR-0012](decisions/0012-thin-distribution-functions.md).
  ────────────────            ───────────────────────────        ────────────────         ─────────────
  NRC power status    ─┐
  NRC license pages    │      nrc-daily        (08:00)           14 tables                React + Vite
- NRC event notices    ├────► nrc-license-mo   (1st)     ──────► 4 views          ◄─────── react-router
+ NRC event notices    ├────► nrc-license-wk   (Mon)      ──────► 4 views          ◄─────── react-router
  EIA-860M / 930       │      eia930           (6h)               (editorial math   anon   MapLibre / Recharts
  DOE / OWID / IPCC   ─┘      nrc-events       (09:00)            = views only)     key    11 tabs + permalinks
                             monthly-dispatch  (2nd)                  │                        │

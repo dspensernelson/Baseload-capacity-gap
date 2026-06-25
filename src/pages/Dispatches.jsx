@@ -27,7 +27,25 @@ function RadarLine({ a, name }) {
   )
 }
 
-function RegulatoryRadar({ actions, reactorsById }) {
+function WeeklyDigest({ report }) {
+  if (!report) return null
+  const lines = report.body.split('\n').filter(Boolean)
+  return (
+    <div style={{
+      marginBottom: '1.75rem', padding: '0.9rem 1.1rem', borderRadius: '8px',
+      background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+    }}>
+      <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+        This week · {new Date(report.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+      </div>
+      {lines.map((line, i) => (
+        <p key={i} style={{ fontSize: '0.88rem', margin: i === 0 ? 0 : '0.4rem 0 0' }}>{line}</p>
+      ))}
+    </div>
+  )
+}
+
+function RegulatoryRadar({ actions, reactorsById, digest }) {
   const nameOf = a =>
     (a.reactor_id && reactorsById[a.reactor_id])
       ? reactorsById[a.reactor_id]
@@ -48,8 +66,9 @@ function RegulatoryRadar({ actions, reactorsById }) {
     <div style={{ marginTop: '3.5rem' }}>
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', color: 'var(--color-brand)', marginBottom: '0.3rem' }}>Regulatory radar</h3>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '46rem' }}>
-        What's moving at the NRC — license renewals and 80-year extensions, straight from the records. Updates monthly.
+        What's moving at the NRC — license renewals and 80-year extensions, straight from the records. Updates weekly.
       </p>
+      <WeeklyDigest report={digest} />
       <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 320px', minWidth: 0 }}>
           <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-amber)', marginBottom: '0.5rem' }}>Under NRC review ({pending.length})</div>
@@ -67,7 +86,9 @@ function RegulatoryRadar({ actions, reactorsById }) {
 
 export default function Dispatches({ reports = [], licenseActions = [], reactors = [] }) {
   const { period } = useParams()
-  const selected = (period ? reports.find(r => r.period === period) : null) ?? reports[0] ?? null
+  const monthlyReports = useMemo(() => reports.filter(r => r.kind === 'monthly'), [reports])
+  const radarDigest = useMemo(() => reports.find(r => r.kind === 'weekly_radar') ?? null, [reports])
+  const selected = (period ? monthlyReports.find(r => r.period === period) : null) ?? monthlyReports[0] ?? null
   const reactorsById = useMemo(
     () => Object.fromEntries(reactors.map(r => [r.id, `${r.plant_name} ${r.unit_number}`])),
     [reactors])
@@ -94,10 +115,10 @@ export default function Dispatches({ reports = [], licenseActions = [], reactors
             <Dispatch report={selected} />
           </div>
 
-          {reports.length > 1 && (
+          {monthlyReports.length > 1 && (
             <div style={{ flex: '0 0 200px' }}>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)', marginBottom: '0.6rem' }}>Archive</div>
-              {reports.map(r => (
+              {monthlyReports.map(r => (
                 <Link
                   key={r.id}
                   to={`/dispatches/${r.period}`}
@@ -118,7 +139,7 @@ export default function Dispatches({ reports = [], licenseActions = [], reactors
         </div>
       )}
 
-      <RegulatoryRadar actions={licenseActions} reactorsById={reactorsById} />
+      <RegulatoryRadar actions={licenseActions} reactorsById={reactorsById} digest={radarDigest} />
     </section>
   )
 }

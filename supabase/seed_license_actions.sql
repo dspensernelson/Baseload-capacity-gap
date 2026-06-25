@@ -1,6 +1,6 @@
 -- Seed: license_actions  ** SUPERSEDED — kept for history only **
--- license_actions is now rebuilt monthly from nrc.gov by scripts/nrc_license_actions.py
--- (workflow .github/workflows/nrc-license-monthly.yml). Do not run this file; the
+-- license_actions is now rebuilt weekly from nrc.gov by scripts/nrc_license_actions.py
+-- (workflow .github/workflows/nrc-license-weekly.yml). Do not run this file; the
 -- scraper deletes and replaces renewal rows on every run.
 
 INSERT INTO license_actions (reactor_id, action_type, action_date, new_expiration_date, nrc_docket, status, notes) VALUES

@@ -101,8 +101,13 @@ Source: WNA / DOE / NRC / EIA / UNSCEAR.
 
 ## Content
 
-### `reports` — the monthly Dispatches (1 row, grows monthly)
-`id`, `kind`, `period`, `title`, `body` (markdown), `stats` (jsonb), `published_at`.
+### `reports` — Dispatches & the Regulatory Radar digest (grows monthly + weekly)
+`id`, `kind`, `period`, `title`, `body` (markdown), `stats` (jsonb), `published_at`,
+`unique(kind, period)`. Two `kind` values: `monthly` (the Dispatch, `period` = `'YYYY-MM'`,
+written by `scripts/generate_dispatch.py`) and `weekly_radar` (the Regulatory Radar digest,
+`period` = ISO week `'YYYY-Www'`, written by `scripts/generate_radar.py`). The radar's
+`stats.snapshot` holds last week's `license_actions` state for diffing — see
+[ADR-0013](decisions/0013-radar-snapshot-diff.md).
 
 ---
 

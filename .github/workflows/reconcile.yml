@@ -9,7 +9,7 @@ on:
   schedule:
     - cron: '30 13 * * 1'   # Mondays 13:30 UTC — weekly traceability sweep
   workflow_run:
-    workflows: ["NRC License Actions Monthly"]   # renewals move "retiring by 2035"
+    workflows: ["NRC License Actions Weekly"]   # renewals move "retiring by 2035"
     types: [completed]
   workflow_dispatch:
 

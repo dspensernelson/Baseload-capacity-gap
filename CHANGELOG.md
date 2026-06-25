@@ -5,6 +5,17 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Regulatory Radar weekly digest — June 2026
+VISION Surface 3, scoped to what's already in the database. The license cron moved from
+monthly to weekly (`nrc-license-weekly.yml`, renamed from `nrc-license-monthly.yml`) — a
+real freshness improvement, not just a workaround — and now runs `scripts/generate_radar.py`
+right after the scraper. Since `license_actions` is fully rebuilt from nrc.gov on every run
+(no row history to query), the script snapshots state into `reports.stats` and diffs it
+against last week's snapshot to write a plain-English "what changed" digest (new filings,
+approvals). Reuses the `reports` table (`kind='weekly_radar'`). Rendered on `/dispatches`
+**alongside** the existing always-live pending/issued list, not replacing it — one answers
+"what's true now," the other "what changed." See [ADR-0013](docs/decisions/0013-radar-snapshot-diff.md).
+
 ## Distribution: OG cards, JSON-LD, RSS — June 2026
 ROADMAP H1's first slice. Added `/dispatches/:period` permalinks so every Dispatch has a
 stable URL; a live, branded OG/Twitter share card (`api/og.js`, Edge + `@vercel/og`,

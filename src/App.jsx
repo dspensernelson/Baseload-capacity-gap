@@ -61,7 +61,7 @@ function SiteFooter({ reactors }) {
     <footer style={{ borderTop: '1px solid var(--color-border)', padding: '2rem', textAlign: 'center', fontSize: '0.78rem', color: 'var(--color-text-muted)', background: 'var(--color-surface)' }}>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
         <span className="pulse-dot" style={{ width: 7, height: 7 }} />
-        Reactor power status refreshed daily from the U.S. NRC · last update {when}. License records refreshed monthly.
+        Reactor power status refreshed daily from the U.S. NRC · last update {when}. License records refreshed weekly.
       </div>
       <div style={{ marginTop: '0.45rem', opacity: 0.85 }}>
         The data, charts, and the monthly dispatch update on their own. Sources: U.S. NRC &amp; U.S. EIA.

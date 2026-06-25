@@ -179,8 +179,9 @@ Track your progress from empty repo to live V1. Check items off as you go.
 - [ ] EIA-930 live generation by balancing authority
 - [ ] Wind/solar/storage context layer
 - [ ] EIA-923 monthly generation refresh cron
-- [x] NRC license-renewal scraper (monthly cron, June 2026 — uprate tracking still open)
+- [x] NRC license-renewal scraper (weekly cron, June 2026 — uprate tracking still open)
 - [x] Surface license actions in map detail panel
+- [x] Regulatory Radar weekly digest (June 2026 — alongside the live pending/issued list)
 - [ ] ADAMS document feed
 - [ ] Mobile layout + shareable deep links
 - [ ] Paperclip agent org setup

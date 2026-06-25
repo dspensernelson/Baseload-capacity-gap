@@ -75,7 +75,7 @@ client routes to `index.html` so deep links (`/reactor/...`, `/sources`) survive
 The workflows in `.github/workflows/` run on schedule once secrets exist. Trigger each once
 via **workflow_dispatch** to populate live data immediately:
 
-`nrc-daily` · `nrc-license-monthly` · `eia930-generation` · `nrc-events` · `monthly-dispatch`
+`nrc-daily` · `nrc-license-weekly` · `eia930-generation` · `nrc-events` · `monthly-dispatch`
 → then `reconcile` and `health-check` to validate. (Schedules + purposes: see [README](../README.md#the-crons).)
 
 ---

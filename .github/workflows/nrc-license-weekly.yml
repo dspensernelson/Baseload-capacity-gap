@@ -1,8 +1,8 @@
-name: NRC License Actions Monthly
+name: NRC License Actions Weekly
 
 on:
   schedule:
-    - cron: '0 9 1 * *'   # 9am UTC on the 1st of each month
+    - cron: '0 9 * * 1'   # 9am UTC every Monday — before reconcile.yml's 13:30 UTC run
   workflow_dispatch:       # allow manual trigger from Actions tab
 
 jobs:
@@ -23,3 +23,9 @@ jobs:
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/nrc_license_actions.py
+
+      - name: Generate the weekly Regulatory Radar digest
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/generate_radar.py

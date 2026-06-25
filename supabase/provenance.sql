@@ -43,7 +43,7 @@ WHERE source IS NULL;
 
 UPDATE license_actions SET
   source='NRC-renewal', source_url='https://www.nrc.gov/reactors/operating/licensing/renewal/applications.html', verified_at=now(),
-  provenance_note='Scraped from NRC license-renewal program pages by nrc_license_actions.py (monthly cron). new_expiration_date is the NRC-authorized license expiration date.'
+  provenance_note='Scraped from NRC license-renewal program pages by nrc_license_actions.py (weekly cron). new_expiration_date is the NRC-authorized license expiration date.'
 WHERE action_type IN ('license_renewal','subsequent_license_renewal') AND source IS NULL;
 
 UPDATE license_actions SET

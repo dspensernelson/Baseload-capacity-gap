@@ -8,8 +8,8 @@ from, and what the known caveats are.
 | Data | Source | Refresh |
 |------|--------|---------|
 | Operating reactor inventory (94 units: name, operator, location, capacity, COD) | EIA v2 API, operating generator capacity, `technology=Nuclear` | Seeded once; re-runnable via `scripts/seed_reactors.py` |
-| License expiration dates | NRC license renewal status pages (initial + subsequent renewal, issued history) | Monthly cron (`scripts/nrc_license_actions.py`) |
-| License renewal applications in review | Same NRC pages | Monthly cron |
+| License expiration dates | NRC license renewal status pages (initial + subsequent renewal, issued history) | Weekly cron (`scripts/nrc_license_actions.py`) |
+| License renewal applications in review | Same NRC pages | Weekly cron |
 | Daily power level per unit | NRC Power Reactor Status report | Daily cron (`scripts/nrc_daily_status.py`) |
 | Shutdown / decommissioning units | NRC decommissioning pages | Manual seed |
 | New build pipeline (SMR + large) | NRC new reactors pages + DOE ARDP | Manual, curated quarterly |

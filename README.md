@@ -62,7 +62,7 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | Workflow | Schedule | What it does |
 |----------|----------|--------------|
 | `nrc-daily.yml` | daily 08:00 UTC | NRC power status → `reactors.daily_status` (94 units) + appends `daily_status_history` |
-| `nrc-license-monthly.yml` | monthly, 1st | NRC renewal pages → rebuilds `license_actions`, updates `reactors` expiration dates |
+| `nrc-license-weekly.yml` | weekly, Mon 09:00 UTC | NRC renewal pages → rebuilds `license_actions`, updates `reactors` expiration dates; then drafts the Regulatory Radar digest → `reports` |
 | `eia930-generation.yml` | every 6 h | EIA-930 hourly US generation by fuel → `generation_hourly` (the 2 a.m. view) |
 | `nrc-events.yml` | daily 09:00 UTC | NRC Event Notifications → `incidents` (the live wire) |
 | `monthly-dispatch.yml` | monthly, 2nd | drafts the plain-English Dispatch → `reports` |

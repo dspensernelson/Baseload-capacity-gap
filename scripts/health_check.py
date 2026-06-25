@@ -108,7 +108,7 @@ def run_checks(sb):
         if days_old > 3:
             errors.append(f"History tape is stale — latest report_date {h[0]['report_date']} ({days_old}d old).")
 
-    # 3 — Monthly license scraper isn't overdue
+    # 3 — Weekly license scraper isn't overdue
     l = latest("nrc_license_actions")
     if not l:
         warnings.append("No `nrc_license_actions` run logged yet.")
@@ -116,8 +116,8 @@ def run_checks(sb):
         age = hours_since(parse_ts(l.get("run_at")))
         if l.get("status") != "success":
             errors.append(f"License scraper last run errored: {l.get('error_message') or l.get('notes')}")
-        elif age is not None and age > 24 * 40:
-            errors.append(f"License scraper overdue — last run {age / 24:.0f}d ago (threshold 40d).")
+        elif age is not None and age > 24 * 10:
+            errors.append(f"License scraper overdue — last run {age / 24:.0f}d ago (threshold 10d).")
 
     # 4 — Headline numbers are in a sane range (catches data/view corruption)
     hn = with_retry(lambda: sb.table("headline_numbers").select("*").single().execute()).data

@@ -2,7 +2,7 @@ name: Pipeline Health Watchdog
 
 on:
   workflow_run:
-    workflows: ["NRC Daily Reactor Status", "NRC License Actions Monthly"]
+    workflows: ["NRC Daily Reactor Status", "NRC License Actions Weekly"]
     types: [completed]
   schedule:
     - cron: '0 13 * * *'   # 1pm UTC daily, after the 8am data cron

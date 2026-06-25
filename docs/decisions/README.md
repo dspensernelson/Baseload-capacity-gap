@@ -20,6 +20,7 @@ unless noted. Numbers are assigned once and never reused.
 | [0010](0010-automation-ratchet.md) | The automation ratchet |
 | [0011](0011-gap-formula.md) | The gap formula & nameplate vs net |
 | [0012](0012-thin-distribution-functions.md) | Thin read-only Vercel functions for distribution |
+| [0013](0013-radar-snapshot-diff.md) | Regulatory Radar: snapshot-diff, license cron to weekly |
 
 ## Writing a new one
 Copy the shape of any file here and add a row above. If a decision touches the *advocacy
