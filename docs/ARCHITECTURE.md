@@ -10,8 +10,13 @@ for sources see [`SOURCES.md`](SOURCES.md).
 
 Public data (NRC + EIA) → scraped by GitHub Actions crons → stored in Supabase Postgres,
 where **all editorial math lives in SQL views** → read directly by a React/Vercel frontend.
-No backend server; the database *is* the API. Provenance and a reconciliation loop keep
-every number honest; a watchdog keeps the crons honest.
+No *application* server; the database *is* the API. Provenance and a reconciliation loop
+keep every number honest; a watchdog keeps the crons honest.
+
+Two narrow exceptions: `api/og.js` and `api/rss.js` are thin, read-only Vercel functions
+that render a live share-card image and an RSS feed respectively — presentation artifacts
+for distribution, not application logic. Both use only the public anon key, same as the
+frontend. See [ADR-0012](decisions/0012-thin-distribution-functions.md).
 
 ```
  EXTERNAL SOURCES            AUTOMATION (GitHub Actions)        STORE (Supabase)         READ (Vercel)
@@ -75,9 +80,10 @@ the math lives. Changing a number means changing a view — and its `metric_line
 
 React + Vite + react-router. One route per visitor question (the "tab theory" — see
 [decisions/0005-tab-theory.md](decisions/0005-tab-theory.md)): 11 tabs + `/reactor/:slug`
-permalinks + `/embed/gap`. Components fetch through one configured client (`src/supabase.js`);
-charts are Recharts; the map is MapLibre GL (no token). `vercel.json` rewrites client routes
-so deep links survive a refresh. Deployed on Vercel; push to `main` auto-deploys.
+and `/dispatches/:period` permalinks + `/embed/gap`. Components fetch through one configured
+client (`src/supabase.js`); charts are Recharts; the map is MapLibre GL (no token).
+`vercel.json` rewrites client routes so deep links survive a refresh, plus one explicit
+rewrite (`/rss.xml` → `api/rss`) for the feed. Deployed on Vercel; push to `main` auto-deploys.
 
 ---
 
@@ -87,6 +93,7 @@ so deep links survive a refresh. Deployed on Vercel; push to `main` auto-deploys
 2. **Every cron writes a `sync_log` row.**
 3. **Every curated row cites a source; every public number has a `metric_lineage` entry.**
 4. **Never prune `daily_status_history`** — it's the un-recreatable asset.
-5. **The anon key is the only key in the frontend.** Service key is server-side only.
+5. **The anon key is the only key in the frontend** — and the only key `api/og.js`/`api/rss.js`
+   use too. Service key is server-side-script-only.
 6. **`new_reactor_projects` is capacity *arriving* only** — never renewals of operating plants.
 7. **If it can't update itself, it doesn't ship** — manual work is reserved for editorial judgment.

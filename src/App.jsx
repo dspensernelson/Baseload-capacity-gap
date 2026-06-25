@@ -181,6 +181,7 @@ export default function App() {
   const location = useLocation()
   useEffect(() => {
     if (location.pathname.startsWith('/reactor/')) return  // the reactor page sets its own title
+    if (location.pathname.startsWith('/dispatches')) return  // the dispatches page sets its own title
     const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
     const t = titles[location.pathname]
     document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
@@ -233,6 +234,7 @@ export default function App() {
         <Route path="/incidents" element={<Incidents />} />
         <Route path="/safety" element={<Safety />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
+        <Route path="/dispatches/:period" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="/data" element={<DataExport />} />

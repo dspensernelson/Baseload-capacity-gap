@@ -5,6 +5,17 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Distribution: OG cards, JSON-LD, RSS — June 2026
+ROADMAP H1's first slice. Added `/dispatches/:period` permalinks so every Dispatch has a
+stable URL; a live, branded OG/Twitter share card (`api/og.js`, Edge + `@vercel/og`,
+rendered from `headline_numbers` on every request — no rebuild needed to stay current);
+an RSS 2.0 feed of Dispatches (`api/rss.js`, served at `/rss.xml`); and `WebSite`/`Dataset`
+JSON-LD in `index.html` for machine discovery. The two functions are the first server-side
+compute in the stack beyond GitHub Actions crons — both read-only, anon-key-only, no
+secrets. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md). A scoped
+email-syndication newsletter was discussed and parked (no clear subscriber demand for a
+"Dispatch" specifically) — see CLAUDE.md.
+
 ## Documentation overhaul — June 2026
 The docs are brought to the same bar as the data: accurate, complete, self-auditing.
 - Rewrote `README.md`, `docs/data-model.md`, replaced stale `DESIGN.md` with `docs/ARCHITECTURE.md`.

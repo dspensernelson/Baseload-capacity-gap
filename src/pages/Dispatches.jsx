@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import Dispatch from '../components/Dispatch'
 
 const ACTION_LABELS = {
@@ -65,11 +66,15 @@ function RegulatoryRadar({ actions, reactorsById }) {
 }
 
 export default function Dispatches({ reports = [], licenseActions = [], reactors = [] }) {
-  const [selectedId, setSelectedId] = useState(reports[0]?.id ?? null)
-  const selected = reports.find(r => r.id === selectedId) ?? reports[0] ?? null
+  const { period } = useParams()
+  const selected = (period ? reports.find(r => r.period === period) : null) ?? reports[0] ?? null
   const reactorsById = useMemo(
     () => Object.fromEntries(reactors.map(r => [r.id, `${r.plant_name} ${r.unit_number}`])),
     [reactors])
+
+  useEffect(() => {
+    if (selected) document.title = `${selected.title} · Nuclear Pipeline Tracker`
+  }, [selected])
 
   return (
     <section style={{ maxWidth: '900px', marginTop: '3rem', paddingBottom: '4rem' }} className="centered">
@@ -93,20 +98,20 @@ export default function Dispatches({ reports = [], licenseActions = [], reactors
             <div style={{ flex: '0 0 200px' }}>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)', marginBottom: '0.6rem' }}>Archive</div>
               {reports.map(r => (
-                <button
+                <Link
                   key={r.id}
-                  onClick={() => setSelectedId(r.id)}
+                  to={`/dispatches/${r.period}`}
                   style={{
-                    display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
+                    display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', textDecoration: 'none',
                     background: r.id === selected.id ? 'var(--color-surface)' : 'transparent',
-                    border: 'none', borderLeft: `2px solid ${r.id === selected.id ? 'var(--color-brand)' : 'transparent'}`,
+                    borderLeft: `2px solid ${r.id === selected.id ? 'var(--color-brand)' : 'transparent'}`,
                     padding: '0.5rem 0.75rem', marginBottom: '0.15rem', fontFamily: 'var(--font-body)',
                     fontSize: '0.82rem', color: r.id === selected.id ? 'var(--color-brand)' : 'var(--color-text-muted)',
                     fontWeight: r.id === selected.id ? 600 : 400,
                   }}
                 >
                   {new Date(r.published_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </button>
+                </Link>
               ))}
             </div>
           )}

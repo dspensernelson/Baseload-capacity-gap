@@ -35,7 +35,7 @@ The nav groups eleven surfaces into five sections; the two trust/utility surface
 | **History** (`/history`) | a sourced timeline of nuclear power, 1938 → the gap | how we got here |
 | **The Fleet** ▾ | **Map** (`/map`) · **Performance** (`/fleet`) · **Incidents** (`/incidents`) | the operating reality — where reactors are, how they're running, what just happened |
 | **The Case** ▾ | **Safety** (`/safety`) · **The Grid** (`/grid`) · **Scenarios** (`/scenarios`) | the argument in context — how safe, vs. other sources, and the what-if explorer |
-| **Dispatches** (`/dispatches`) | an auto-written monthly report + a regulatory radar of NRC license activity | what changed |
+| **Dispatches** (`/dispatches`) | an auto-written monthly report (`/dispatches/:period` permalinks, [RSS](https://nukemap-two.vercel.app/rss.xml)) + a regulatory radar of NRC license activity | what changed |
 | *footer* | **The Data** (`/data`) · **The Sources** (`/sources`) | the open data export, and the public audit trail (every number's formula + source) |
 
 Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/gap`).
@@ -52,6 +52,8 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
 - **Automation** — 7 GitHub Actions crons keep the data fresh with zero manual upkeep;
   a **watchdog** confirms they ran; a weekly **reconciliation** re-derives every headline
   from atomic rows and proves it still matches its source. Every run writes to `sync_log`.
+- **Distribution** — two thin, read-only Vercel functions (`api/og.js`, `api/rss.js`),
+  anon-key-only, no app server. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md).
 
 Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/data-model.md`](docs/data-model.md).
 
@@ -111,6 +113,7 @@ src/
   components/        Hook (map), GapChart, FleetOutputChart, GridMix, ReplacementMath,
                      CapacityFactor, Dispatch, HeadlineBand, ReactorTable
   lib/slug.js        reactor permalink slugs
+api/                 og.js (live OG share card), rss.js (Dispatches RSS feed) — see ADR-0012
 scripts/             Python ETL, the cron scripts, the watchdog, reconcile, docs_check
 supabase/            table DDL + views + seeds (apply order in docs/REBUILD.md)
 .github/workflows/   the 7 crons + watchdog

@@ -25,6 +25,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
 | Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-monthly.yml` (monthly, license actions) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
+| Distribution | Vercel Functions | `api/og.js` (Edge, `@vercel/og` — live share card from `headline_numbers`) + `api/rss.js` (Node — Dispatches feed from `reports`, served at `/rss.xml`). Both read-only, anon key only, no service key. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md) |
 
 ---
 
@@ -51,6 +52,7 @@ nuclear-pipeline-tracker/
 │   ├── session-06.md          ← gap chart
 │   ├── session-07.md          ← table & visual polish
 │   └── session-08.md          ← deploy & live cron
+├── api/                        ← og.js (live OG share card), rss.js (Dispatches RSS) — ADR-0012
 ├── scripts/                   ← Python ETL scripts
 ├── src/                       ← React app
 │   ├── pages/                 ← one per route (tab theory: one tab per visitor question)
@@ -130,6 +132,7 @@ See `docs/data-model.md` for full schema.
 - **Automation ratchet** — any recurring manual task is treated as a defect; the fix is a cron or an agent (see VISION.md)
 - **Provenance / traceability** — every curated row carries `source`/`source_url`/`verified_at`; every public number is registered in `metric_lineage` with its exact formula + primary source; `reconcile.py` (weekly) re-derives the headlines from atomic rows into `reconciliation_log`; `/sources` renders it. **Never** add a curated row without provenance, or a visible number without a `metric_lineage` entry. If you change a SQL view's formula, update the matching `metric_lineage.formula` in the same commit. See `docs/PROVENANCE.md`
 - **Documentation freshness** — docs are kept true the way numbers are: `scripts/docs_check.py` fails on drift (undocumented tables, unmentioned crons). Follow the freshness contract in `docs/INDEX.md` — new table → `data-model.md` + a `supabase/*.sql`; new cron → README; notable decision → an ADR in `docs/decisions/`. Start doc work at `docs/INDEX.md`
+- **Thin, read-only distribution functions only** — `api/og.js` and `api/rss.js` ([ADR-0012](docs/decisions/0012-thin-distribution-functions.md)) are the one exception to "no backend server," and deliberately narrow: stateless, anon-key-only, no writes, no secrets. Extend these two for future distribution needs (e.g. per-reactor OG cards) rather than adding a new server surface.
 - **Wind/solar comparison, live district output, ADAMS feeds** — all v2
 
 ---
@@ -174,6 +177,8 @@ See `docs/data-model.md` for full schema.
 
 > Update this section at the start of each working session.
 
-**Active session:** —  
-**Last completed:** Post-V1 automation (June 2026) — V1 live at https://nukemap-two.vercel.app (Vercel `nukemap`, auto-deploys from `main`). Two crons: NRC daily status (08:00 UTC) and NRC license actions (monthly). `license_actions` is now fully scraper-fed from nrc.gov (no manual verification needed); detail panel shows license history + daily power. Headline "retiring by 2035" is ~13.2 GW with authoritative NRC expiration dates. **Provenance/audit-trail system added (June 2026):** every curated row carries a source (`source`/`source_url`/`verified_at`), every public number is registered in `metric_lineage` and cross-checked weekly by `scripts/reconcile.py` (→ `reconciliation_log`), and `/sources` renders the whole audit trail. Headlines now: Operating 101.9 GW / Retiring-by-2035 13.2 GW / Pipeline 2.0 GW. See `docs/PROVENANCE.md`.  
+**Active session:** —
+**Last completed:** (June 2026, in order) Provenance/reconciliation system (`metric_lineage`, `reconciliation_log`, `scripts/reconcile.py`, `/sources`) → Incidents tab (live NRC Event Notification wire, `nrc-events.yml` daily) → Safety tab (deaths/TWh + the honest accident record) → History tab (sourced 1938→now timeline) → **full documentation overhaul** (README/ARCHITECTURE/REBUILD/SOURCES/data-model rewritten to the live 14-table schema; 11 ADRs in `docs/decisions/`; `CHANGELOG.md`; `docs/INDEX.md`; `scripts/docs_check.py` self-audit wired into CI) → **nav grouped into 5 sections** (Overview · History · The Fleet ▾ · The Case ▾ · Dispatches; The Data + The Sources moved to the footer). Live at https://nukemap-two.vercel.app, auto-deploys from `main`. 14 tables, 4 views, 7 data crons + watchdog + reconcile + docs-check. Headlines: Operating ~101.9 GW / Retiring-by-2035 ~13.2 GW / Pipeline ~2.0 GW.
+**Next planned (per user, in order):** (1) Distribution — OG share cards, JSON-LD structured data, RSS for Dispatches. (2) Regulatory Radar — weekly plain-English digest of NRC license/docket movement from `license_actions` + `sync_log`. (3) Demand-side layer — overlay data-center/load growth on the gap chart (matures the thesis toward "the Race," per ROADMAP.md). Also floated as a tangent, not yet scoped: a pricing/spot-pricing data layer (likely wholesale electricity LMP/day-ahead-real-time, tying into the existing ISO/RTO map regions and The Grid's "2 a.m. test") — discuss before building.
 **Blockers:** —
+**A fresh thread can start cold from this file + `docs/INDEX.md`** — that's the point of the documentation overhaul. Memory files at the user level (`nukemap-deployment.md`, `nukemap-identity.md`) cover the URL/deploy/auth mechanics and the hidden-advocacy end-state; this file + git log/CHANGELOG.md cover everything else.

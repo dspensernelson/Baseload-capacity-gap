@@ -19,6 +19,7 @@ unless noted. Numbers are assigned once and never reused.
 | [0009](0009-anon-key-frontend.md) | Anon key on the frontend |
 | [0010](0010-automation-ratchet.md) | The automation ratchet |
 | [0011](0011-gap-formula.md) | The gap formula & nameplate vs net |
+| [0012](0012-thin-distribution-functions.md) | Thin read-only Vercel functions for distribution |
 
 ## Writing a new one
 Copy the shape of any file here and add a row above. If a decision touches the *advocacy
