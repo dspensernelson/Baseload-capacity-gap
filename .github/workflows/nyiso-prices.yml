@@ -16,7 +16,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install python-dotenv "supabase==2.9.1" requests
+        run: pip install python-dotenv "supabase==2.9.1" requests tzdata
 
       - name: Run NYISO LBMP fetch
         env:
