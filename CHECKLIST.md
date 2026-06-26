@@ -182,6 +182,8 @@ Track your progress from empty repo to live V1. Check items off as you go.
 - [x] NRC license-renewal scraper (weekly cron, June 2026 — uprate tracking still open)
 - [x] Surface license actions in map detail panel
 - [x] Regulatory Radar weekly digest (June 2026 — alongside the live pending/issued list)
+- [x] Demand-growth band on the gap chart (June 2026 — EIA AEO2026 reference case, ADR-0014)
+- [x] Wholesale pricing layer — CAISO pilot only (June 2026 — ADR-0015; ERCOT/PJM/real-time still open)
 - [ ] ADAMS document feed
 - [ ] Mobile layout + shareable deep links
 - [ ] Paperclip agent org setup

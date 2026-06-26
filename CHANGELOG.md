@@ -5,6 +5,18 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Wholesale pricing pilot: CAISO — June 2026
+Extends The Grid's "2 a.m. test" with the price story: a new "The price of intermittency"
+section showing CAISO day-ahead hourly LMP (NP15/SP15) over the last 48 hours, with a
+dynamically-computed callout (cheapest vs. priciest hour). The original plan was to start
+with EIA wholesale price data — verified against the live EIA API instead of assumed, and it
+turned out **EIA has no wholesale price route at all**; the wholesale-markets page is a
+biweekly Excel file licensed from a commercial exchange (ICE), the wrong granularity for an
+hourly story regardless. Pivoted to a CAISO pilot instead — confirmed free, public, no API
+key (more open than EIA's own API). New `wholesale_prices` table, `iso`/`market` columns
+designed for more ISOs or real-time prices later without a schema change. See
+[ADR-0015](docs/decisions/0015-caiso-pricing-pilot.md).
+
 ## Demand-growth band on the gap chart — June 2026
 The first move toward VISION's V2 thesis ("the Race"): a low-high band showing how much new
 firm capacity nationwide electricity demand growth implies, EIA AEO2026 reference case

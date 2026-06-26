@@ -44,7 +44,7 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
 
 ## Architecture (one minute)
 
-- **Database** — Supabase (Postgres), 15 tables + 5 views. *All* editorial math lives in
+- **Database** — Supabase (Postgres), 16 tables + 5 views. *All* editorial math lives in
   SQL views (`headline_numbers`, `gap_series`, `fleet_output_series`, `reactor_cf_90d`);
   React only renders. Public read-only via RLS + the anon key.
 - **Frontend** — React + Vite + react-router (tabbed pages + reactor permalinks),
@@ -68,6 +68,7 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `monthly-dispatch.yml` | monthly, 2nd | drafts the plain-English Dispatch → `reports` |
 | `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
 | `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure |
+| `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS day-ahead LMP (NP15/SP15) → `wholesale_prices` — pilot, no API key needed |
 
 **Manual by design:** `new_reactor_projects` (~7 rows of editorial judgment about which
 SMR/new-build projects are credible) and the curated reference tables (`energy_safety`,

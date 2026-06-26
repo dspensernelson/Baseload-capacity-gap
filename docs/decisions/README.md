@@ -22,6 +22,7 @@ unless noted. Numbers are assigned once and never reused.
 | [0012](0012-thin-distribution-functions.md) | Thin read-only Vercel functions for distribution |
 | [0013](0013-radar-snapshot-diff.md) | Regulatory Radar: snapshot-diff, license cron to weekly |
 | [0014](0014-demand-growth-band.md) | The demand-growth band on the gap chart |
+| [0015](0015-caiso-pricing-pilot.md) | The wholesale-pricing layer: a CAISO pilot, not an EIA shortcut |
 
 ## Writing a new one
 Copy the shape of any file here and add a row above. If a decision touches the *advocacy

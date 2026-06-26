@@ -22,11 +22,12 @@ frontend. See [ADR-0012](decisions/0012-thin-distribution-functions.md).
  EXTERNAL SOURCES            AUTOMATION (GitHub Actions)        STORE (Supabase)         READ (Vercel)
  ────────────────            ───────────────────────────        ────────────────         ─────────────
  NRC power status    ─┐
- NRC license pages    │      nrc-daily        (08:00)           15 tables                React + Vite
+ NRC license pages    │      nrc-daily        (08:00)           16 tables                React + Vite
  NRC event notices    ├────► nrc-license-wk   (Mon)      ──────► 5 views          ◄─────── react-router
  EIA-860M / 930       │      eia930           (6h)               (editorial math   anon   MapLibre / Recharts
- DOE / OWID / IPCC   ─┘      nrc-events       (09:00)            = views only)     key    11 tabs + permalinks
-                            monthly-dispatch  (2nd)                  │                        │
+ CAISO OASIS          │      caiso-prices     (daily)             = views only)     key    11 tabs + permalinks
+ DOE / OWID / IPCC   ─┘      nrc-events       (09:00)                  │                        │
+                            monthly-dispatch  (2nd)                    │                        │
                             reconcile         (weekly) ◄────────────┤  metric_lineage ──────►/sources
                             health-check      (watchdog)            sync_log (every run)
 ```
@@ -52,11 +53,11 @@ for any aggregated number — React never re-aggregates.
 ## The three subsystems
 
 ### 1. The data plane (tables + crons)
-15 tables in four shapes: **core entities** (`reactors`, `new_reactor_projects`,
+16 tables in four shapes: **core entities** (`reactors`, `new_reactor_projects`,
 `decommissioning`, `license_actions`), **automated feeds** (`daily_status_history`,
-`generation_hourly`, `incidents`, `sync_log`), **curated reference** (`energy_safety`,
+`generation_hourly`, `wholesale_prices`, `incidents`, `sync_log`), **curated reference** (`energy_safety`,
 `notable_accidents`, `history_milestones`, `demand_forecast`), and **the provenance pair** (`metric_lineage`,
-`reconciliation_log`). Seven crons keep them fresh ([README](../README.md#the-crons)).
+`reconciliation_log`). Eight crons keep them fresh ([README](../README.md#the-crons)).
 
 ### 2. The editorial plane (views)
 Every number a visitor sees that isn't a raw row is a **SQL view**: `headline_numbers`,

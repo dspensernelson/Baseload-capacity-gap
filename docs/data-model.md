@@ -1,6 +1,6 @@
 # Data Model
 
-The complete schema as it runs in production: **15 tables, 5 views**. Generated against
+The complete schema as it runs in production: **16 tables, 5 views**. Generated against
 the live database. Every `CREATE TABLE` here has a matching artifact under `supabase/`
 (see [REBUILD.md](REBUILD.md) for the apply order); `scripts/docs_check.py` fails if a
 live table is missing from this file.
@@ -57,6 +57,13 @@ One row per reactor per NRC report date. The un-recreatable asset (never prune).
 
 ### `generation_hourly` — EIA-930 grid mix (~4k rows)
 `period_utc`+`fueltype` PK, `mwh`, `updated_at`. Powers the 2 a.m. view. Degrades gracefully.
+
+### `wholesale_prices` — CAISO day-ahead hourly LMP (pilot, grows daily)
+`iso`+`hub`+`market`+`interval_start` PK, `price_usd_mwh`, `updated_at`. Powers "The price of
+intermittency" on The Grid. Pilot scope: CAISO only (NP15/SP15), day-ahead market only — `iso`
+and `market` are real columns so another ISO or real-time prices is additive, not a schema
+change. No API key needed (CAISO OASIS is public). Degrades gracefully. See
+[ADR-0015](decisions/0015-caiso-pricing-pilot.md).
 
 ### `incidents` — the live NRC event wire (11 rows, grows daily)
 NRC Event Notifications, plant events only (filtered to rows with a `Facility`).
