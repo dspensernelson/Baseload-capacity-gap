@@ -27,11 +27,10 @@ main matches origin/main before assuming anything is unpushed.
 
 This round's candidates (pick and confirm with me before building):
 
-1. **Extend wholesale pricing further** — CAISO day-ahead + real-time, NYISO day-ahead +
-   real-time, and ERCOT real-time hubs are now live with no API key; PJM remains optional/key-gated.
-   SPP no-key machine endpoint was not found (public probes + portal endpoint checks).
-   Next choices: deeper hub coverage on current no-key ISOs, or free-registration expansion (ISO-NE/MISO).
-   `wholesale_prices.iso`/`market` columns were built for exactly this, no schema change needed.
+1. **Grid reliability expansion shipped** — `/grid` now has source-by-source reliability profile
+   (`grid_reliability_source_stats_30d`) and a firming snapshot (`grid_firming_snapshot_30d`),
+   both derived from automated EIA-930 data and registered in `metric_lineage`.
+   Next choices: add historical trend lines for these reliability metrics and/or regionalize beyond US48.
 2. **H1 finishing pieces** (ROADMAP): event-driven Dispatches (not just monthly),
    self-healing scrapers (watchdog already detects breaks; the agent-fix loop is
    the open part). NOTE: an "LLM content layer" for Dispatches/Radar prose has been

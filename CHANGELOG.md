@@ -16,6 +16,15 @@ The Prices page now supports a market toggle (day-ahead vs real-time) and dynami
 all active no-key series (CAISO + NYISO + ERCOT, with PJM remaining optional when API credentials exist).
 `wholesale_prices` schema remains unchanged (`iso`/`hub`/`market`/`interval_start`).
 
+## Grid reliability + firming buildout — June 2026
+Expanded The Grid beyond the 2 a.m. anecdote with two traceable, source-backed reliability surfaces
+driven by automated EIA-930 data: (1) a cross-source 30-day reliability profile (variability + ramp stress)
+and (2) a firming snapshot quantifying nuclear share overnight and during low-renewables hours.
+
+All editorial math was placed in SQL views (`grid_reliability_source_stats_30d`,
+`grid_firming_snapshot_30d`) and registered in `metric_lineage`, preserving the project's
+automation/provenance contract (no client-side re-aggregation of public metrics).
+
 ## Pricing reliability + PJM expansion — June 2026
 Hardened the CAISO ingest path so failures are no longer narrowly tied to HTTP errors:
 timeouts, connection issues, parse failures, malformed rows, and upsert failures now

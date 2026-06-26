@@ -65,7 +65,8 @@ for any aggregated number — React never re-aggregates.
 ### 2. The editorial plane (views)
 Every number a visitor sees that isn't a raw row is a **SQL view**: `headline_numbers`,
 `demand_growth_series`,
-`gap_series`, `fleet_output_series`, `reactor_cf_90d`. This is the single auditable place
+`gap_series`, `fleet_output_series`, `reactor_cf_90d`, `grid_reliability_source_stats_30d`,
+`grid_firming_snapshot_30d`. This is the single auditable place
 the math lives. Changing a number means changing a view — and its `metric_lineage` row.
 
 ### 3. The integrity plane (provenance + watchdog)

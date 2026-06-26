@@ -144,3 +144,35 @@ ON CONFLICT (metric_key) DO UPDATE SET
  unit=EXCLUDED.unit, source_object=EXCLUDED.source_object, primary_source=EXCLUDED.primary_source,
  primary_source_url=EXCLUDED.primary_source_url, constants=EXCLUDED.constants, notes=EXCLUDED.notes,
  sort_order=EXCLUDED.sort_order, updated_at=now();
+
+INSERT INTO metric_lineage
+ (metric_key,label,surface,definition,formula,unit,source_object,primary_source,primary_source_url,constants,notes,sort_order) VALUES
+($$grid_source_cv_30d$$,$$30-day source variability (CV)$$,$$Grid / Reliability profile$$,
+ $$Coefficient of variation for each major generation source over the trailing 30 days of hourly U.S. generation.$$,
+ $$grid_reliability_source_stats_30d.cv_pct = stddev_pop(gw)/avg(gw) by source bucket$$,$$%$$,
+ $$grid_reliability_source_stats_30d$$,$$EIA Hourly Electric Grid Monitor (EIA-930)$$,
+ $$https://www.eia.gov/electricity/gridmonitor/$$,NULL,
+ $$Lower CV means flatter output profile; this is a reliability-shape metric, not a cost metric.$$,44),
+($$grid_source_ramp95_30d$$,$$30-day source ramp stress (P95 abs delta)$$,$$Grid / Reliability profile$$,
+ $$95th percentile absolute hour-to-hour GW change by source over the trailing 30 days.$$,
+ $$grid_reliability_source_stats_30d.ramp95_gw = percentile_cont(0.95) of abs(gw_t - gw_t-1)$$,$$GW$$,
+ $$grid_reliability_source_stats_30d$$,$$EIA Hourly Electric Grid Monitor (EIA-930)$$,
+ $$https://www.eia.gov/electricity/gridmonitor/$$,NULL,
+ $$Higher ramp stress implies more balancing burden on the rest of the system.$$,45),
+($$grid_overnight_nuclear_share_30d$$,$$Overnight nuclear share (00:00-05:59 ET)$$,$$Grid / Firming snapshot$$,
+ $$Average nuclear share of total U.S. generation during overnight hours, trailing 30 days.$$,
+ $$grid_firming_snapshot_30d.overnight_nuclear_share_pct = 100*avg(nuclear_gw/total_gw) for ET hour 0-5$$,$$%$$,
+ $$grid_firming_snapshot_30d$$,$$EIA Hourly Electric Grid Monitor (EIA-930)$$,
+ $$https://www.eia.gov/electricity/gridmonitor/$$,NULL,
+ $$Shows contribution when solar is structurally absent, not annual energy share.$$,46),
+($$grid_nuclear_share_low_renew_30d$$,$$Nuclear share when wind+solar < 15%$$,$$Grid / Firming snapshot$$,
+ $$Average nuclear share during hours where wind+solar together provide under 15% of total generation, trailing 30 days.$$,
+ $$grid_firming_snapshot_30d.nuclear_share_when_low_renewables_pct$$,$$%$$,
+ $$grid_firming_snapshot_30d$$,$$EIA Hourly Electric Grid Monitor (EIA-930)$$,
+ $$https://www.eia.gov/electricity/gridmonitor/$$,$$low-renew threshold = 15% of total generation$$,
+ $$Illustrates firming role during weak renewable periods; threshold is explicit and editable.$$,47)
+ON CONFLICT (metric_key) DO UPDATE SET
+ label=EXCLUDED.label, surface=EXCLUDED.surface, definition=EXCLUDED.definition, formula=EXCLUDED.formula,
+ unit=EXCLUDED.unit, source_object=EXCLUDED.source_object, primary_source=EXCLUDED.primary_source,
+ primary_source_url=EXCLUDED.primary_source_url, constants=EXCLUDED.constants, notes=EXCLUDED.notes,
+ sort_order=EXCLUDED.sort_order, updated_at=now();

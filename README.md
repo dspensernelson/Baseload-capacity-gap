@@ -73,6 +73,10 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `ercot-prices.yml` | every 2 h | ERCOT public MIS CDR real-time hub LMP (HB_HOUSTON/HB_NORTH/HB_SOUTH/HB_WEST) → `wholesale_prices` — no API key needed |
 | `pjm-prices.yml` | manual (`workflow_dispatch`) | Optional PJM Data Miner day-ahead hourly LMP (WEST/MIDATL) → `wholesale_prices` (requires `PJM_API_KEY`) |
 
+`/grid` now includes two source-backed reliability layers derived from `generation_hourly` (EIA-930):
+- `grid_reliability_source_stats_30d` — per-source 30-day variability profile (CV + ramp stress).
+- `grid_firming_snapshot_30d` — firming snapshot (overnight nuclear share + low-renewables-hour nuclear share).
+
 **Manual by design:** `new_reactor_projects` (~7 rows of editorial judgment about which
 SMR/new-build projects are credible) and the curated reference tables (`energy_safety`,
 `notable_accidents`, `history_milestones`). Everything a cron *can* fetch, it does.
