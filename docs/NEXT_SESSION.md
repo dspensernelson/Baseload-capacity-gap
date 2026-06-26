@@ -27,9 +27,9 @@ main matches origin/main before assuming anything is unpushed.
 
 This round's candidates (pick and confirm with me before building):
 
-1. **Extend wholesale pricing further** — CAISO day-ahead + real-time and NYISO day-ahead +
-   real-time are now live with no API key; PJM remains optional/key-gated. Next choices:
-   ERCOT/SPP/MISO no-key endpoint hardening (if feasible) and/or deeper hub coverage.
+1. **Extend wholesale pricing further** — CAISO day-ahead + real-time, NYISO day-ahead +
+   real-time, and ERCOT real-time hubs are now live with no API key; PJM remains optional/key-gated.
+   Next choices: SPP/MISO no-key endpoint hardening (if feasible) and/or deeper hub coverage.
    `wholesale_prices.iso`/`market` columns were built for exactly this, no schema change needed.
 2. **H1 finishing pieces** (ROADMAP): event-driven Dispatches (not just monthly),
    self-healing scrapers (watchdog already detects breaks; the agent-fix loop is

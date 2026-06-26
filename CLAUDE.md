@@ -24,7 +24,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
-| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-weekly.yml` (weekly Mon, license actions + the Regulatory Radar digest) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `caiso-prices.yml` (daily — CAISO day-ahead LMP pilot, no API key) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
+| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-weekly.yml` (weekly Mon, license actions + the Regulatory Radar digest) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `caiso-prices.yml` (daily — CAISO day-ahead + real-time LMP, no API key) · `nyiso-prices.yml` (every 6h — NYISO day-ahead + real-time zonal LBMP, no API key) · `ercot-prices.yml` (every 2h — ERCOT real-time hub LMP, no API key) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
 | Distribution | Vercel Functions | `api/og.js` (Edge, `@vercel/og` — live share card from `headline_numbers`) + `api/rss.js` (Node — Dispatches feed from `reports`, served at `/rss.xml`). Both read-only, anon key only, no service key. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md) |
 
 ---
@@ -84,7 +84,9 @@ nuclear-pipeline-tracker/
 | NRC license renewal pages | License actions + authoritative expiration dates | Weekly cron (`scripts/nrc_license_actions.py`) — rebuilds `license_actions`, updates `reactors.license_expiration_date`, then `scripts/generate_radar.py` diffs it into the Regulatory Radar digest |
 | DOE ARDP / NRC new reactors | SMR/new build pipeline | Manual seed, curated quarterly (intentionally not automated) |
 | EIA-930 Hourly Electric Grid Monitor | US48 hourly generation by fuel type | `eia930-generation.yml` every 6h (`scripts/eia930_generation.py`) — feeds the 2 a.m. grid-mix view |
-| CAISO OASIS (PRC_LMP) | Day-ahead hourly wholesale price, NP15/SP15 hubs | `caiso-prices.yml` daily (`scripts/caiso_prices.py`) — no API key needed; pilot scope, see ADR-0015 |
+| CAISO OASIS | Day-ahead + real-time LMP, NP15/SP15 hubs | `caiso-prices.yml` daily (`scripts/caiso_prices.py`) — no API key needed |
+| NYISO public MIS CSV | Day-ahead + real-time zonal LBMP | `nyiso-prices.yml` every 6h (`scripts/nyiso_prices.py`) — no API key needed |
+| ERCOT MIS CDR (NP6-788) | Real-time hub LMP (`HB_HOUSTON`, `HB_NORTH`, `HB_SOUTH`, `HB_WEST`) | `ercot-prices.yml` every 2h (`scripts/ercot_prices.py`) — no API key needed |
 
 **EIA API key:** Required. Store in `.env` as `EIA_API_KEY`. Never commit.  
 **Supabase keys:** Store in `.env` as `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`. Never commit.
@@ -108,7 +110,7 @@ nuclear-pipeline-tracker/
 13. **`incidents`** — live NRC Event Notifications (plant events); written by `nrc_event_notifications.py` (daily), powers Incidents
 14. **`history_milestones`** — the History timeline (sourced, 1938 → the gap)
 15. **`demand_forecast`** — the EIA AEO reference-case demand-growth assumption (1 row, curated, annual-refresh) behind "Why this gets harder, not easier" on The Grid; feeds `demand_growth_series`. See ADR-0014
-16. **`wholesale_prices`** — CAISO day-ahead hourly LMP (NP15/SP15 pilot), powers "The price of intermittency" on The Grid. No API key needed. See ADR-0015
+16. **`wholesale_prices`** — multi-ISO wholesale prices (CAISO day-ahead + real-time, NYISO day-ahead + real-time zonal LBMP, ERCOT real-time hub LMP; optional PJM when keyed), powers "The price of intermittency" on The Grid. Core feeds are no-key.
 
 **Provenance columns:** `reactors`, `new_reactor_projects`, `decommissioning`, `license_actions` each carry `source`, `source_url`, `source_date`, `verified_at`, `provenance_note`. **Every curated row must cite a source** (watchdog- and reconcile-enforced). Full process in `docs/PROVENANCE.md`.
 

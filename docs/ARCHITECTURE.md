@@ -27,6 +27,7 @@ frontend. See [ADR-0012](decisions/0012-thin-distribution-functions.md).
  EIA-860M / 930       │      eia930           (6h)               (editorial math   anon   MapLibre / Recharts
  CAISO OASIS          │      caiso-prices     (daily)             = views only)     key    11 tabs + permalinks
  NYISO MIS CSV        │      nyiso-prices     (6h)
+ ERCOT MIS CDR        │      ercot-prices     (2h)
  PJM Data Miner       │      pjm-prices       (daily)                                         
  DOE / OWID / IPCC   ─┘      nrc-events       (09:00)                  │                        │
                             monthly-dispatch  (2nd)                    │                        │
@@ -59,7 +60,7 @@ for any aggregated number — React never re-aggregates.
 `decommissioning`, `license_actions`), **automated feeds** (`daily_status_history`,
 `generation_hourly`, `wholesale_prices`, `incidents`, `sync_log`), **curated reference** (`energy_safety`,
 `notable_accidents`, `history_milestones`, `demand_forecast`), and **the provenance pair** (`metric_lineage`,
-`reconciliation_log`). Nine scheduled crons keep them fresh, plus an optional manual PJM pricing workflow ([README](../README.md#the-crons)).
+`reconciliation_log`). Ten scheduled crons keep them fresh, plus an optional manual PJM pricing workflow ([README](../README.md#the-crons)).
 
 ### 2. The editorial plane (views)
 Every number a visitor sees that isn't a raw row is a **SQL view**: `headline_numbers`,

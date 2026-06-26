@@ -5,13 +5,15 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
-## No-key pricing expansion: CAISO real-time + NYISO — June 2026
+## No-key pricing expansion: CAISO + NYISO + ERCOT — June 2026
 Expanded the wholesale-pricing pipeline to maximize free/no-key coverage. CAISO now ingests
 both day-ahead and real-time pricing (NP15/SP15), and NYISO was added via public MIS CSV feeds
 for zonal LBMP (day-ahead + real-time) with a new scheduled workflow (`nyiso-prices.yml`).
+ERCOT real-time hub LMP (`HB_HOUSTON`, `HB_NORTH`, `HB_SOUTH`, `HB_WEST`) is now also ingested
+from the public MIS CDR feed via `ercot-prices.yml`, no key required.
 
 The Prices page now supports a market toggle (day-ahead vs real-time) and dynamically renders
-all active no-key series (CAISO + NYISO, with PJM remaining optional when API credentials exist).
+all active no-key series (CAISO + NYISO + ERCOT, with PJM remaining optional when API credentials exist).
 `wholesale_prices` schema remains unchanged (`iso`/`hub`/`market`/`interval_start`).
 
 ## Pricing reliability + PJM expansion — June 2026

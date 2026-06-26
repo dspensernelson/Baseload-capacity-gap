@@ -1,0 +1,25 @@
+name: ERCOT Wholesale Prices
+
+on:
+  schedule:
+    - cron: '20 */2 * * *'   # every 2h: refresh recent real-time hub LMP
+  workflow_dispatch:
+
+jobs:
+  update-ercot-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install python-dotenv "supabase==2.9.1" requests
+
+      - name: Run ERCOT real-time hub LMP fetch
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/ercot_prices.py
