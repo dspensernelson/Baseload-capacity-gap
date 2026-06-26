@@ -49,7 +49,7 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
   React only renders. Public read-only via RLS + the anon key.
 - **Frontend** — React + Vite + react-router (tabbed pages + reactor permalinks),
   MapLibre GL (map), Recharts (charts). On Vercel; every push to `main` auto-deploys.
-- **Automation** — 8 GitHub Actions crons keep the data fresh with zero manual upkeep;
+- **Automation** — 9 GitHub Actions crons keep the data fresh with zero manual upkeep;
   a **watchdog** confirms they ran; a weekly **reconciliation** re-derives every headline
   from atomic rows and proves it still matches its source. Every run writes to `sync_log`.
 - **Distribution** — two thin, read-only Vercel functions (`api/og.js`, `api/rss.js`),
@@ -68,7 +68,8 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `monthly-dispatch.yml` | monthly, 2nd | drafts the plain-English Dispatch → `reports` |
 | `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
 | `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure |
-| `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS day-ahead LMP (NP15/SP15) → `wholesale_prices` — pilot, no API key needed |
+| `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS pricing (day-ahead + real-time, NP15/SP15) → `wholesale_prices` — no API key needed |
+| `nyiso-prices.yml` | every 6 h | NYISO public MIS zonal LBMP (day-ahead + real-time) → `wholesale_prices` — no API key needed |
 | `pjm-prices.yml` | manual (`workflow_dispatch`) | Optional PJM Data Miner day-ahead hourly LMP (WEST/MIDATL) → `wholesale_prices` (requires `PJM_API_KEY`) |
 
 **Manual by design:** `new_reactor_projects` (~7 rows of editorial judgment about which
@@ -119,7 +120,7 @@ src/
 api/                 og.js (live OG share card), rss.js (Dispatches RSS feed) — see ADR-0012
 scripts/             Python ETL, the cron scripts, the watchdog, reconcile, docs_check
 supabase/            table DDL + views + seeds (apply order in docs/REBUILD.md)
-.github/workflows/   the 8 crons + watchdog (+ optional pjm-prices manual workflow)
+.github/workflows/   the 9 crons + watchdog (+ optional pjm-prices manual workflow)
 docs/                INDEX, ARCHITECTURE, REBUILD, data-model, PROVENANCE, SOURCES,
                      ROADMAP, methodology, decisions/ (ADRs), history/ (V1 build log)
 CLAUDE.md            working context for AI-assisted sessions (the agent's entry point)

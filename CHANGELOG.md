@@ -5,6 +5,15 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## No-key pricing expansion: CAISO real-time + NYISO — June 2026
+Expanded the wholesale-pricing pipeline to maximize free/no-key coverage. CAISO now ingests
+both day-ahead and real-time pricing (NP15/SP15), and NYISO was added via public MIS CSV feeds
+for zonal LBMP (day-ahead + real-time) with a new scheduled workflow (`nyiso-prices.yml`).
+
+The Prices page now supports a market toggle (day-ahead vs real-time) and dynamically renders
+all active no-key series (CAISO + NYISO, with PJM remaining optional when API credentials exist).
+`wholesale_prices` schema remains unchanged (`iso`/`hub`/`market`/`interval_start`).
+
 ## Pricing reliability + PJM expansion — June 2026
 Hardened the CAISO ingest path so failures are no longer narrowly tied to HTTP errors:
 timeouts, connection issues, parse failures, malformed rows, and upsert failures now

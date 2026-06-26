@@ -27,9 +27,10 @@ main matches origin/main before assuming anything is unpushed.
 
 This round's candidates (pick and confirm with me before building):
 
-1. **Extend the wholesale-pricing pilot further** — PJM day-ahead is now wired in,
-   so next choices are ERCOT and/or real-time pricing for CAISO/PJM. `wholesale_prices.iso`/
-   `market` columns were built for exactly this, no schema change needed. See ADR-0015.
+1. **Extend wholesale pricing further** — CAISO day-ahead + real-time and NYISO day-ahead +
+   real-time are now live with no API key; PJM remains optional/key-gated. Next choices:
+   ERCOT/SPP/MISO no-key endpoint hardening (if feasible) and/or deeper hub coverage.
+   `wholesale_prices.iso`/`market` columns were built for exactly this, no schema change needed.
 2. **H1 finishing pieces** (ROADMAP): event-driven Dispatches (not just monthly),
    self-healing scrapers (watchdog already detects breaks; the agent-fix loop is
    the open part). NOTE: an "LLM content layer" for Dispatches/Radar prose has been
