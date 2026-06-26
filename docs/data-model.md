@@ -1,6 +1,6 @@
 # Data Model
 
-The complete schema as it runs in production: **16 tables, 5 views**. Generated against
+The complete schema as it runs in production: **18 tables, 7 views**. Generated against
 the live database. Every `CREATE TABLE` here has a matching artifact under `supabase/`
 (see [REBUILD.md](REBUILD.md) for the apply order); `scripts/docs_check.py` fails if a
 live table is missing from this file.
@@ -57,6 +57,17 @@ One row per reactor per NRC report date. The un-recreatable asset (never prune).
 
 ### `generation_hourly` — EIA-930 grid mix (~4k rows)
 `period_utc`+`fueltype` PK, `mwh`, `updated_at`. Powers the 2 a.m. view. Degrades gracefully.
+
+### `grid_reliability_daily` — daily source reliability snapshots
+Materialized by `scripts/grid_reliability_daily.py` from `generation_hourly`.
+PK: `snapshot_date` + `source_key`. Columns include `avg_gw`, `p10_gw`, `p90_gw`,
+`cv_pct`, `ramp95_gw`, `hours_observed`, `updated_at`.
+
+### `grid_firming_daily` — daily firming snapshot
+Materialized by `scripts/grid_reliability_daily.py` from `generation_hourly`.
+PK: `snapshot_date`. Columns include overnight/midday source averages plus
+`overnight_nuclear_share_pct`, `low_renewables_hours_pct`,
+`nuclear_share_when_low_renewables_pct`, `hours_observed`, `updated_at`.
 
 ### `wholesale_prices` — CAISO day-ahead hourly LMP (pilot, grows daily)
 `iso`+`hub`+`market`+`interval_start` PK, `price_usd_mwh`, `updated_at`. Powers "The price of
@@ -134,6 +145,8 @@ written by `scripts/generate_dispatch.py`) and `weekly_radar` (the Regulatory Ra
 | `demand_growth_series` | per-year `demand_mw_low`, `demand_mw_high` (2025–2045) | The Grid's demand-growth section |
 | `fleet_output_series` | per-day `output_mw`, `capacity_mw`, `units_offline`, `units_reporting` | the 12-month fleet chart |
 | `reactor_cf_90d` | per-unit `avg_power_90d`, `offline_days`, `days` (last 90 d) | Fleet "who ran hardest" |
+| `grid_reliability_source_stats_30d` | per-source 30-day reliability profile (`cv_pct`, `ramp95_gw`, ranges) | Grid reliability profile |
+| `grid_firming_snapshot_30d` | 30-day aggregate firming snapshot (overnight + low-renewables nuclear share) | Grid firming callout |
 
 Exact formulas are registered in `metric_lineage` and shown on [`/sources`](https://nukemap-two.vercel.app/sources).
 **Rule:** if you change a view's formula, update its `metric_lineage` row in the same commit.

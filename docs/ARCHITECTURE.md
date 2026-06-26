@@ -25,6 +25,7 @@ frontend. See [ADR-0012](decisions/0012-thin-distribution-functions.md).
  NRC license pages    │      nrc-daily        (08:00)           16 tables                React + Vite
  NRC event notices    ├────► nrc-license-wk   (Mon)      ──────► 5 views          ◄─────── react-router
  EIA-860M / 930       │      eia930           (6h)               (editorial math   anon   MapLibre / Recharts
+                       │      grid-reliability (daily)
  CAISO OASIS          │      caiso-prices     (daily)             = views only)     key    11 tabs + permalinks
  NYISO MIS CSV        │      nyiso-prices     (6h)
  ERCOT MIS CDR        │      ercot-prices     (2h)
@@ -56,11 +57,11 @@ for any aggregated number — React never re-aggregates.
 ## The three subsystems
 
 ### 1. The data plane (tables + crons)
-16 tables in four shapes: **core entities** (`reactors`, `new_reactor_projects`,
+18 tables in four shapes: **core entities** (`reactors`, `new_reactor_projects`,
 `decommissioning`, `license_actions`), **automated feeds** (`daily_status_history`,
-`generation_hourly`, `wholesale_prices`, `incidents`, `sync_log`), **curated reference** (`energy_safety`,
+`generation_hourly`, `grid_reliability_daily`, `grid_firming_daily`, `wholesale_prices`, `incidents`, `sync_log`), **curated reference** (`energy_safety`,
 `notable_accidents`, `history_milestones`, `demand_forecast`), and **the provenance pair** (`metric_lineage`,
-`reconciliation_log`). Ten scheduled crons keep them fresh, plus an optional manual PJM pricing workflow ([README](../README.md#the-crons)).
+`reconciliation_log`). Eleven scheduled crons keep them fresh, plus an optional manual PJM pricing workflow ([README](../README.md#the-crons)).
 
 ### 2. The editorial plane (views)
 Every number a visitor sees that isn't a raw row is a **SQL view**: `headline_numbers`,

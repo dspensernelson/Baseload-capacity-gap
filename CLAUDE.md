@@ -24,7 +24,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 | Charts | Recharts | Area/composed chart for the gap visualization |
 | Hosting | Vercel or Netlify | Free tier, connect to GitHub repo |
 | ETL (v1) | Python scripts | One-off seed scripts, run manually |
-| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-weekly.yml` (weekly Mon, license actions + the Regulatory Radar digest) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `caiso-prices.yml` (daily — CAISO day-ahead + real-time LMP, no API key) · `nyiso-prices.yml` (every 6h — NYISO day-ahead + real-time zonal LBMP, no API key) · `ercot-prices.yml` (every 2h — ERCOT real-time hub LMP, no API key) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
+| Crons | GitHub Actions | `nrc-daily.yml` (daily 08:00, power status) · `nrc-license-weekly.yml` (weekly Mon, license actions + the Regulatory Radar digest) · `health-check.yml` (watchdog — opens a GitHub issue if a cron breaks, closes it when healthy) · `monthly-dispatch.yml` (writes the monthly Dispatch) · `eia930-generation.yml` (every 6h — hourly grid mix for the 2 a.m. view) · `grid-reliability-daily.yml` (daily + after EIA-930 — materializes reliability snapshots) · `caiso-prices.yml` (daily — CAISO day-ahead + real-time LMP, no API key) · `nyiso-prices.yml` (every 6h — NYISO day-ahead + real-time zonal LBMP, no API key) · `ercot-prices.yml` (every 2h — ERCOT real-time hub LMP, no API key) · `reconcile.yml` (weekly + after the license cron — re-derives every headline from atomic rows, logs to `reconciliation_log`). Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY` |
 | Distribution | Vercel Functions | `api/og.js` (Edge, `@vercel/og` — live share card from `headline_numbers`) + `api/rss.js` (Node — Dispatches feed from `reports`, served at `/rss.xml`). Both read-only, anon key only, no service key. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md) |
 
 ---
@@ -93,7 +93,7 @@ nuclear-pipeline-tracker/
 
 ---
 
-## Database Tables (16 total)
+## Database Tables (18 total)
 
 1. **`reactors`** — one row per reactor unit (operating, shutdown, decommissioning)
 2. **`new_reactor_projects`** — SMR and new build pipeline (~10 rows, manual). **Capacity *arriving* only**: new builds + restarts of shut-down units. **Never** existing operating plants being renewed (SLRs like Diablo Canyon/Clinton/Seabrook) — those are already in `reactors` + `license_actions`; adding them double-counts the operating fleet and inflates the pipeline number.
@@ -111,6 +111,8 @@ nuclear-pipeline-tracker/
 14. **`history_milestones`** — the History timeline (sourced, 1938 → the gap)
 15. **`demand_forecast`** — the EIA AEO reference-case demand-growth assumption (1 row, curated, annual-refresh) behind "Why this gets harder, not easier" on The Grid; feeds `demand_growth_series`. See ADR-0014
 16. **`wholesale_prices`** — multi-ISO wholesale prices (CAISO day-ahead + real-time, NYISO day-ahead + real-time zonal LBMP, ERCOT real-time hub LMP; optional PJM when keyed), powers "The price of intermittency" on The Grid. Core feeds are no-key.
+17. **`grid_reliability_daily`** — daily materialized source reliability metrics (avg/p10/p90/CV/ramp95) derived from `generation_hourly`; powers The Grid reliability trend.
+18. **`grid_firming_daily`** — daily materialized firming snapshot (overnight nuclear share and low-renewables-hour nuclear share) derived from `generation_hourly`; powers The Grid firming trend.
 
 **Provenance columns:** `reactors`, `new_reactor_projects`, `decommissioning`, `license_actions` each carry `source`, `source_url`, `source_date`, `verified_at`, `provenance_note`. **Every curated row must cite a source** (watchdog- and reconcile-enforced). Full process in `docs/PROVENANCE.md`.
 

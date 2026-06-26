@@ -27,10 +27,10 @@ main matches origin/main before assuming anything is unpushed.
 
 This round's candidates (pick and confirm with me before building):
 
-1. **Grid reliability expansion shipped** — `/grid` now has source-by-source reliability profile
-   (`grid_reliability_source_stats_30d`) and a firming snapshot (`grid_firming_snapshot_30d`),
-   both derived from automated EIA-930 data and registered in `metric_lineage`.
-   Next choices: add historical trend lines for these reliability metrics and/or regionalize beyond US48.
+1. **Autonomous reliability pipeline shipped** — `/grid` reliability/firming now read from
+   cron-materialized daily tables (`grid_reliability_daily`, `grid_firming_daily`) built by
+   `grid-reliability-daily.yml` + `scripts/grid_reliability_daily.py`, with sync receipts.
+   Next choices: regionalize reliability metrics beyond US48 and add source-specific trend annotations.
 2. **H1 finishing pieces** (ROADMAP): event-driven Dispatches (not just monthly),
    self-healing scrapers (watchdog already detects breaks; the agent-fix loop is
    the open part). NOTE: an "LLM content layer" for Dispatches/Radar prose has been

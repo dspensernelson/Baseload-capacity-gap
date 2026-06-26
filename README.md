@@ -44,12 +44,12 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
 
 ## Architecture (one minute)
 
-- **Database** — Supabase (Postgres), 16 tables + 5 views. *All* editorial math lives in
+- **Database** — Supabase (Postgres), 18 tables + 7 views. *All* editorial math lives in
   SQL views (`headline_numbers`, `gap_series`, `fleet_output_series`, `reactor_cf_90d`);
   React only renders. Public read-only via RLS + the anon key.
 - **Frontend** — React + Vite + react-router (tabbed pages + reactor permalinks),
   MapLibre GL (map), Recharts (charts). On Vercel; every push to `main` auto-deploys.
-- **Automation** — 10 GitHub Actions crons keep the data fresh with zero manual upkeep;
+- **Automation** — 11 GitHub Actions crons keep the data fresh with zero manual upkeep;
   a **watchdog** confirms they ran; a weekly **reconciliation** re-derives every headline
   from atomic rows and proves it still matches its source. Every run writes to `sync_log`.
 - **Distribution** — two thin, read-only Vercel functions (`api/og.js`, `api/rss.js`),
@@ -64,6 +64,7 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `nrc-daily.yml` | daily 08:00 UTC | NRC power status → `reactors.daily_status` (94 units) + appends `daily_status_history` |
 | `nrc-license-weekly.yml` | weekly, Mon 09:00 UTC | NRC renewal pages → rebuilds `license_actions`, updates `reactors` expiration dates; then drafts the Regulatory Radar digest → `reports` |
 | `eia930-generation.yml` | every 6 h | EIA-930 hourly US generation by fuel → `generation_hourly` (the 2 a.m. view) |
+| `grid-reliability-daily.yml` | daily + after EIA-930 runs | materializes daily reliability snapshots → `grid_reliability_daily`, `grid_firming_daily` |
 | `nrc-events.yml` | daily 09:00 UTC | NRC Event Notifications → `incidents` (the live wire) |
 | `monthly-dispatch.yml` | monthly, 2nd | drafts the plain-English Dispatch → `reports` |
 | `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
@@ -73,9 +74,9 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `ercot-prices.yml` | every 2 h | ERCOT public MIS CDR real-time hub LMP (HB_HOUSTON/HB_NORTH/HB_SOUTH/HB_WEST) → `wholesale_prices` — no API key needed |
 | `pjm-prices.yml` | manual (`workflow_dispatch`) | Optional PJM Data Miner day-ahead hourly LMP (WEST/MIDATL) → `wholesale_prices` (requires `PJM_API_KEY`) |
 
-`/grid` now includes two source-backed reliability layers derived from `generation_hourly` (EIA-930):
-- `grid_reliability_source_stats_30d` — per-source 30-day variability profile (CV + ramp stress).
-- `grid_firming_snapshot_30d` — firming snapshot (overnight nuclear share + low-renewables-hour nuclear share).
+`/grid` now includes two source-backed reliability layers filled by a daily cron from EIA-930:
+- `grid_reliability_daily` — per-day source reliability snapshots (avg/range/CV/ramp stress).
+- `grid_firming_daily` — per-day firming snapshots (overnight nuclear share + low-renewables-hour nuclear share).
 
 **Manual by design:** `new_reactor_projects` (~7 rows of editorial judgment about which
 SMR/new-build projects are credible) and the curated reference tables (`energy_safety`,
@@ -130,7 +131,7 @@ src/
 api/                 og.js (live OG share card), rss.js (Dispatches RSS feed) — see ADR-0012
 scripts/             Python ETL, the cron scripts, the watchdog, reconcile, docs_check
 supabase/            table DDL + views + seeds (apply order in docs/REBUILD.md)
-.github/workflows/   the 10 crons + watchdog (+ optional pjm-prices manual workflow)
+.github/workflows/   the 11 crons + watchdog (+ optional pjm-prices manual workflow)
 docs/                INDEX, ARCHITECTURE, REBUILD, data-model, PROVENANCE, SOURCES,
                      ROADMAP, methodology, decisions/ (ADRs), history/ (V1 build log)
 CLAUDE.md            working context for AI-assisted sessions (the agent's entry point)

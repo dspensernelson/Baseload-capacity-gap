@@ -147,6 +147,26 @@ ON CONFLICT (metric_key) DO UPDATE SET
 
 INSERT INTO metric_lineage
  (metric_key,label,surface,definition,formula,unit,source_object,primary_source,primary_source_url,constants,notes,sort_order) VALUES
+($$grid_reliability_daily_series$$,$$Daily source reliability snapshots$$,$$Grid / Reliability profile$$,
+ $$Per-day, per-source reliability metrics (average, variability, ramp stress) materialized from hourly generation.$$,
+ $$scripts/grid_reliability_daily.py computes daily source series from generation_hourly and upserts into grid_reliability_daily$$,
+ $$series (GW/% by day)$$,$$grid_reliability_daily$$,$$EIA Hourly Electric Grid Monitor (EIA-930)$$,
+ $$https://www.eia.gov/electricity/gridmonitor/$$,NULL,
+ $$Autonomous daily materialization used directly by the Grid reliability chart.$$,48),
+($$grid_firming_daily_snapshot$$,$$Daily nuclear firming snapshot$$,$$Grid / Firming snapshot$$,
+ $$Per-day snapshot of overnight nuclear share and nuclear share during low-renewables hours.$$ ,
+ $$scripts/grid_reliability_daily.py computes overnight and low-renewables metrics and upserts into grid_firming_daily$$,
+ $$% / GW by day$$,$$grid_firming_daily$$,$$EIA Hourly Electric Grid Monitor (EIA-930)$$,
+ $$https://www.eia.gov/electricity/gridmonitor/$$,$$low-renew threshold = 15% of total generation$$,
+ $$Displayed on The Grid as the latest snapshot plus recent trend.$$,49)
+ON CONFLICT (metric_key) DO UPDATE SET
+ label=EXCLUDED.label, surface=EXCLUDED.surface, definition=EXCLUDED.definition, formula=EXCLUDED.formula,
+ unit=EXCLUDED.unit, source_object=EXCLUDED.source_object, primary_source=EXCLUDED.primary_source,
+ primary_source_url=EXCLUDED.primary_source_url, constants=EXCLUDED.constants, notes=EXCLUDED.notes,
+ sort_order=EXCLUDED.sort_order, updated_at=now();
+
+INSERT INTO metric_lineage
+ (metric_key,label,surface,definition,formula,unit,source_object,primary_source,primary_source_url,constants,notes,sort_order) VALUES
 ($$grid_source_cv_30d$$,$$30-day source variability (CV)$$,$$Grid / Reliability profile$$,
  $$Coefficient of variation for each major generation source over the trailing 30 days of hourly U.S. generation.$$,
  $$grid_reliability_source_stats_30d.cv_pct = stddev_pop(gw)/avg(gw) by source bucket$$,$$%$$,

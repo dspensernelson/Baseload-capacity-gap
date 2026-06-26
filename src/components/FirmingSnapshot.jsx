@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import supabase from '../supabase'
 
 function n(v, d = 1) {
@@ -8,28 +9,35 @@ function n(v, d = 1) {
 
 export default function FirmingSnapshot() {
   const [row, setRow] = useState(null)
+  const [trend, setTrend] = useState([])
   const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
     setError('')
+    const since = new Date(Date.now() - 35 * 24 * 3600 * 1000).toISOString().slice(0, 10)
     supabase
-      .from('grid_firming_snapshot_30d')
+      .from('grid_firming_daily')
       .select('*')
-      .maybeSingle()
+      .gte('snapshot_date', since)
+      .order('snapshot_date')
       .then(({ data, error: qErr }) => {
         if (!alive) return
         if (qErr) {
           setError('Firming snapshot is temporarily unavailable.')
           setRow(null)
+          setTrend([])
           return
         }
-        setRow(data || null)
+        const arr = data || []
+        setTrend(arr)
+        setRow(arr.length ? arr[arr.length - 1] : null)
       })
       .catch(() => {
         if (alive) {
           setError('Firming snapshot is temporarily unavailable.')
           setRow(null)
+          setTrend([])
         }
       })
 
@@ -42,7 +50,7 @@ export default function FirmingSnapshot() {
   return (
     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '1.15rem 1.3rem', lineHeight: 1.6 }}>
       <div style={{ fontSize: '0.95rem' }}>
-        Over the last 30 days, during overnight hours (12 a.m.-6 a.m. ET), nuclear supplied about{' '}
+        In the latest daily snapshot, during overnight hours (12 a.m.-6 a.m. ET), nuclear supplied about{' '}
         <strong>{n(row.overnight_nuclear_share_pct)}%</strong> of total U.S. generation while solar averaged{' '}
         <strong>{n(row.overnight_solar_gw)} GW</strong>. In hours where wind+solar together fell below 15% of the grid,
         nuclear's average share rose to <strong>{n(row.nuclear_share_when_low_renewables_pct)}%</strong>.
@@ -67,8 +75,21 @@ export default function FirmingSnapshot() {
         </div>
       </div>
 
+      <div style={{ marginTop: '0.95rem' }}>
+        <ResponsiveContainer width="100%" height={180}>
+          <LineChart data={trend} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+            <XAxis dataKey="snapshot_date" tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} tickLine={false} axisLine={{ stroke: '#e0e0e0' }} minTickGap={24} />
+            <YAxis tickFormatter={v => `${v}%`} tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} tickLine={false} axisLine={false} width={32} />
+            <Tooltip formatter={v => `${Number(v).toFixed(1)}%`} />
+            <Line type="monotone" dataKey="overnight_nuclear_share_pct" stroke="var(--color-operating)" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls name="Overnight nuclear share" />
+            <Line type="monotone" dataKey="nuclear_share_when_low_renewables_pct" stroke="var(--color-brand)" strokeWidth={1.8} dot={false} isAnimationActive={false} connectNulls name="Nuclear share when wind+solar < 15%" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
       <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.65rem', marginBottom: 0 }}>
-        Derived from hourly U.S. generation (EIA-930), trailing 30 days; low-renewables threshold = 15% of total generation.
+        Daily materialized snapshots from hourly U.S. generation (EIA-930); low-renewables threshold = 15% of total generation.
       </p>
     </div>
   )

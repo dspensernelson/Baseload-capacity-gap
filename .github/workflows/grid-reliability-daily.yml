@@ -1,0 +1,29 @@
+name: Grid Reliability Daily
+
+on:
+  schedule:
+    - cron: '40 12 * * *'   # daily snapshot after noon EIA-930 refresh
+  workflow_run:
+    workflows: ["EIA-930 Grid Generation"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  materialize-grid-reliability:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install python-dotenv "supabase==2.9.1" tzdata
+
+      - name: Build daily reliability snapshots
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/grid_reliability_daily.py

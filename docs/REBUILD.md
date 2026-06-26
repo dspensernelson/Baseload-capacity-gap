@@ -30,11 +30,13 @@ Run each in the Supabase SQL editor (or `psql`). All are idempotent (`IF NOT EXI
 | 2 | `supabase/daily_status_history.sql` | `daily_status_history` (the tape) |
 | 3 | `supabase/reports.sql` | `reports` (Dispatches) |
 | 4 | `supabase/generation_hourly.sql` | `generation_hourly` (EIA-930) |
-| 5 | `supabase/fleet_output_series.sql` | view (needs `daily_status_history` + `reactors`) |
-| 6 | `supabase/reactor_cf_90d.sql` | view (needs `daily_status_history` + `reactors`) |
-| 7 | `supabase/metric_lineage.sql` | `metric_lineage` + `reconciliation_log` + the registry seed |
-| 8 | `supabase/safety_incidents.sql` | `energy_safety`, `notable_accidents`, `incidents` + reference seeds |
-| 9 | `supabase/history.sql` | `history_milestones` + timeline seed |
+| 5 | `supabase/grid_reliability_daily.sql` | `grid_reliability_daily`, `grid_firming_daily` |
+| 6 | `supabase/fleet_output_series.sql` | view (needs `daily_status_history` + `reactors`) |
+| 7 | `supabase/reactor_cf_90d.sql` | view (needs `daily_status_history` + `reactors`) |
+| 8 | `supabase/grid_reliability_views.sql` | views for 30-day reliability and firming snapshot |
+| 9 | `supabase/metric_lineage.sql` | `metric_lineage` + `reconciliation_log` + the registry seed |
+| 10 | `supabase/safety_incidents.sql` | `energy_safety`, `notable_accidents`, `incidents` + reference seeds |
+| 11 | `supabase/history.sql` | `history_milestones` + timeline seed |
 
 (`supabase/provenance.sql` is applied in step 2, after rows exist — it adds the provenance
 columns *and* backfills them.)
@@ -70,7 +72,7 @@ client routes to `index.html` so deep links (`/reactor/...`, `/sources`) survive
 
 ---
 
-## 5. Turn on the automation (7 crons)
+## 5. Turn on the automation (11 crons)
 
 The workflows in `.github/workflows/` run on schedule once secrets exist. Trigger each once
 via **workflow_dispatch** to populate live data immediately:
