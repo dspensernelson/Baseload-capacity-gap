@@ -17,12 +17,13 @@ Every document, who it's for, and the rule that keeps it true. Three readers:
 | Know where it's headed | [`ROADMAP.md`](ROADMAP.md) · `VISION.md` (internal) 🧭 |
 | Operate / verify the live system | [`VERIFY.md`](../VERIFY.md) · [`TESTING.md`](../TESTING.md) 🧭 |
 | Work on the code as an agent | [`CLAUDE.md`](../CLAUDE.md) 🤖 |
+| Start the *next* working session | [`NEXT_SESSION.md`](NEXT_SESSION.md) 🤖🧭 |
 | See how it evolved | [`CHANGELOG.md`](../CHANGELOG.md) 🏛️ |
 
 ## Full map
 
 **Current (keep these true):** README · ARCHITECTURE · data-model · REBUILD · PROVENANCE ·
-SOURCES · ROADMAP · decisions/ · CLAUDE.md · VERIFY · TESTING · CHANGELOG · methodology.md.
+SOURCES · ROADMAP · decisions/ · CLAUDE.md · NEXT_SESSION · VERIFY · TESTING · CHANGELOG · methodology.md.
 
 **Internal (gitignored, local only):** `VISION.md` — the full positioning, including the
 parts never printed on the site. The public docs describe the reference work; VISION holds
@@ -45,5 +46,6 @@ Docs rot silently — so we make drift *fail*, the same way we make wrong number
 | make a notable decision | a new file in `decisions/` |
 | move the thesis | `VISION.md` and `ROADMAP.md` |
 | ship anything notable | a line in `CHANGELOG.md` |
+| finish a working session | refresh `CLAUDE.md`'s Current Session footer **and** `docs/NEXT_SESSION.md` (the next thread's kickoff) |
 
 Run `python scripts/docs_check.py` before committing docs or schema changes.
