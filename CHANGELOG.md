@@ -5,6 +5,20 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Pricing reliability + PJM expansion — June 2026
+Hardened the CAISO ingest path so failures are no longer narrowly tied to HTTP errors:
+timeouts, connection issues, parse failures, malformed rows, and upsert failures now
+flow through a single error path and still emit a bounded `sync_log.error_message`
+receipt every run. This closes a real observability gap in the cron contract.
+
+Frontend app bootstrap now has an explicit failure state (`src/App.jsx`) with a retry
+control, replacing silent blank/partial states when Supabase startup queries fail.
+
+Prepared the wholesale-pricing layer beyond California with a PJM day-ahead ingest path
+(`scripts/pjm_prices.py`) and a key-gated workflow (`pjm-prices.yml`) writing to the
+existing `wholesale_prices` schema (`iso`/`hub`/`market`), plus multi-ISO rendering in
+`WholesalePrices.jsx` (CAISO NP15/SP15 + PJM WEST/MIDATL when configured).
+
 ## Demand-growth visual moved off the hero chart — June 2026
 Shipped on the Overview gap chart earlier today; pulled the same day on direct feedback that
 whole-grid demand context on the nuclear-specific hero chart confused the story rather than

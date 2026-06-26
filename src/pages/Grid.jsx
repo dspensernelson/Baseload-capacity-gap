@@ -1,5 +1,4 @@
 import GridMix from '../components/GridMix'
-import WholesalePrices from '../components/WholesalePrices'
 import DemandGrowth from '../components/DemandGrowth'
 import ReplacementMath from '../components/ReplacementMath'
 
@@ -12,19 +11,12 @@ export default function Grid({ reactors = [], demandSeries = [] }) {
         persuasive thing we can show: what each source actually contributes, hour by hour.
       </p>
 
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '2.25rem', marginBottom: '0.4rem' }}>The 2 a.m. test</h3>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '2.25rem', marginBottom: '0.4rem' }}>Generation: the 2 a.m. test</h3>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem', maxWidth: '46rem' }}>
         Who actually keeps the lights on overnight? Here's the whole U.S. grid by source for the last two days.
         Watch solar vanish to zero every night while nuclear holds the same line around the clock.
       </p>
       <GridMix />
-
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '3rem', marginBottom: '0.4rem' }}>The price of intermittency</h3>
-      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem', maxWidth: '46rem' }}>
-        Same story, in dollars. Wholesale electricity price swings hour to hour with how much solar and wind are on the
-        grid — a cost that flat, predictable output doesn't carry. Pilot: California (CAISO) only.
-      </p>
-      <WholesalePrices />
 
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '3rem', marginBottom: '0.4rem' }}>Why this gets harder, not easier</h3>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem', maxWidth: '46rem' }}>

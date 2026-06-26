@@ -69,6 +69,20 @@ def fetch_hub(hub, start, end):
     return []
 
 
+def write_sync_log(sb, status, total_written, start_t, errors):
+    try:
+        sb.table("sync_log").insert({
+            "source":        "caiso_prices",
+            "status":        status,
+            "rows_inserted": total_written,
+            "duration_ms":   int((time.time() - start_t) * 1000),
+            "error_message": ("; ".join(errors))[:500] if errors else None,
+            "notes":         f"CAISO day-ahead LMP, hubs {', '.join(HUBS)}, {LOOKBACK_DAYS}d trailing window.",
+        }).execute()
+    except Exception as e:
+        print(f"(could not write sync_log row: {e})")
+
+
 def main():
     start_t = time.time()
     sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
@@ -84,34 +98,50 @@ def main():
         short_hub = hub.replace("TH_", "").replace("_GEN-APND", "")
         try:
             rows = fetch_hub(hub, start, end)
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.RequestException as e:
             print(f"  {hub}: FAILED ({e})")
             errors.append(f"{short_hub}: {e}")
             continue
+        except (zipfile.BadZipFile, csv.Error) as e:
+            print(f"  {hub}: FAILED to parse response ({e})")
+            errors.append(f"{short_hub}: parse_error: {e}")
+            continue
+        except Exception as e:
+            print(f"  {hub}: FAILED unexpectedly ({type(e).__name__}: {e})")
+            errors.append(f"{short_hub}: unexpected_error: {type(e).__name__}: {e}")
+            continue
 
-        records = [{
-            "iso": "CAISO",
-            "hub": short_hub,
-            "market": "day_ahead",
-            "interval_start": r["INTERVALSTARTTIME_GMT"],
-            "price_usd_mwh": float(r["MW"]),  # CAISO's CSV names the price column MW
-        } for r in rows]
+        records = []
+        bad_rows = 0
+        for r in rows:
+            try:
+                records.append({
+                    "iso": "CAISO",
+                    "hub": short_hub,
+                    "market": "day_ahead",
+                    "interval_start": r["INTERVALSTARTTIME_GMT"],
+                    "price_usd_mwh": float(r["MW"]),  # CAISO's CSV names the price column MW
+                })
+            except (KeyError, TypeError, ValueError):
+                bad_rows += 1
+
+        if bad_rows:
+            errors.append(f"{short_hub}: skipped {bad_rows} malformed row(s)")
 
         if records:
-            sb.table("wholesale_prices").upsert(
-                records, on_conflict="iso,hub,market,interval_start"
-            ).execute()
+            try:
+                sb.table("wholesale_prices").upsert(
+                    records, on_conflict="iso,hub,market,interval_start"
+                ).execute()
+            except Exception as e:
+                errors.append(f"{short_hub}: upsert_error: {e}")
+                print(f"  {hub}: FAILED write ({e})")
+                continue
         total_written += len(records)
         print(f"  {hub}: {len(records)} hourly rows written")
 
-    sb.table("sync_log").insert({
-        "source":        "caiso_prices",
-        "status":        "error" if errors else "success",
-        "rows_inserted": total_written,
-        "duration_ms":   int((time.time() - start_t) * 1000),
-        "error_message": "; ".join(errors) if errors else None,
-        "notes":         f"CAISO day-ahead LMP, hubs {', '.join(HUBS)}, {LOOKBACK_DAYS}d trailing window.",
-    }).execute()
+    status = "error" if errors else "success"
+    write_sync_log(sb, status, total_written, start_t, errors)
 
     print(f"Done: wrote {total_written} rows total" + (f", {len(errors)} hub(s) failed" if errors else ""))
     if errors:

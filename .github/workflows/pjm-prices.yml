@@ -1,0 +1,29 @@
+name: PJM Wholesale Prices
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-pjm-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install python-dotenv "supabase==2.9.1" requests
+
+      - name: Run PJM day-ahead LMP fetch
+        if: ${{ secrets.PJM_API_KEY != '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PJM_API_KEY: ${{ secrets.PJM_API_KEY }}
+        run: python scripts/pjm_prices.py
+
+      - name: Skip when PJM key is not configured
+        if: ${{ secrets.PJM_API_KEY == '' }}
+        run: echo "PJM_API_KEY is not configured. PJM ingest is optional and was skipped."

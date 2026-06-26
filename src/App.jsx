@@ -5,6 +5,7 @@ import Overview from './pages/Overview'
 import MapPage from './pages/MapPage'
 import Fleet from './pages/Fleet'
 import Grid from './pages/Grid'
+import Prices from './pages/Prices'
 import Incidents from './pages/Incidents'
 import Safety from './pages/Safety'
 import History from './pages/History'
@@ -80,47 +81,10 @@ const navLinkStyle = ({ isActive }) => ({
   textDecoration: 'none',
   fontSize: '0.85rem',
   fontWeight: isActive ? 700 : 500,
-  opacity: isActive ? 1 : 0.65,
+  opacity: isActive ? 1 : 0.72,
   borderBottom: `2px solid ${isActive ? '#fff' : 'transparent'}`,
   paddingBottom: '2px',
 })
-
-// A grouped nav section: a label that reveals a small dropdown of routes, highlighted
-// when any child route is active. Opens on hover, toggles on click (touch-friendly).
-function NavSection({ label, items }) {
-  const [open, setOpen] = useState(false)
-  const { pathname } = useLocation()
-  const active = items.some(it => pathname === it.to || pathname.startsWith(it.to + '/'))
-  return (
-    <div onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} style={{ position: 'relative' }}>
-      <button onClick={() => setOpen(o => !o)} style={{
-        color: '#fff', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-        fontSize: '0.85rem', fontWeight: active ? 700 : 500, opacity: active ? 1 : 0.65,
-        borderBottom: `2px solid ${active ? '#fff' : 'transparent'}`, paddingBottom: '2px',
-        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-      }}>
-        {label}<span style={{ fontSize: '0.6em', opacity: 0.8 }}>▼</span>
-      </button>
-      {open && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, paddingTop: '8px', zIndex: 100 }}>
-          <div style={{
-            background: 'var(--color-brand)', borderRadius: '8px', padding: '0.35rem', minWidth: '160px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.14)',
-          }}>
-            {items.map(it => (
-              <NavLink key={it.to} to={it.to} onClick={() => setOpen(false)} style={({ isActive }) => ({
-                display: 'block', padding: '0.45rem 0.65rem', borderRadius: '6px', whiteSpace: 'nowrap',
-                color: '#fff', textDecoration: 'none', fontSize: '0.85rem',
-                fontWeight: isActive ? 700 : 500, background: isActive ? 'rgba(255,255,255,0.14)' : 'transparent',
-                opacity: isActive ? 1 : 0.85,
-              })}>{it.label}</NavLink>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 export default function App() {
   const [reactors, setReactors]   = useState([])
@@ -132,6 +96,8 @@ export default function App() {
   const [reports, setReports]     = useState([])
   const [projects, setProjects]   = useState([])
   const [loading, setLoading]     = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [reloadTick, setReloadTick] = useState(0)
 
   // ISO filter is URL-backed so /map?iso=PJM is a shareable, filtered view.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -144,28 +110,56 @@ export default function App() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }, { data: ds }, { data: rp }, { data: np }] = await Promise.all([
-        supabase.from('reactors').select('*'),
-        supabase.from('headline_numbers').select('*').single(),
-        supabase.from('gap_series').select('*').order('year'),
-        supabase.from('license_actions').select('*').order('action_date', { ascending: false }),
-        supabase.from('fleet_output_series').select('*').order('report_date'),
-        supabase.from('demand_growth_series').select('*').order('year'),
-        supabase.from('reports').select('*').order('published_at', { ascending: false }),
-        supabase.from('new_reactor_projects').select('*'),
-      ])
-      setReactors(r ?? [])
-      setHeadlines(h)
-      setGapSeries(g ?? [])
-      setLicenseActions(la ?? [])
-      setFleetSeries(fs ?? [])
-      setDemandSeries(ds ?? [])
-      setReports(rp ?? [])
-      setProjects(np ?? [])
-      setLoading(false)
+      setLoadError('')
+      setLoading(true)
+      try {
+        const names = [
+          'reactors',
+          'headline_numbers',
+          'gap_series',
+          'license_actions',
+          'fleet_output_series',
+          'demand_growth_series',
+          'reports',
+          'new_reactor_projects',
+        ]
+        const results = await Promise.all([
+          supabase.from('reactors').select('*'),
+          supabase.from('headline_numbers').select('*').single(),
+          supabase.from('gap_series').select('*').order('year'),
+          supabase.from('license_actions').select('*').order('action_date', { ascending: false }),
+          supabase.from('fleet_output_series').select('*').order('report_date'),
+          supabase.from('demand_growth_series').select('*').order('year'),
+          supabase.from('reports').select('*').order('published_at', { ascending: false }),
+          supabase.from('new_reactor_projects').select('*'),
+        ])
+
+        const queryErrors = results
+          .map((res, idx) => (res.error ? `${names[idx]}: ${res.error.message}` : null))
+          .filter(Boolean)
+
+        if (queryErrors.length) {
+          throw new Error(queryErrors.join(' | '))
+        }
+
+        const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }, { data: ds }, { data: rp }, { data: np }] = results
+        setReactors(r ?? [])
+        setHeadlines(h)
+        setGapSeries(g ?? [])
+        setLicenseActions(la ?? [])
+        setFleetSeries(fs ?? [])
+        setDemandSeries(ds ?? [])
+        setReports(rp ?? [])
+        setProjects(np ?? [])
+      } catch (e) {
+        console.error('App bootstrap failed:', e)
+        setLoadError('Live data could not be loaded right now. Please retry in a moment.')
+      } finally {
+        setLoading(false)
+      }
     }
     load()
-  }, [])
+  }, [reloadTick])
 
   const licenseActionsByReactor = useMemo(() => {
     const map = {}
@@ -185,7 +179,7 @@ export default function App() {
   useEffect(() => {
     if (location.pathname.startsWith('/reactor/')) return  // the reactor page sets its own title
     if (location.pathname.startsWith('/dispatches')) return  // the dispatches page sets its own title
-    const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
+    const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/prices': 'Wholesale Prices', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
     const t = titles[location.pathname]
     document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
   }, [location.pathname])
@@ -200,6 +194,23 @@ export default function App() {
     )
   }
 
+  if (loadError) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem', background: 'var(--color-background)' }}>
+        <div style={{ maxWidth: '38rem', border: '1px solid var(--color-border)', borderRadius: '10px', background: 'var(--color-surface)', padding: '1.25rem 1.35rem' }}>
+          <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', color: 'var(--color-brand)', fontSize: '1.25rem' }}>Data temporarily unavailable</h2>
+          <p style={{ marginTop: '0.7rem', marginBottom: '1rem', color: 'var(--color-text-muted)', fontSize: '0.92rem' }}>{loadError}</p>
+          <button
+            onClick={() => setReloadTick(t => t + 1)}
+            style={{ border: '1px solid var(--color-brand)', background: 'var(--color-brand)', color: '#fff', borderRadius: '7px', padding: '0.45rem 0.8rem', fontSize: '0.85rem', cursor: 'pointer' }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {!isEmbed && (<header style={{ background: 'var(--color-brand)', color: '#fff', padding: '0.9rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
@@ -209,9 +220,16 @@ export default function App() {
         <nav style={{ display: 'flex', gap: '1.1rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <NavLink to="/" end style={navLinkStyle}>Overview</NavLink>
           <NavLink to="/history" style={navLinkStyle}>History</NavLink>
-          <NavSection label="The Fleet" items={[{ to: '/map', label: 'Map' }, { to: '/fleet', label: 'Performance' }, { to: '/incidents', label: 'Incidents' }]} />
-          <NavSection label="The Case" items={[{ to: '/safety', label: 'Safety' }, { to: '/grid', label: 'The Grid' }, { to: '/scenarios', label: 'Scenarios' }]} />
+          <NavLink to="/map" style={navLinkStyle}>Map</NavLink>
+          <NavLink to="/fleet" style={navLinkStyle}>Fleet</NavLink>
+          <NavLink to="/incidents" style={navLinkStyle}>Incidents</NavLink>
+          <NavLink to="/safety" style={navLinkStyle}>Safety</NavLink>
+          <NavLink to="/grid" style={navLinkStyle}>Grid</NavLink>
+          <NavLink to="/prices" style={navLinkStyle}>Prices</NavLink>
+          <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
+          <NavLink to="/data" style={navLinkStyle}>Data</NavLink>
+          <NavLink to="/sources" style={navLinkStyle}>Sources</NavLink>
         </nav>
         <FleetPulse reactors={reactors} />
       </header>)}
@@ -234,6 +252,7 @@ export default function App() {
         />
         <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
         <Route path="/grid" element={<Grid reactors={reactors} demandSeries={demandSeries} />} />
+        <Route path="/prices" element={<Prices />} />
         <Route path="/incidents" element={<Incidents />} />
         <Route path="/safety" element={<Safety />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />

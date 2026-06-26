@@ -25,12 +25,11 @@ don't ask me to re-explain it. Orient yourself first:
 Live site: https://nukemap-two.vercel.app — confirm git status is clean and local
 main matches origin/main before assuming anything is unpushed.
 
-This round's candidates (pick and confirm with me before building — none of these
-are committed yet):
+This round's candidates (pick and confirm with me before building):
 
-1. **Extend the wholesale-pricing pilot** — more ISOs (PJM, ERCOT) and/or real-time
-   (not just day-ahead) prices. `wholesale_prices.iso`/`market` columns were built
-   for exactly this, no schema change needed. See ADR-0015.
+1. **Extend the wholesale-pricing pilot further** — PJM day-ahead is now wired in,
+   so next choices are ERCOT and/or real-time pricing for CAISO/PJM. `wholesale_prices.iso`/
+   `market` columns were built for exactly this, no schema change needed. See ADR-0015.
 2. **H1 finishing pieces** (ROADMAP): event-driven Dispatches (not just monthly),
    self-healing scrapers (watchdog already detects breaks; the agent-fix loop is
    the open part). NOTE: an "LLM content layer" for Dispatches/Radar prose has been
