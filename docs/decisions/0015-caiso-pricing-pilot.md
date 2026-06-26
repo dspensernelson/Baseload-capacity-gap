@@ -49,3 +49,23 @@ of data for this specific story, not just a coarser version of the right one.
   stack. Genuinely the lowest-friction source added so far.
 - Not watchdog-monitored yet (same as `generation_hourly` — degrades gracefully if a fetch is
   missed). Could be added later if this graduates past pilot status.
+
+## Amendment (June 25, 2026) — the first production run hit a 429
+
+The first manual `workflow_dispatch` run failed: NP15 fetched fine (120 rows), but the very
+next request for SP15 — fired immediately after — got `HTTP 429 Too Many Requests` from
+CAISO. Worse, the original script batched both hubs into one `upsert` at the end, so NP15's
+successful fetch was discarded too when SP15 raised.
+
+**CAISO's OASIS rate-limits back-to-back requests.** Not documented anywhere obvious; found
+by running it. Fixed in `scripts/caiso_prices.py`:
+- An 8-second delay between hub requests, plus retry-with-backoff specifically on 429
+  (verified against the live API before re-shipping — both hubs fetch cleanly with the delay).
+- Each hub now upserts **immediately after fetching**, not batched — one hub failing no
+  longer discards another hub's already-successful write.
+- `sync_log.error_message` records which hub failed, not just a bare "error" status.
+
+Re-triggered after the fix: succeeded, 240 rows (120/hub × 2 hubs), chart confirmed showing
+the real duck-curve story live. **Lesson for adding a third ISO later: assume rate limits
+exist even when undocumented, space out requests by default, and never let one source's
+failure erase another source's success in the same run.**

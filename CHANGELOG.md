@@ -22,8 +22,11 @@ turned out **EIA has no wholesale price route at all**; the wholesale-markets pa
 biweekly Excel file licensed from a commercial exchange (ICE), the wrong granularity for an
 hourly story regardless. Pivoted to a CAISO pilot instead — confirmed free, public, no API
 key (more open than EIA's own API). New `wholesale_prices` table, `iso`/`market` columns
-designed for more ISOs or real-time prices later without a schema change. See
-[ADR-0015](docs/decisions/0015-caiso-pricing-pilot.md).
+designed for more ISOs or real-time prices later without a schema change. First production
+run hit an undocumented CAISO rate limit (429 on the second back-to-back request, which also
+discarded the first hub's already-successful fetch) — fixed with a delay + retry-with-backoff
+and per-hub upserts; re-run succeeded, 240 rows live, chart confirmed showing the real
+duck-curve story. See [ADR-0015](docs/decisions/0015-caiso-pricing-pilot.md) and its amendment.
 
 ## Demand-growth band on the gap chart — June 2026
 The first move toward VISION's V2 thesis ("the Race"): a low-high band showing how much new
