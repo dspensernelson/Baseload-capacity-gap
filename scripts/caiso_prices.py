@@ -6,7 +6,10 @@ solar drops to zero in GridMix.
 
 CAISO's OASIS system is free, public, and needs no API key or registration —
 it's a regulatory-mandated public data system, built for exactly this. No EIA
-key, no account, nothing to rotate.
+key, no account, nothing to rotate. It does rate-limit back-to-back requests
+(observed: a second request immediately after the first gets HTTP 429) — each
+hub is fetched with a retry/backoff, and written to the table immediately
+after fetching, so one hub's success isn't lost if another hub fails.
 
 Pilot scope (see ADR-0015): CAISO only, day-ahead market only. `iso`/`market`
 are real columns so another ISO or real-time prices is a new script writing
@@ -33,7 +36,9 @@ SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 
 OASIS_URL = "https://oasis.caiso.com/oasisapi/SingleZip"
 HUBS = ["TH_NP15_GEN-APND", "TH_SP15_GEN-APND"]
-LOOKBACK_DAYS = 5  # trailing window; idempotent upsert covers any missed runs
+LOOKBACK_DAYS = 5      # trailing window; idempotent upsert covers any missed runs
+HUB_DELAY_S = 8        # spacing between requests to avoid CAISO's rate limit
+MAX_RETRIES = 4
 
 
 def fetch_hub(hub, start, end):
@@ -46,14 +51,22 @@ def fetch_hub(hub, start, end):
         "market_run_id": "DAM",
         "node": hub,
     }
-    resp = requests.get(OASIS_URL, params=params, timeout=60,
-                         headers={"User-Agent": "nukemap-caiso-prices"})
-    resp.raise_for_status()
-    with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
-        csv_name = next(n for n in zf.namelist() if n.endswith(".csv"))
-        with zf.open(csv_name) as f:
-            reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8"))
-            return [row for row in reader if row.get("LMP_TYPE") == "LMP"]
+    backoff = 15
+    for attempt in range(1, MAX_RETRIES + 1):
+        resp = requests.get(OASIS_URL, params=params, timeout=60,
+                             headers={"User-Agent": "nukemap-caiso-prices"})
+        if resp.status_code == 429 and attempt < MAX_RETRIES:
+            print(f"    {hub}: 429 rate-limited (attempt {attempt}/{MAX_RETRIES}), waiting {backoff}s…")
+            time.sleep(backoff)
+            backoff *= 2
+            continue
+        resp.raise_for_status()
+        with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
+            csv_name = next(n for n in zf.namelist() if n.endswith(".csv"))
+            with zf.open(csv_name) as f:
+                reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8"))
+                return [row for row in reader if row.get("LMP_TYPE") == "LMP"]
+    return []
 
 
 def main():
@@ -63,34 +76,46 @@ def main():
     end = datetime.now(timezone.utc)
     start = end - timedelta(days=LOOKBACK_DAYS)
 
-    records = []
-    for hub in HUBS:
-        rows = fetch_hub(hub, start, end)
+    total_written = 0
+    errors = []
+    for i, hub in enumerate(HUBS):
+        if i > 0:
+            time.sleep(HUB_DELAY_S)
         short_hub = hub.replace("TH_", "").replace("_GEN-APND", "")
-        for r in rows:
-            records.append({
-                "iso": "CAISO",
-                "hub": short_hub,
-                "market": "day_ahead",
-                "interval_start": r["INTERVALSTARTTIME_GMT"],
-                "price_usd_mwh": float(r["MW"]),  # CAISO's CSV names the price column MW
-            })
-        print(f"  {hub}: {len(rows)} hourly rows")
+        try:
+            rows = fetch_hub(hub, start, end)
+        except requests.exceptions.HTTPError as e:
+            print(f"  {hub}: FAILED ({e})")
+            errors.append(f"{short_hub}: {e}")
+            continue
 
-    if records:
-        sb.table("wholesale_prices").upsert(
-            records, on_conflict="iso,hub,market,interval_start"
-        ).execute()
+        records = [{
+            "iso": "CAISO",
+            "hub": short_hub,
+            "market": "day_ahead",
+            "interval_start": r["INTERVALSTARTTIME_GMT"],
+            "price_usd_mwh": float(r["MW"]),  # CAISO's CSV names the price column MW
+        } for r in rows]
+
+        if records:
+            sb.table("wholesale_prices").upsert(
+                records, on_conflict="iso,hub,market,interval_start"
+            ).execute()
+        total_written += len(records)
+        print(f"  {hub}: {len(records)} hourly rows written")
 
     sb.table("sync_log").insert({
         "source":        "caiso_prices",
-        "status":        "success",
-        "rows_inserted": len(records),
+        "status":        "error" if errors else "success",
+        "rows_inserted": total_written,
         "duration_ms":   int((time.time() - start_t) * 1000),
+        "error_message": "; ".join(errors) if errors else None,
         "notes":         f"CAISO day-ahead LMP, hubs {', '.join(HUBS)}, {LOOKBACK_DAYS}d trailing window.",
     }).execute()
 
-    print(f"Done: upserted {len(records)} rows")
+    print(f"Done: wrote {total_written} rows total" + (f", {len(errors)} hub(s) failed" if errors else ""))
+    if errors:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
