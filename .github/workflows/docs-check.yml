@@ -18,3 +18,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: python scripts/docs_check.py
+      - run: python scripts/pipeline_contract_check.py

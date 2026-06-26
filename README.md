@@ -90,6 +90,10 @@ The same discipline guards the docs: [`scripts/docs_check.py`](scripts/docs_chec
 (run in CI by `docs-check.yml`) fails if the documentation drifts from the code — undocumented
 tables, unmentioned crons.
 
+The automation contract is checked too: [`scripts/pipeline_contract_check.py`](scripts/pipeline_contract_check.py)
+fails CI if workflow/script wiring drifts or if a workflow-automated ETL script stops emitting
+`sync_log` receipts.
+
 ---
 
 ## Local development

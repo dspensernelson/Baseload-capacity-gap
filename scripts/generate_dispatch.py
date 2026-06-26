@@ -10,6 +10,7 @@ diff against it — turning this into a real "what changed since last month" eng
 Run:  python scripts/generate_dispatch.py
 """
 import os
+import time
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client
@@ -19,6 +20,20 @@ SUPABASE_URL         = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 
 NOW = datetime.now(timezone.utc)
+
+
+def write_sync_log(sb, status, rows_inserted, start_t, errors, notes):
+    try:
+        sb.table("sync_log").insert({
+            "source": "generate_dispatch",
+            "status": status,
+            "rows_inserted": rows_inserted,
+            "duration_ms": int((time.time() - start_t) * 1000),
+            "error_message": ("; ".join(errors))[:500] if errors else None,
+            "notes": notes,
+        }).execute()
+    except Exception as e:
+        print(f"(could not write sync_log row: {e})")
 
 
 def gw(mw):
@@ -36,7 +51,9 @@ def delta_phrase(curr, prev, unit="GW", up_is="", down_is=""):
 
 
 def main():
+    start_t = time.time()
     sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    errors = []
 
     hn = sb.table("headline_numbers").select("*").single().execute().data
     operating = gw(hn.get("operating_mw"))
@@ -95,15 +112,33 @@ _Auto-generated from NRC daily power-status reports and license records on {NOW:
         "under_review": under_review, "approved": approved, "n_operating": n_operating,
     }
 
-    sb.table("reports").upsert(
-        {"kind": "monthly", "period": period, "title": title, "body": body, "stats": stats,
-         "published_at": NOW.isoformat()},
-        on_conflict="kind,period",
-    ).execute()
+    rows_inserted = 0
+    try:
+        sb.table("reports").upsert(
+            {"kind": "monthly", "period": period, "title": title, "body": body, "stats": stats,
+             "published_at": NOW.isoformat()},
+            on_conflict="kind,period",
+        ).execute()
+        rows_inserted = 1
+    except Exception as e:
+        errors.append(f"upsert_error: {type(e).__name__}: {e}")
+
+    status = "error" if errors else "success"
+    write_sync_log(
+        sb,
+        status,
+        rows_inserted,
+        start_t,
+        errors,
+        notes=f"Monthly dispatch period {period}.",
+    )
 
     print(f"Published dispatch: {title}\n")
     print(body)
+    if errors:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
     main()
+
