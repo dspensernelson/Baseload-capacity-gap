@@ -71,10 +71,15 @@ export default function WholesalePrices() {
           return
         }
         const byHour = new Map()
+        const makeSeriesKey = (iso, hub) => {
+          const normHub = String(hub || '').replace(/[^A-Za-z0-9]+/g, '')
+          return `${iso}_${normHub}`
+        }
         for (const r of data) {
-          if (!byHour.has(r.interval_start)) byHour.set(r.interval_start, { iso: r.interval_start, market: r.market })
-          const seriesKey = `${r.iso}_${r.hub}`.replace('N.Y.C.', 'NYC')
-          byHour.get(r.interval_start)[seriesKey] = parseFloat(r.price_usd_mwh)
+          const bucketKey = `${r.market}|${r.interval_start}`
+          if (!byHour.has(bucketKey)) byHour.set(bucketKey, { iso: r.interval_start, market: r.market })
+          const seriesKey = makeSeriesKey(r.iso, r.hub)
+          byHour.get(bucketKey)[seriesKey] = parseFloat(r.price_usd_mwh)
         }
         const arr = [...byHour.values()].map(h => {
           h.t = fmtPT(h.iso, { hour: 'numeric' })
