@@ -217,7 +217,7 @@ export default function App() {
       </header>)}
 
       <Routes>
-        <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} demandSeries={demandSeries} />} />
+        <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} />} />
         <Route path="/history" element={<History />} />
         <Route
           path="/map"
@@ -233,7 +233,7 @@ export default function App() {
           }
         />
         <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
-        <Route path="/grid" element={<Grid reactors={reactors} />} />
+        <Route path="/grid" element={<Grid reactors={reactors} demandSeries={demandSeries} />} />
         <Route path="/incidents" element={<Incidents />} />
         <Route path="/safety" element={<Safety />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />

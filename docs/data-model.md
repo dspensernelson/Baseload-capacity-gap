@@ -106,8 +106,9 @@ Source: WNA / DOE / NRC / EIA / UNSCEAR.
 
 ### `demand_forecast` — the demand-growth assumption (1 row)
 `id`, `scenario`, `baseline_year`, `baseline_twh`, `growth_rate_low`, `growth_rate_high`,
-provenance, `created_at`. Feeds `demand_growth_series` — the band on the Overview gap chart.
-Source: EIA AEO2026 reference case + Today in Energy (2024 baseline). See
+provenance, `created_at`. Feeds `demand_growth_series` — "Why this gets harder, not easier"
+on The Grid (`DemandGrowth.jsx`), not the Overview gap chart (moved after shipping — see the
+amendment in ADR-0014). Source: EIA AEO2026 reference case + Today in Energy (2024 baseline). See
 [ADR-0014](decisions/0014-demand-growth-band.md).
 
 ---
@@ -130,7 +131,7 @@ written by `scripts/generate_dispatch.py`) and `weekly_radar` (the Regulatory Ra
 |---|---|---|
 | `headline_numbers` | `operating_mw`, `retiring_by_2035_mw`, `confirmed_pipeline_mw` | the three headline numbers |
 | `gap_series` | per-year `retiring_mw`, `adding_mw`, `net_capacity_mw` (2025–2045) | the gap chart |
-| `demand_growth_series` | per-year `demand_mw_low`, `demand_mw_high` (2025–2045) | the gap chart's demand-growth band |
+| `demand_growth_series` | per-year `demand_mw_low`, `demand_mw_high` (2025–2045) | The Grid's demand-growth section |
 | `fleet_output_series` | per-day `output_mw`, `capacity_mw`, `units_offline`, `units_reporting` | the 12-month fleet chart |
 | `reactor_cf_90d` | per-unit `avg_power_90d`, `offline_days`, `days` (last 90 d) | Fleet "who ran hardest" |
 

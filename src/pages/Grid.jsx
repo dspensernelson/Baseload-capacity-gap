@@ -1,8 +1,9 @@
 import GridMix from '../components/GridMix'
 import WholesalePrices from '../components/WholesalePrices'
+import DemandGrowth from '../components/DemandGrowth'
 import ReplacementMath from '../components/ReplacementMath'
 
-export default function Grid({ reactors = [] }) {
+export default function Grid({ reactors = [], demandSeries = [] }) {
   return (
     <section style={{ maxWidth: '1100px', marginTop: '3rem', paddingBottom: '4rem' }} className="centered">
       <h2 className="section-title">The Grid</h2>
@@ -24,6 +25,13 @@ export default function Grid({ reactors = [] }) {
         grid — a cost that flat, predictable output doesn't carry. Pilot: California (CAISO) only.
       </p>
       <WholesalePrices />
+
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '3rem', marginBottom: '0.4rem' }}>Why this gets harder, not easier</h3>
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem', maxWidth: '46rem' }}>
+        Demand stopped being flat. Data centers, electrification, and onshoring are pushing nationwide electricity
+        use up for the first time in two decades — raising the stakes on everything above.
+      </p>
+      <DemandGrowth demandSeries={demandSeries} />
 
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--color-brand)', marginTop: '3rem', marginBottom: '0.4rem' }}>What would it take to replace one?</h3>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: '46rem' }}>

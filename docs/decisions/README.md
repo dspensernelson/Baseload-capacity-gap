@@ -21,7 +21,7 @@ unless noted. Numbers are assigned once and never reused.
 | [0011](0011-gap-formula.md) | The gap formula & nameplate vs net |
 | [0012](0012-thin-distribution-functions.md) | Thin read-only Vercel functions for distribution |
 | [0013](0013-radar-snapshot-diff.md) | Regulatory Radar: snapshot-diff, license cron to weekly |
-| [0014](0014-demand-growth-band.md) | The demand-growth band on the gap chart |
+| [0014](0014-demand-growth-band.md) | The demand-growth visual (shipped on the gap chart, moved to The Grid) |
 | [0015](0015-caiso-pricing-pilot.md) | The wholesale-pricing layer: a CAISO pilot, not an EIA shortcut |
 
 ## Writing a new one

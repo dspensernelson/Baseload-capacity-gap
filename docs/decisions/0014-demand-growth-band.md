@@ -45,3 +45,20 @@ energy number (TWh) comparable to a nuclear-only capacity number (GW) without ov
   (`scenario='reference'`) — updating to AEO2027 later is a single curated INSERT, no schema
   or chart code change.
 - Registered in `metric_lineage` (`demand_growth_gw`, sort_order 15) per the provenance rule.
+
+## Amendment (June 25, 2026) — moved off the gap chart, onto The Grid
+
+Shipped as above, then pulled the same day on direct user feedback: showing whole-grid
+demand growth on the nuclear-specific hero chart read as confusing, not clarifying — it
+blurred "the Gap" (nuclear's own retiring-vs-replacing math) with a different, broader
+question (does *any* firm capacity keep pace with demand). The fix wasn't the methodology —
+the sourcing, formula, and 90%-capacity-factor framing all held up — it was placement.
+
+**This is the "context, not combat" rule applied a second time**, this time against the
+site's own hero visual, not just other energy sources: broader-than-nuclear context belongs
+in The Grid's dedicated comparison modules (`GridMix`, `WholesalePrices`, now
+`DemandGrowth.jsx`), never stacked onto the Overview gap chart. The data, table, view, and
+metric_lineage entry are unchanged — only the component moved. New section "Why this gets
+harder, not easier" on `/grid`, right after the pricing pilot, framed as raising the stakes
+on the 2 a.m. test and the price-of-intermittency story rather than as its own competing
+thesis. The Overview gap chart is back to exactly its original two-area shape.

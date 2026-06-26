@@ -5,6 +5,14 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Demand-growth visual moved off the hero chart — June 2026
+Shipped on the Overview gap chart earlier today; pulled the same day on direct feedback that
+whole-grid demand context on the nuclear-specific hero chart confused the story rather than
+sharpening it. Same data, same EIA-sourced methodology, same `metric_lineage` entry — only
+the placement changed. Now `DemandGrowth.jsx`, "Why this gets harder, not easier" on
+`/grid`, right after the CAISO pricing pilot. The Overview gap chart is back to its original
+two-area shape. See the amendment in [ADR-0014](docs/decisions/0014-demand-growth-band.md).
+
 ## Wholesale pricing pilot: CAISO — June 2026
 Extends The Grid's "2 a.m. test" with the price story: a new "The price of intermittency"
 section showing CAISO day-ahead hourly LMP (NP15/SP15) over the last 48 hours, with a
