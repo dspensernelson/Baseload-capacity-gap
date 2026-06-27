@@ -25,13 +25,25 @@ export default function News({ reports = [], newsItems = [] }) {
   // archive has not been populated yet.
   const stories = useMemo(() => {
     if (Array.isArray(newsItems) && newsItems.length > 0) {
-      return newsItems.map(n => ({
-        source: n.source,
-        title: n.title,
-        link: n.url,
-        summary: n.summary,
-        published_at: n.published_at,
-      }))
+      // Cap per source so the chronological feed isn't flooded by one outlet
+      // (e.g. the Google News aggregator), then re-sort newest-first.
+      const MAX_PER_SOURCE = 6
+      const perSource = {}
+      const capped = []
+      for (const n of newsItems) {
+        const count = perSource[n.source] || 0
+        if (count >= MAX_PER_SOURCE) continue
+        perSource[n.source] = count + 1
+        capped.push({
+          source: n.source,
+          title: n.title,
+          link: n.url,
+          summary: n.summary,
+          published_at: n.published_at,
+        })
+      }
+      capped.sort((a, b) => new Date(b.published_at) - new Date(a.published_at))
+      return capped
     }
     return Array.isArray(digest?.stats?.stories) ? digest.stats.stories : []
   }, [newsItems, digest])

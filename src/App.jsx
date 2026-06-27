@@ -135,7 +135,7 @@ export default function App() {
           supabase.from('demand_growth_series').select('*').order('year'),
           supabase.from('reports').select('*').order('published_at', { ascending: false }),
           supabase.from('new_reactor_projects').select('*'),
-          supabase.from('news_items').select('*').order('published_at', { ascending: false }).limit(120),
+          supabase.from('news_items').select('*').order('published_at', { ascending: false }).limit(200),
         ])
 
         const queryErrors = results
