@@ -45,6 +45,54 @@ function WeeklyDigest({ report }) {
   )
 }
 
+function NewswireDigest({ report }) {
+  if (!report) return null
+  const stories = Array.isArray(report?.stats?.stories) ? report.stats.stories : []
+  if (!stories.length) return null
+
+  return (
+    <div style={{ marginTop: '3.25rem' }}>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', color: 'var(--color-brand)', marginBottom: '0.3rem' }}>Newswire</h3>
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.1rem', maxWidth: '46rem' }}>
+        Weekly top-line digest from free public nuclear feeds, auto-ranked and published.
+      </p>
+
+      <div style={{ marginBottom: '1rem', padding: '0.9rem 1.1rem', borderRadius: '8px', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: '0.45rem' }}>
+          Week of {new Date(report.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          {' · '}
+          {report?.stats?.claude_used ? 'Claude-assisted lead' : 'Deterministic lead'}
+        </div>
+        <p style={{ margin: 0, fontSize: '0.88rem' }}>{(report.body || '').split('\n')[0]}</p>
+      </div>
+
+      <div style={{ display: 'grid', gap: '0.55rem' }}>
+        {stories.map((s, i) => (
+          <a
+            key={`${s.link}-${i}`}
+            href={s.link}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              textDecoration: 'none',
+              color: 'inherit',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)',
+              borderRadius: '8px',
+              padding: '0.7rem 0.85rem',
+            }}
+          >
+            <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.15rem' }}>
+              {s.source} · {new Date(s.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--color-text)', lineHeight: 1.45 }}>{s.title}</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function RegulatoryRadar({ actions, reactorsById, digest }) {
   const nameOf = a =>
     (a.reactor_id && reactorsById[a.reactor_id])
@@ -88,6 +136,7 @@ export default function Dispatches({ reports = [], licenseActions = [], reactors
   const { period } = useParams()
   const monthlyReports = useMemo(() => reports.filter(r => r.kind === 'monthly'), [reports])
   const radarDigest = useMemo(() => reports.find(r => r.kind === 'weekly_radar') ?? null, [reports])
+  const newswireDigest = useMemo(() => reports.find(r => r.kind === 'weekly_news') ?? null, [reports])
   const selected = (period ? monthlyReports.find(r => r.period === period) : null) ?? monthlyReports[0] ?? null
   const reactorsById = useMemo(
     () => Object.fromEntries(reactors.map(r => [r.id, `${r.plant_name} ${r.unit_number}`])),
@@ -140,6 +189,7 @@ export default function Dispatches({ reports = [], licenseActions = [], reactors
       )}
 
       <RegulatoryRadar actions={licenseActions} reactorsById={reactorsById} digest={radarDigest} />
+      <NewswireDigest report={newswireDigest} />
     </section>
   )
 }

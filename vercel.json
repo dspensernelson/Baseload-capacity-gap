@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/rss.xml", "destination": "/api/rss" },
+    { "source": "/newsletter.xml", "destination": "/api/newsletter" },
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ]
 }

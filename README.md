@@ -54,6 +54,7 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
   from atomic rows and proves it still matches its source. Every run writes to `sync_log`.
 - **Distribution** — two thin, read-only Vercel functions (`api/og.js`, `api/rss.js`),
   anon-key-only, no app server. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md).
+  Newsletter syndication now also exposes `newsletter.xml` via `api/newsletter.js`.
 
 Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/data-model.md`](docs/data-model.md).
 
@@ -67,6 +68,7 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `grid-reliability-daily.yml` | daily + after EIA-930 runs | materializes daily reliability snapshots → `grid_reliability_daily`, `grid_firming_daily` |
 | `nrc-events.yml` | daily 09:00 UTC | NRC Event Notifications → `incidents` (the live wire) |
 | `monthly-dispatch.yml` | monthly, 2nd | drafts the plain-English Dispatch → `reports` |
+| `newsletter-weekly.yml` | weekly, Mon 12:00 UTC | curates high-signal nuclear headlines from free feeds into a weekly Newswire digest → `reports` (`kind='weekly_news'`); optional Claude lead if `ANTHROPIC_API_KEY` exists |
 | `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
 | `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure |
 | `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS pricing (day-ahead + real-time, NP15/SP15) → `wholesale_prices` — no API key needed |

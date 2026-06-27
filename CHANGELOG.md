@@ -5,6 +5,16 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Weekly Newswire digest automation — June 2026
+Launched a cron-backed newsletter lane that can run fully no-key and publish every week without
+editor intervention. New `scripts/generate_newsletter.py` pulls from free public RSS/Atom feeds
+(NRC, IAEA, DOE-NE, WNN, NEI, and Google News query), de-duplicates and scores stories, and
+upserts a weekly digest into `reports` (`kind='weekly_news'`) with `sync_log` receipts.
+
+The Dispatches surface now renders this digest in a new Newswire section, and `newsletter.xml`
+syndicates it via `api/newsletter.js`. If `ANTHROPIC_API_KEY` is configured, the lead summary is
+Claude-assisted; otherwise the pipeline falls back to deterministic text.
+
 ## No-key pricing expansion: CAISO + NYISO + ERCOT — June 2026
 Expanded the wholesale-pricing pipeline to maximize free/no-key coverage. CAISO now ingests
 both day-ahead and real-time pricing (NP15/SP15), and NYISO was added via public MIS CSV feeds
