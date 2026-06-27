@@ -13,16 +13,28 @@ function snippet(text) {
   return clean.length > 260 ? `${clean.slice(0, 257)}...` : clean
 }
 
-export default function News({ reports = [] }) {
-  const latest = useMemo(
+export default function News({ reports = [], newsItems = [] }) {
+  // The weekly digest provides an editorial lead; the rolling feed comes from
+  // the durable news_items archive (refreshed daily).
+  const digest = useMemo(
     () => reports.find(r => r.kind === 'weekly_news') ?? null,
     [reports],
   )
 
-  const stories = useMemo(
-    () => (Array.isArray(latest?.stats?.stories) ? latest.stats.stories : []),
-    [latest],
-  )
+  // Prefer the live archive; fall back to the digest's embedded stories if the
+  // archive has not been populated yet.
+  const stories = useMemo(() => {
+    if (Array.isArray(newsItems) && newsItems.length > 0) {
+      return newsItems.map(n => ({
+        source: n.source,
+        title: n.title,
+        link: n.url,
+        summary: n.summary,
+        published_at: n.published_at,
+      }))
+    }
+    return Array.isArray(digest?.stats?.stories) ? digest.stats.stories : []
+  }, [newsItems, digest])
 
   const sourceCounts = useMemo(() => {
     const counts = {}
@@ -32,27 +44,33 @@ export default function News({ reports = [] }) {
     return Object.entries(counts).sort((a, b) => b[1] - a[1])
   }, [stories])
 
+  const hasContent = stories.length > 0
+
   return (
     <section style={{ maxWidth: '980px', marginTop: '3rem', paddingBottom: '4rem' }} className="centered">
       <h2 className="section-title">News</h2>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', maxWidth: '50rem', marginBottom: '1.25rem' }}>
-        Headlines and summaries from nuclear and broader power-source reporting, auto-curated weekly from public feeds.
+        A rolling feed of headlines and summaries from across the power sector — nuclear,
+        renewables, grid and markets — auto-ingested daily from public feeds and de-duplicated
+        into a durable archive.
       </p>
 
-      {!latest && (
+      {!hasContent && (
         <p style={{ color: 'var(--color-text-muted)' }}>
-          First newswire run is publishing. Check back shortly.
+          The news archive is populating. Check back shortly.
         </p>
       )}
 
-      {latest && (
+      {hasContent && (
         <>
-          <div style={{ marginBottom: '1rem', padding: '1rem 1.1rem', borderRadius: '8px', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: '0.45rem' }}>
-              {latest.title} · published {fmtDate(latest.published_at)}
+          {digest && (
+            <div style={{ marginBottom: '1rem', padding: '1rem 1.1rem', borderRadius: '8px', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: '0.45rem' }}>
+                {digest.title} · published {fmtDate(digest.published_at)}
+              </div>
+              <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.5 }}>{(digest.body || '').split('\n')[0]}</p>
             </div>
-            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.5 }}>{(latest.body || '').split('\n')[0]}</p>
-          </div>
+          )}
 
           {sourceCounts.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '1rem' }}>

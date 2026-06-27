@@ -68,7 +68,8 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `grid-reliability-daily.yml` | daily + after EIA-930 runs | materializes daily reliability snapshots → `grid_reliability_daily`, `grid_firming_daily` |
 | `nrc-events.yml` | daily 09:00 UTC | NRC Event Notifications → `incidents` (the live wire) |
 | `monthly-dispatch.yml` | monthly, 2nd | drafts the plain-English Dispatch → `reports` |
-| `newsletter-weekly.yml` | weekly, Mon 12:00 UTC | curates high-signal nuclear headlines from free feeds into a weekly Newswire digest → `reports` (`kind='weekly_news'`); optional Claude lead if `ANTHROPIC_API_KEY` exists |
+| `news-daily.yml` | daily 10:00 UTC | ingests free power-sector feeds into the durable `news_items` archive (additive, de-duplicated by URL) |
+| `newsletter-weekly.yml` | weekly, Mon 12:00 UTC | curates high-signal headlines from the `news_items` archive into a weekly Newswire digest → `reports` (`kind='weekly_news'`); optional Claude lead if `ANTHROPIC_API_KEY` exists |
 | `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
 | `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure |
 | `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS pricing (day-ahead + real-time, NP15/SP15) → `wholesale_prices` — no API key needed |

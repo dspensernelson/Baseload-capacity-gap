@@ -132,7 +132,17 @@ amendment in ADR-0014). Source: EIA AEO2026 reference case + Today in Energy (20
 written by `scripts/generate_dispatch.py`) and `weekly_radar` (the Regulatory Radar digest,
 `period` = ISO week `'YYYY-Www'`, written by `scripts/generate_radar.py`). The radar's
 `stats.snapshot` holds last week's `license_actions` state for diffing — see
-[ADR-0013](decisions/0013-radar-snapshot-diff.md).
+[ADR-0013](decisions/0013-radar-snapshot-diff.md). A third `kind`, `weekly_news`
+(`period` = ISO week), is the curated Newswire digest written by
+`scripts/generate_newsletter.py` from the `news_items` archive.
+
+### `news_items` — durable news archive (grows daily, de-duplicated by URL)
+`id`, `url` (unique), `source`, `title`, `summary`, `published_at`, `score`,
+`first_seen`, `last_seen`. Populated daily by `scripts/news_ingest.py`
+(`news-daily.yml`) from free public RSS/Atom feeds; `url` uniqueness makes the
+table additive — re-seeing an article refreshes `last_seen`/`score` instead of
+duplicating. `scripts/generate_newsletter.py` reads the recent window from here to
+build the weekly `weekly_news` digest, and `src/pages/News.jsx` renders a rolling feed.
 
 ---
 

@@ -95,6 +95,7 @@ export default function App() {
   const [fleetSeries, setFleetSeries] = useState([])
   const [demandSeries, setDemandSeries] = useState([])
   const [reports, setReports]     = useState([])
+  const [newsItems, setNewsItems] = useState([])
   const [projects, setProjects]   = useState([])
   const [loading, setLoading]     = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -123,6 +124,7 @@ export default function App() {
           'demand_growth_series',
           'reports',
           'new_reactor_projects',
+          'news_items',
         ]
         const results = await Promise.all([
           supabase.from('reactors').select('*'),
@@ -133,6 +135,7 @@ export default function App() {
           supabase.from('demand_growth_series').select('*').order('year'),
           supabase.from('reports').select('*').order('published_at', { ascending: false }),
           supabase.from('new_reactor_projects').select('*'),
+          supabase.from('news_items').select('*').order('published_at', { ascending: false }).limit(120),
         ])
 
         const queryErrors = results
@@ -143,7 +146,7 @@ export default function App() {
           throw new Error(queryErrors.join(' | '))
         }
 
-        const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }, { data: ds }, { data: rp }, { data: np }] = results
+        const [{ data: r }, { data: h }, { data: g }, { data: la }, { data: fs }, { data: ds }, { data: rp }, { data: np }, { data: ni }] = results
         setReactors(r ?? [])
         setHeadlines(h)
         setGapSeries(g ?? [])
@@ -152,6 +155,7 @@ export default function App() {
         setDemandSeries(ds ?? [])
         setReports(rp ?? [])
         setProjects(np ?? [])
+        setNewsItems(ni ?? [])
       } catch (e) {
         console.error('App bootstrap failed:', e)
         setLoadError('Live data could not be loaded right now. Please retry in a moment.')
@@ -259,7 +263,7 @@ export default function App() {
         <Route path="/safety" element={<Safety />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
         <Route path="/dispatches/:period" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
-        <Route path="/news" element={<News reports={reports} />} />
+        <Route path="/news" element={<News reports={reports} newsItems={newsItems} />} />
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="/data" element={<DataExport />} />
