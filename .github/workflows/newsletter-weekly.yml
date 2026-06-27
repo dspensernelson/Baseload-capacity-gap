@@ -24,3 +24,11 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
         run: python scripts/generate_newsletter.py
+
+      - name: Email the digest to subscribers
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RESEND_API_KEY:       ${{ secrets.RESEND_API_KEY }}
+          NEWSLETTER_FROM:      ${{ secrets.NEWSLETTER_FROM }}
+        run: python scripts/send_newsletter.py

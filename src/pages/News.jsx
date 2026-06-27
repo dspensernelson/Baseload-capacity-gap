@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import SignupForm from '../components/SignupForm'
 
 const CATEGORY_ORDER = [
   'Nuclear', 'Solar', 'Wind', 'Hydro', 'Storage', 'Gas & Coal', 'Grid & Markets', 'Policy', 'General',
@@ -288,6 +289,9 @@ export default function News({ reports = [], newsItems = [], reactors = [], lice
 
             {/* Trending rail */}
             <aside style={{ position: 'sticky', top: '1rem' }}>
+              <div style={{ marginBottom: '1rem' }}>
+                <SignupForm source="news-rail" compact />
+              </div>
               {trending.length > 0 && (
                 <div style={{ border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface)', padding: '0.9rem 1rem', marginBottom: '1rem' }}>
                   <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: '0.6rem' }}>Trending</div>
@@ -306,7 +310,8 @@ export default function News({ reports = [], newsItems = [], reactors = [], lice
                 </div>
               )}
               <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-                Data also available as JSON at <a href="/news.json" style={{ color: 'var(--color-accent, #2563eb)' }}>/news.json</a>.
+                Data also available as JSON at <a href="/news.json" style={{ color: 'var(--color-accent, #2563eb)' }}>/news.json</a>,
+                {' '}plus <a href="/trends.json" style={{ color: 'var(--color-accent, #2563eb)' }}>/trends.json</a> and a downloadable <a href="/snapshot.json" style={{ color: 'var(--color-accent, #2563eb)' }}>/snapshot.json</a>.
               </div>
             </aside>
           </div>

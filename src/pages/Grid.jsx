@@ -3,8 +3,9 @@ import ReliabilityProfile from '../components/ReliabilityProfile'
 import FirmingSnapshot from '../components/FirmingSnapshot'
 import DemandGrowth from '../components/DemandGrowth'
 import ReplacementMath from '../components/ReplacementMath'
+import NewsForEntity from '../components/NewsForEntity'
 
-export default function Grid({ reactors = [], demandSeries = [] }) {
+export default function Grid({ reactors = [], demandSeries = [], newsItems = [] }) {
   return (
     <section style={{ maxWidth: '1100px', marginTop: '3rem', paddingBottom: '4rem' }} className="centered">
       <h2 className="section-title">The Grid</h2>
@@ -47,6 +48,8 @@ export default function Grid({ reactors = [], demandSeries = [] }) {
         solar it would take to match its output over a year.
       </p>
       <ReplacementMath reactors={reactors} />
+
+      <NewsForEntity newsItems={newsItems} terms={['grid', 'PJM', 'MISO', 'ERCOT', 'CAISO', 'demand', 'transmission']} title="Grid &amp; markets in the news" limit={6} />
     </section>
   )
 }

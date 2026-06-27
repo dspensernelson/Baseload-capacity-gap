@@ -1,21 +1,25 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, NavLink, Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import supabase from './supabase'
-import Overview from './pages/Overview'
-import MapPage from './pages/MapPage'
-import Fleet from './pages/Fleet'
-import Grid from './pages/Grid'
-import Prices from './pages/Prices'
-import Incidents from './pages/Incidents'
-import Safety from './pages/Safety'
-import History from './pages/History'
-import Dispatches from './pages/Dispatches'
-import News from './pages/News'
-import Scenarios from './pages/Scenarios'
-import Reactor from './pages/Reactor'
-import DataExport from './pages/DataExport'
-import EmbedGap from './pages/EmbedGap'
-import Sources from './pages/Sources'
+
+// Route-level code splitting keeps the initial bundle small; each page chunk
+// loads on demand behind the Suspense fallback below.
+const Overview = lazy(() => import('./pages/Overview'))
+const MapPage = lazy(() => import('./pages/MapPage'))
+const Fleet = lazy(() => import('./pages/Fleet'))
+const Grid = lazy(() => import('./pages/Grid'))
+const Prices = lazy(() => import('./pages/Prices'))
+const Incidents = lazy(() => import('./pages/Incidents'))
+const Safety = lazy(() => import('./pages/Safety'))
+const History = lazy(() => import('./pages/History'))
+const Dispatches = lazy(() => import('./pages/Dispatches'))
+const News = lazy(() => import('./pages/News'))
+const Newsletter = lazy(() => import('./pages/Newsletter'))
+const Scenarios = lazy(() => import('./pages/Scenarios'))
+const Reactor = lazy(() => import('./pages/Reactor'))
+const DataExport = lazy(() => import('./pages/DataExport'))
+const EmbedGap = lazy(() => import('./pages/EmbedGap'))
+const Sources = lazy(() => import('./pages/Sources'))
 
 // Fleet-wide "running right now" pulse, computed from the latest daily readings.
 function FleetPulse({ reactors }) {
@@ -47,6 +51,14 @@ function FleetPulse({ reactors }) {
         <strong style={{ fontWeight: 700 }}>~{onlineGW} GW</strong> online now
         <span style={{ opacity: 0.6 }}> · {running}/{total} units running</span>
       </span>
+    </div>
+  )
+}
+
+function RouteFallback() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+      Loading…
     </div>
   )
 }
@@ -184,7 +196,7 @@ export default function App() {
   useEffect(() => {
     if (location.pathname.startsWith('/reactor/')) return  // the reactor page sets its own title
     if (location.pathname.startsWith('/dispatches')) return  // the dispatches page sets its own title
-    const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/prices': 'Wholesale Prices', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/news': 'News', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
+    const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/prices': 'Wholesale Prices', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/news': 'News', '/newsletter': 'Newswire', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
     const t = titles[location.pathname]
     document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
   }, [location.pathname])
@@ -234,6 +246,7 @@ export default function App() {
           <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
           <NavLink to="/news" style={navLinkStyle}>News</NavLink>
+          <NavLink to="/newsletter" style={navLinkStyle}>Newswire</NavLink>
           <NavLink to="/data" style={navLinkStyle}>Data</NavLink>
           <NavLink to="/sources" style={navLinkStyle}>Sources</NavLink>
         </nav>
@@ -241,11 +254,12 @@ export default function App() {
       </header>)}
 
       <Routes>
-        <Route path="/" element={<Overview gapSeries={gapSeries} headlines={headlines} />} />
-        <Route path="/history" element={<History />} />
+        <Route path="/" element={<Suspense fallback={<RouteFallback />}><Overview gapSeries={gapSeries} headlines={headlines} /></Suspense>} />
+        <Route path="/history" element={<Suspense fallback={<RouteFallback />}><History /></Suspense>} />
         <Route
           path="/map"
           element={
+            <Suspense fallback={<RouteFallback />}>
             <MapPage
               reactors={reactors}
               filteredReactors={filteredReactors}
@@ -254,21 +268,24 @@ export default function App() {
               selectedISO={selectedISO}
               setSelectedISO={setSelectedISO}
             />
+            </Suspense>
           }
         />
-        <Route path="/fleet" element={<Fleet fleetSeries={fleetSeries} reactors={reactors} />} />
-        <Route path="/grid" element={<Grid reactors={reactors} demandSeries={demandSeries} />} />
-        <Route path="/prices" element={<Prices />} />
-        <Route path="/incidents" element={<Incidents />} />
-        <Route path="/safety" element={<Safety />} />
-        <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
-        <Route path="/dispatches/:period" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
-        <Route path="/news" element={<News reports={reports} newsItems={newsItems} reactors={reactors} licenseActions={licenseActions} />} />
-        <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
-        <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} newsItems={newsItems} />} />
-        <Route path="/data" element={<DataExport />} />
-        <Route path="/sources" element={<Sources />} />
-        <Route path="/embed/gap" element={<EmbedGap gapSeries={gapSeries} headlines={headlines} />} />
+        <Route path="/fleet" element={<Suspense fallback={<RouteFallback />}><Fleet fleetSeries={fleetSeries} reactors={reactors} newsItems={newsItems} /></Suspense>} />
+        <Route path="/grid" element={<Suspense fallback={<RouteFallback />}><Grid reactors={reactors} demandSeries={demandSeries} newsItems={newsItems} /></Suspense>} />
+        <Route path="/prices" element={<Suspense fallback={<RouteFallback />}><Prices /></Suspense>} />
+        <Route path="/incidents" element={<Suspense fallback={<RouteFallback />}><Incidents /></Suspense>} />
+        <Route path="/safety" element={<Suspense fallback={<RouteFallback />}><Safety /></Suspense>} />
+        <Route path="/dispatches" element={<Suspense fallback={<RouteFallback />}><Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} /></Suspense>} />
+        <Route path="/dispatches/:period" element={<Suspense fallback={<RouteFallback />}><Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} /></Suspense>} />
+        <Route path="/news" element={<Suspense fallback={<RouteFallback />}><News reports={reports} newsItems={newsItems} reactors={reactors} licenseActions={licenseActions} /></Suspense>} />
+        <Route path="/newsletter" element={<Suspense fallback={<RouteFallback />}><Newsletter reports={reports} /></Suspense>} />
+        <Route path="/newsletter/:period" element={<Suspense fallback={<RouteFallback />}><Newsletter reports={reports} /></Suspense>} />
+        <Route path="/scenarios" element={<Suspense fallback={<RouteFallback />}><Scenarios reactors={reactors} /></Suspense>} />
+        <Route path="/reactor/:slug" element={<Suspense fallback={<RouteFallback />}><Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} newsItems={newsItems} /></Suspense>} />
+        <Route path="/data" element={<Suspense fallback={<RouteFallback />}><DataExport /></Suspense>} />
+        <Route path="/sources" element={<Suspense fallback={<RouteFallback />}><Sources /></Suspense>} />
+        <Route path="/embed/gap" element={<Suspense fallback={<RouteFallback />}><EmbedGap gapSeries={gapSeries} headlines={headlines} /></Suspense>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

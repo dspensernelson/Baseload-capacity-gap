@@ -3,6 +3,9 @@
     { "source": "/rss.xml", "destination": "/api/rss" },
     { "source": "/newsletter.xml", "destination": "/api/newsletter" },
     { "source": "/news.json", "destination": "/api/news" },
+    { "source": "/trends.json", "destination": "/api/trends" },
+    { "source": "/snapshot.json", "destination": "/api/snapshot" },
+    { "source": "/api.json", "destination": "/api/index" },
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ]
 }

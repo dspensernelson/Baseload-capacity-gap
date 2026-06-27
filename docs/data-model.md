@@ -147,6 +147,14 @@ regions) by `scripts/news_feeds.py`. `scripts/generate_newsletter.py` reads the 
 window to build the weekly `weekly_news` digest, `api/news.js` serves it as JSON at
 `news.json`, and `src/pages/News.jsx` renders a categorized rolling feed.
 
+### `subscribers` — newsletter signups (grows with signups)
+`id`, `email` (unique), `source`, `status` (default `active`), `confirmed`,
+`created_at`, `unsubscribed_at`. RLS is **insert-only for the anon role** — the
+public web form (`/api/subscribe`, `src/components/SignupForm.jsx`) can add an
+address but the list is never readable through the anon key. Duplicate signups are
+ignored (idempotent). `scripts/send_newsletter.py` reads the active list with the
+service key and emails the latest `weekly_news` digest via Resend.
+
 ---
 
 ## Views (all editorial math lives here)
