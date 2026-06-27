@@ -119,6 +119,23 @@ def run_checks(sb):
         elif age is not None and age > 24 * 10:
             errors.append(f"License scraper overdue — last run {age / 24:.0f}d ago (threshold 10d).")
 
+    # 3b — Daily news ingest keeps the news_items archive fresh. News is a value-add,
+    # not core data integrity, so a short delay is a warning; only a clear multi-day
+    # breakage escalates to an error (which opens an issue).
+    ni = latest("news_ingest")
+    if not ni:
+        warnings.append("No `news_ingest` run logged yet.")
+    else:
+        age = hours_since(parse_ts(ni.get("run_at")))
+        if ni.get("status") != "success":
+            warnings.append(f"News ingest last run errored: {ni.get('error_message') or ni.get('notes')}")
+        elif age is None:
+            warnings.append("News ingest run_at unparseable.")
+        elif age > 72:
+            errors.append(f"News ingest broken — last successful run {age / 24:.0f}d ago (threshold 3d).")
+        elif age > 36:
+            warnings.append(f"News ingest is late — last run {age:.0f}h ago (daily cron, threshold 36h).")
+
     # 4 — Headline numbers are in a sane range (catches data/view corruption)
     hn = with_retry(lambda: sb.table("headline_numbers").select("*").single().execute()).data
     op = float(hn.get("operating_mw") or 0)

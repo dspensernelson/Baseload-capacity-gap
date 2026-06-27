@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/rss.xml", "destination": "/api/rss" },
     { "source": "/newsletter.xml", "destination": "/api/newsletter" },
+    { "source": "/news.json", "destination": "/api/news" },
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ]
 }

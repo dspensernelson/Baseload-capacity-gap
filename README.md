@@ -54,7 +54,8 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
   from atomic rows and proves it still matches its source. Every run writes to `sync_log`.
 - **Distribution** — two thin, read-only Vercel functions (`api/og.js`, `api/rss.js`),
   anon-key-only, no app server. See [ADR-0012](docs/decisions/0012-thin-distribution-functions.md).
-  Newsletter syndication now also exposes `newsletter.xml` via `api/newsletter.js`.
+  Newsletter syndication now also exposes `newsletter.xml` via `api/newsletter.js`, and the
+  news archive is queryable as JSON at `news.json` (`?limit=&source=&since=&q=`) via `api/news.js`.
 
 Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/data-model.md`](docs/data-model.md).
 
