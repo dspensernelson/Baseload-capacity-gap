@@ -76,7 +76,7 @@ def load_recent_stories(sb, warnings: list[str]) -> list[Story]:
     try:
         resp = (
             sb.table("news_items")
-            .select("source,title,url,summary,published_at,score")
+            .select("source,title,url,summary,published_at,score,category,entities,image_url")
             .gte("published_at", window_start.isoformat())
             .order("score", desc=True)
             .limit(400)
@@ -98,6 +98,9 @@ def load_recent_stories(sb, warnings: list[str]) -> list[Story]:
                     summary=r.get("summary", "") or "",
                     published_at=published,
                     score=int(r.get("score") or nf.score_story(r.get("source", ""), r.get("title", ""), published, NOW)),
+                    category=r.get("category") or "General",
+                    entities=r.get("entities") or [],
+                    image_url=r.get("image_url") or "",
                 )
             )
         return stories
@@ -117,6 +120,7 @@ def load_recent_stories(sb, warnings: list[str]) -> list[Story]:
         key = nf.normalize_title(title)
         if not key:
             continue
+        category, _topics = nf.classify(title, nf.clean(item.get("summary", "")), item.get("source", ""))
         cand = {
             "source": item.get("source", ""),
             "title": title,
@@ -124,6 +128,9 @@ def load_recent_stories(sb, warnings: list[str]) -> list[Story]:
             "summary": nf.clean(item.get("summary", "")),
             "published_at": published if isinstance(published, datetime) else NOW,
             "score": nf.score_story(item.get("source", ""), title, published, NOW),
+            "category": category,
+            "entities": nf.extract_entities(title, nf.clean(item.get("summary", ""))),
+            "image_url": item.get("image") or "",
         }
         prev = dedup.get(key)
         if prev is None or cand["score"] > prev["score"]:
@@ -210,15 +217,29 @@ def main():
     period = f"{iso_year}-W{iso_week:02d}"
     title = f"Power Sector Newswire - Week {iso_week}, {iso_year}"
 
-    lines = [lead, "", "Top stories:"]
+    # Group the selected stories into topic sections for a scannable digest.
+    SECTION_ORDER = ["Nuclear", "Solar", "Wind", "Hydro", "Storage", "Gas & Coal", "Grid & Markets", "Policy", "General"]
+    by_cat: dict[str, list] = {}
     for s in top:
-        lines.append(f"- [{s.source}] {s.title} ({short_date(s.published_at)})")
-    body = "\n".join(lines)
+        by_cat.setdefault(s.category or "General", []).append(s)
+    ordered_sections = [c for c in SECTION_ORDER if c in by_cat] + [c for c in by_cat if c not in SECTION_ORDER]
+
+    lines = [lead, ""]
+    sections_stats = []
+    for cat in ordered_sections:
+        items = by_cat[cat]
+        lines.append(f"## {cat}")
+        for s in items:
+            lines.append(f"- [{s.source}] {s.title} ({short_date(s.published_at)})")
+        lines.append("")
+        sections_stats.append({"category": cat, "count": len(items)})
+    body = "\n".join(lines).strip()
 
     stats = {
         "story_count": len(top),
         "feed_count": len(nf.FEEDS),
         "claude_used": claude_used,
+        "sections": sections_stats,
         "stories": [
             {
                 "source": s.source,
@@ -227,6 +248,9 @@ def main():
                 "summary": s.summary,
                 "published_at": s.published_at.isoformat() if s.published_at else None,
                 "score": s.score,
+                "category": s.category,
+                "entities": s.entities,
+                "image_url": s.image_url,
             }
             for s in top
         ],

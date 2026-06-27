@@ -263,9 +263,9 @@ export default function App() {
         <Route path="/safety" element={<Safety />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
         <Route path="/dispatches/:period" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
-        <Route path="/news" element={<News reports={reports} newsItems={newsItems} />} />
+        <Route path="/news" element={<News reports={reports} newsItems={newsItems} reactors={reactors} licenseActions={licenseActions} />} />
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
-        <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
+        <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} newsItems={newsItems} />} />
         <Route path="/data" element={<DataExport />} />
         <Route path="/sources" element={<Sources />} />
         <Route path="/embed/gap" element={<EmbedGap gapSeries={gapSeries} headlines={headlines} />} />

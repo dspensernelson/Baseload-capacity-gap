@@ -138,11 +138,14 @@ written by `scripts/generate_dispatch.py`) and `weekly_radar` (the Regulatory Ra
 
 ### `news_items` — durable news archive (grows daily, de-duplicated by URL)
 `id`, `url` (unique), `source`, `title`, `summary`, `published_at`, `score`,
-`first_seen`, `last_seen`. Populated daily by `scripts/news_ingest.py`
-(`news-daily.yml`) from free public RSS/Atom feeds; `url` uniqueness makes the
-table additive — re-seeing an article refreshes `last_seen`/`score` instead of
-duplicating. `scripts/generate_newsletter.py` reads the recent window from here to
-build the weekly `weekly_news` digest, and `src/pages/News.jsx` renders a rolling feed.
+`category`, `topics[]`, `entities[]`, `image_url`, `featured`, `first_seen`, `last_seen`.
+Populated daily by `scripts/news_ingest.py` (`news-daily.yml`) from free public RSS/Atom
+feeds; `url` uniqueness makes the table additive — re-seeing an article refreshes
+`last_seen`/`score` instead of duplicating. Each item is classified into a primary
+`category` (+ all matched `topics`) and tagged with detected `entities` (companies, ISOs,
+regions) by `scripts/news_feeds.py`. `scripts/generate_newsletter.py` reads the recent
+window to build the weekly `weekly_news` digest, `api/news.js` serves it as JSON at
+`news.json`, and `src/pages/News.jsx` renders a categorized rolling feed.
 
 ---
 

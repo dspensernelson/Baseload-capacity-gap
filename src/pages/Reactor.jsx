@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { reactorSlug } from '../lib/slug'
 import { PowerSparkline, LicenseActionLine } from '../components/Hook'
+import NewsForEntity from '../components/NewsForEntity'
 
 const STATUS_COLORS = {
   operating:       '#2d6a4f',
@@ -21,7 +22,7 @@ function Fact({ label, value }) {
   )
 }
 
-export default function Reactor({ reactors, licenseActionsByReactor }) {
+export default function Reactor({ reactors, licenseActionsByReactor, newsItems = [] }) {
   const { slug } = useParams()
   const reactor = reactors.find(r => reactorSlug(r) === slug)
 
@@ -88,6 +89,12 @@ export default function Reactor({ reactors, licenseActionsByReactor }) {
 
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: 'var(--color-brand)', marginTop: '2rem', marginBottom: '0.6rem' }}>Power, last 90 days</h3>
       <PowerSparkline reactorId={reactor.id} />
+
+      <NewsForEntity
+        newsItems={newsItems}
+        terms={[reactor.plant_name, reactor.operator]}
+        title="In the news"
+      />
 
       <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: '2rem' }}>
         Power status from the U.S. NRC daily report; license records from NRC renewal filings. See{' '}

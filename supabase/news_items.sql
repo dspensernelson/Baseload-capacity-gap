@@ -13,6 +13,11 @@ create table if not exists public.news_items (
   summary      text,
   published_at timestamptz,
   score        int,
+  category     text,                          -- primary topic bucket
+  topics       text[],                        -- all matched topic buckets
+  entities     text[],                        -- companies / ISOs / regions detected
+  image_url    text,                          -- best-effort image from the feed
+  featured     boolean not null default false,
   first_seen   timestamptz not null default now(),
   last_seen    timestamptz not null default now()
 );
@@ -22,6 +27,9 @@ create index if not exists news_items_published_at_idx
 
 create index if not exists news_items_first_seen_idx
   on public.news_items (first_seen desc);
+
+create index if not exists news_items_category_idx
+  on public.news_items (category);
 
 alter table public.news_items enable row level security;
 

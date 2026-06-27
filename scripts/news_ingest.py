@@ -69,14 +69,22 @@ def main():
             continue
 
         source = item.get("source", "")
+        summary = nf.clean(item.get("summary", ""))
         score = nf.score_story(source, title, published_at, NOW)
+        category, topics = nf.classify(title, summary, source)
+        entities = nf.extract_entities(title, summary)
         row = {
             "url": url,
             "source": source,
             "title": title,
-            "summary": nf.clean(item.get("summary", "")),
+            "summary": summary,
             "published_at": published_at.isoformat() if isinstance(published_at, datetime) else None,
             "score": score,
+            "category": category,
+            "topics": topics,
+            "entities": entities,
+            "image_url": item.get("image") or None,
+            "featured": score >= 10,
             "last_seen": NOW.isoformat(),
         }
         prev = by_url.get(url)

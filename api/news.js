@@ -6,12 +6,13 @@
 // Query params:
 //   limit   1–200   (default 50)
 //   source  exact source name filter (e.g. "Canary Media")
+//   category exact category filter (e.g. "Nuclear")
 //   since   ISO timestamp; only items published at/after this
 //   q       case-insensitive substring match on the title
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
-const SELECT = 'source,title,url,summary,published_at,score,first_seen,last_seen'
+const SELECT = 'source,title,url,summary,published_at,score,category,topics,entities,image_url,featured'
 
 function clampLimit(raw) {
   const n = parseInt(raw, 10)
@@ -24,12 +25,13 @@ function isIsoLike(s) {
   return /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/.test(s)
 }
 
-async function fetchItems({ limit, source, since, q }) {
+async function fetchItems({ limit, source, category, since, q }) {
   const params = new URLSearchParams()
   params.set('select', SELECT)
   params.set('order', 'published_at.desc.nullslast')
   params.set('limit', String(limit))
   if (source) params.append('source', `eq.${source}`)
+  if (category) params.append('category', `eq.${category}`)
   if (since) params.append('published_at', `gte.${since}`)
   if (q) params.append('title', `ilike.*${q}*`)
 
@@ -54,20 +56,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { limit: rawLimit, source, since, q } = req.query || {}
+    const { limit: rawLimit, source, category, since, q } = req.query || {}
     const limit = clampLimit(rawLimit)
     const cleanSince = since && isIsoLike(String(since)) ? String(since) : undefined
     const cleanSource = source ? String(source).slice(0, 120) : undefined
+    const cleanCategory = category ? String(category).slice(0, 60) : undefined
     const cleanQ = q ? String(q).replace(/[%*,()]/g, ' ').trim().slice(0, 120) : undefined
 
-    const items = await fetchItems({ limit, source: cleanSource, since: cleanSince, q: cleanQ })
+    const items = await fetchItems({ limit, source: cleanSource, category: cleanCategory, since: cleanSince, q: cleanQ })
 
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
     res.setHeader('Cache-Control', 'public, max-age=900, s-maxage=900')
     res.status(200).json({
       generated_at: new Date().toISOString(),
       count: items.length,
-      query: { limit, source: cleanSource || null, since: cleanSince || null, q: cleanQ || null },
+      query: { limit, source: cleanSource || null, category: cleanCategory || null, since: cleanSince || null, q: cleanQ || null },
       items,
     })
   } catch (err) {
