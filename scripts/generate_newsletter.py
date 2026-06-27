@@ -18,6 +18,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+from urllib.parse import quote, urljoin, urlsplit, urlunsplit
 from xml.etree import ElementTree as ET
 
 import requests
@@ -34,22 +35,54 @@ NOW = datetime.now(timezone.utc)
 WINDOW_DAYS = 10
 
 FEEDS = [
+    # Nuclear-focused
     ("NRC News", "https://www.nrc.gov/reading-rm/doc-collections/news/news-release-rss.xml"),
     ("World Nuclear News", "https://www.world-nuclear-news.org/rss"),
     ("Nuclear Engineering International", "https://www.neimagazine.com/rss/"),
-    ("Google News: nuclear energy", "https://news.google.com/rss/search?q=nuclear+energy+when:7d&hl=en-US&gl=US&ceid=US:en"),
+    # Broad power & energy
+    ("EIA Today in Energy", "https://www.eia.gov/rss/todayinenergy.xml"),
+    ("Utility Dive", "https://www.utilitydive.com/feeds/news/"),
+    ("Canary Media", "https://www.canarymedia.com/rss"),
+    ("POWER Magazine", "https://www.powermag.com/feed/"),
+    ("RTO Insider", "https://www.rtoinsider.com/feed/"),
+    ("Renewable Energy World", "https://www.renewableenergyworld.com/feed/"),
+    ("PV Magazine", "https://www.pv-magazine.com/feed/"),
+    ("Windpower Monthly", "https://www.windpowermonthly.com/rss"),
+    ("Hydro Review", "https://www.hydroreview.com/feed/"),
+    ("Energy Monitor", "https://www.energymonitor.ai/feed"),
+    ("FT Energy Source", "https://www.ft.com/energy?format=rss"),
+    # Aggregated catch-all
+    (
+        "Google News: power mix",
+        "https://news.google.com/rss/search?q=%28nuclear+OR+solar+OR+wind+OR+gas+OR+coal+OR+power+grid%29+when%3A7d&hl=en-US&gl=US&ceid=US:en",
+    ),
 ]
 
 SOURCE_WEIGHT = {
+    # Nuclear-focused
     "NRC News": 7,
-    "IAEA": 6,
-    "DOE Office of Nuclear Energy": 5,
     "World Nuclear News": 5,
     "Nuclear Engineering International": 4,
-    "Google News: nuclear energy": 2,
+    # Broad power & energy
+    "EIA Today in Energy": 6,
+    "Utility Dive": 6,
+    "Canary Media": 5,
+    "POWER Magazine": 5,
+    "RTO Insider": 5,
+    "Renewable Energy World": 4,
+    "PV Magazine": 4,
+    "Windpower Monthly": 4,
+    "Hydro Review": 4,
+    "Energy Monitor": 4,
+    "FT Energy Source": 5,
+    # Aggregated catch-all
+    "Google News: power mix": 2,
 }
 
-TOP_STORIES = 12
+TOP_STORIES = 18
+
+# Cap stories per source so no single outlet dominates the digest.
+MAX_PER_SOURCE = 3
 
 KEYWORD_BOOST = {
     "license": 3,
@@ -75,6 +108,7 @@ class Story:
     source: str
     title: str
     link: str
+    summary: str
     published_at: datetime
     score: int
 
@@ -95,6 +129,27 @@ def write_sync_log(sb, status, rows_inserted, start_t, errors, notes):
 
 def clean(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
+
+
+def strip_html(s: str) -> str:
+    if not s:
+        return ""
+    s = re.sub(r"<[^>]+>", " ", s)
+    s = s.replace("&nbsp;", " ").replace("&amp;", "&")
+    return clean(s)
+
+
+def normalize_link(link: str, feed_url: str) -> str:
+    raw = clean(link)
+    if not raw:
+        return ""
+
+    # Resolve feed-relative links and normalize accidental duplicated path slashes.
+    absolute = urljoin(feed_url, raw)
+    parts = urlsplit(absolute)
+    path = re.sub(r"/{2,}", "/", parts.path or "")
+    path = quote(path, safe="/%:@-._~!$&'()*+,;=")
+    return urlunsplit((parts.scheme, parts.netloc, path, parts.query, parts.fragment))
 
 
 def parse_dt(value: str | None) -> datetime | None:
@@ -127,12 +182,48 @@ def text_of(node, names):
     return ""
 
 
+def _regex_parse_items(source: str, raw: str, base_url: str) -> list[dict]:
+    """Fallback parser for feeds with malformed XML (e.g. mismatched tags).
+
+    Extracts RSS <item> blocks with a tolerant regex so a single broken
+    feed still contributes stories instead of being dropped entirely.
+    """
+    items = []
+
+    def tag(block: str, name: str) -> str:
+        m = re.search(rf"<{name}[^>]*>(.*?)</{name}>", block, re.DOTALL | re.IGNORECASE)
+        if not m:
+            return ""
+        val = m.group(1)
+        cdata = re.match(r"\s*<!\[CDATA\[(.*?)\]\]>\s*$", val, re.DOTALL)
+        return cdata.group(1) if cdata else val
+
+    for m in re.finditer(r"<item[^>]*>(.*?)</item>", raw, re.DOTALL | re.IGNORECASE):
+        block = m.group(1)
+        title = clean(strip_html(tag(block, "title")))
+        link = normalize_link(clean(strip_html(tag(block, "link"))), base_url)
+        summary = strip_html(tag(block, "description"))
+        published = parse_dt(tag(block, "pubDate") or tag(block, "date"))
+        if title and link:
+            items.append({"source": source, "title": title, "link": link, "summary": summary, "published_at": published})
+    return items
+
+
 def parse_feed(source: str, url: str, warnings: list[str]) -> list[dict]:
     items = []
+    raw_content = None
     try:
         resp = requests.get(url, timeout=25, headers={"User-Agent": "NuclearPipelineTracker/1.0 (+news digest)"})
         resp.raise_for_status()
-        root = ET.fromstring(resp.content)
+        raw_content = resp.content
+        root = ET.fromstring(raw_content)
+    except ET.ParseError as e:
+        if raw_content is not None:
+            recovered = _regex_parse_items(source, raw_content.decode("utf-8", "replace"), url)
+            if recovered:
+                return recovered
+        warnings.append(f"feed_fetch_error[{source}]: {type(e).__name__}: {e}")
+        return items
     except Exception as e:
         warnings.append(f"feed_fetch_error[{source}]: {type(e).__name__}: {e}")
         return items
@@ -140,19 +231,21 @@ def parse_feed(source: str, url: str, warnings: list[str]) -> list[dict]:
     # RSS 2.0
     for item in root.findall("./channel/item"):
         title = text_of(item, ["title"])
-        link = text_of(item, ["link"])
+        link = normalize_link(text_of(item, ["link"]), url)
+        summary = strip_html(text_of(item, ["description"]))
         published = parse_dt(text_of(item, ["pubDate", "date"]))
         if title and link:
-            items.append({"source": source, "title": title, "link": link, "published_at": published})
+            items.append({"source": source, "title": title, "link": link, "summary": summary, "published_at": published})
 
     # Atom
     for entry in root.findall(".//{http://www.w3.org/2005/Atom}entry"):
         title = text_of(entry, ["{http://www.w3.org/2005/Atom}title"])
         link_node = entry.find("{http://www.w3.org/2005/Atom}link")
-        link = clean(link_node.attrib.get("href", "") if link_node is not None else "")
+        link = normalize_link(link_node.attrib.get("href", "") if link_node is not None else "", url)
+        summary = strip_html(text_of(entry, ["{http://www.w3.org/2005/Atom}summary", "{http://www.w3.org/2005/Atom}content"]))
         published = parse_dt(text_of(entry, ["{http://www.w3.org/2005/Atom}published", "{http://www.w3.org/2005/Atom}updated"]))
         if title and link:
-            items.append({"source": source, "title": title, "link": link, "published_at": published})
+            items.append({"source": source, "title": title, "link": link, "summary": summary, "published_at": published})
 
     return items
 
@@ -281,6 +374,7 @@ def main():
             "source": item.get("source", ""),
             "title": title,
             "link": link,
+            "summary": clean(item.get("summary", "")),
             "published_at": published_at,
             "score": score_story(item.get("source", ""), title, published_at),
         }
@@ -294,13 +388,32 @@ def main():
             source=v["source"],
             title=v["title"],
             link=v["link"],
+            summary=v.get("summary", ""),
             published_at=v["published_at"] if isinstance(v["published_at"], datetime) else NOW,
             score=v["score"],
         )
         for v in dedup.values()
     ]
     stories.sort(key=lambda s: (s.score, s.published_at), reverse=True)
-    top = stories[:TOP_STORIES]
+
+    # Apply a per-source cap first so no single outlet dominates, then fill
+    # any remaining slots with the best leftover stories regardless of source.
+    top = []
+    per_source = {}
+    leftovers = []
+    for s in stories:
+        if len(top) >= TOP_STORIES:
+            break
+        if per_source.get(s.source, 0) < MAX_PER_SOURCE:
+            top.append(s)
+            per_source[s.source] = per_source.get(s.source, 0) + 1
+        else:
+            leftovers.append(s)
+    for s in leftovers:
+        if len(top) >= TOP_STORIES:
+            break
+        top.append(s)
+    top.sort(key=lambda s: (s.score, s.published_at), reverse=True)
 
     if not top:
         errors.append("story_selection_error: no stories selected from feeds")
@@ -325,6 +438,7 @@ def main():
                 "source": s.source,
                 "title": s.title,
                 "link": s.link,
+                "summary": s.summary,
                 "published_at": s.published_at.isoformat() if s.published_at else None,
                 "score": s.score,
             }
@@ -370,6 +484,7 @@ def main():
         for e in errors:
             print(f"  - {e}")
         raise SystemExit(1)
+
 
 
 if __name__ == "__main__":

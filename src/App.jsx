@@ -10,6 +10,7 @@ import Incidents from './pages/Incidents'
 import Safety from './pages/Safety'
 import History from './pages/History'
 import Dispatches from './pages/Dispatches'
+import News from './pages/News'
 import Scenarios from './pages/Scenarios'
 import Reactor from './pages/Reactor'
 import DataExport from './pages/DataExport'
@@ -179,7 +180,7 @@ export default function App() {
   useEffect(() => {
     if (location.pathname.startsWith('/reactor/')) return  // the reactor page sets its own title
     if (location.pathname.startsWith('/dispatches')) return  // the dispatches page sets its own title
-    const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/prices': 'Wholesale Prices', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
+    const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/prices': 'Wholesale Prices', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/news': 'News', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
     const t = titles[location.pathname]
     document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
   }, [location.pathname])
@@ -228,6 +229,7 @@ export default function App() {
           <NavLink to="/prices" style={navLinkStyle}>Prices</NavLink>
           <NavLink to="/scenarios" style={navLinkStyle}>Scenarios</NavLink>
           <NavLink to="/dispatches" style={navLinkStyle}>Dispatches</NavLink>
+          <NavLink to="/news" style={navLinkStyle}>News</NavLink>
           <NavLink to="/data" style={navLinkStyle}>Data</NavLink>
           <NavLink to="/sources" style={navLinkStyle}>Sources</NavLink>
         </nav>
@@ -257,6 +259,7 @@ export default function App() {
         <Route path="/safety" element={<Safety />} />
         <Route path="/dispatches" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
         <Route path="/dispatches/:period" element={<Dispatches reports={reports} licenseActions={licenseActions} reactors={reactors} />} />
+        <Route path="/news" element={<News reports={reports} />} />
         <Route path="/scenarios" element={<Scenarios reactors={reactors} />} />
         <Route path="/reactor/:slug" element={<Reactor reactors={reactors} licenseActionsByReactor={licenseActionsByReactor} />} />
         <Route path="/data" element={<DataExport />} />
