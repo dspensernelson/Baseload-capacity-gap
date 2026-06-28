@@ -7,7 +7,7 @@
 > Companion docs: [TESTING.md](TESTING.md) is the click-through UI walkthrough; this doc is the
 > "is everything correct and behaving" reference, including external sources of truth.
 >
-> Live site: **https://baseload-capacity-gap.vercel.app** · Repo: **github.com/dspensernelson/NukeMap**
+> Live site: **https://baseload-capacity-gap.vercel.app** · Repo: **github.com/dspensernelson/Baseload-capacity-gap**
 > Last verified: `____________`  By: `____________`
 
 ---
