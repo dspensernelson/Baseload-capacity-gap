@@ -27,7 +27,7 @@ export default function Reactor({ reactors, licenseActionsByReactor, newsItems =
   const reactor = reactors.find(r => reactorSlug(r) === slug)
 
   useEffect(() => {
-    if (reactor) document.title = `${reactor.plant_name} ${reactor.unit_number} · Nuclear Pipeline Tracker`
+    if (reactor) document.title = `${reactor.plant_name} ${reactor.unit_number} · Baseload`
   }, [reactor])
 
   if (!reactor) {

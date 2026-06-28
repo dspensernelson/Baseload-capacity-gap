@@ -9,8 +9,8 @@
 ## Step 4.1 — Scaffold the React App
 
 ```bash
-npm create vite@latest nuclear-pipeline-tracker -- --template react
-cd nuclear-pipeline-tracker
+npm create vite@latest baseload-capacity-gap -- --template react
+cd baseload-capacity-gap
 npm install
 npm install @supabase/supabase-js
 ```

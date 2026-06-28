@@ -1,4 +1,4 @@
-# Agent Runbook — Working with Claude Code on Nuclear Pipeline Tracker
+# Agent Runbook — Working with Claude Code on Baseload — The Capacity Gap
 
 > 🏺 **Historical (V1 build log).** This describes the original 8-session, human-in-the-loop
 > manual build. The project is now **agent-built and agent-run** — for current process see

@@ -1,6 +1,6 @@
 # REBUILD — from zero to live
 
-How to recreate the entire Nuclear Pipeline Tracker from this repo alone. If you have
+How to recreate the entire Baseload — The Capacity Gap from this repo alone. If you have
 only the repo and the four secrets, this is everything. Tested against the production
 stack: Supabase (Postgres) + Vercel + GitHub Actions, all free tier.
 

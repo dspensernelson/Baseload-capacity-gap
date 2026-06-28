@@ -1,4 +1,4 @@
-# Nuclear Pipeline Tracker — Master Checklist
+# Baseload — The Capacity Gap — Master Checklist
 
 Track your progress from empty repo to live V1. Check items off as you go.
 
@@ -8,7 +8,7 @@ Track your progress from empty repo to live V1. Check items off as you go.
 
 - [ ] Register for EIA API key at eia.gov/opendata/register — free, arrives by email
 - [ ] Create Supabase project named `nuclear-pipeline` — save DB password, URL, anon key, service key
-- [ ] Create GitHub repo named `nuclear-pipeline-tracker` (private to start)
+- [ ] Create GitHub repo named `baseload-capacity-gap` (private to start)
 - [ ] Clone repo locally
 - [ ] Apply for GitHub Student Pack at education.github.com/pack with DePaul email (takes ~1 day)
 - [ ] Create `.env` file in repo root with `EIA_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`
@@ -83,7 +83,7 @@ Track your progress from empty repo to live V1. Check items off as you go.
 
 **Goal: React app connected to Supabase, data visible in browser**
 
-- [ ] Scaffold React app: `npm create vite@latest nuclear-pipeline-tracker -- --template react`
+- [ ] Scaffold React app: `npm create vite@latest baseload-capacity-gap -- --template react`
 - [ ] Install dependencies: `npm install @supabase/supabase-js`
 - [ ] Create `src/supabase.js` with configured Supabase client (reads from env vars)
 - [ ] Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to `.env`

@@ -109,7 +109,7 @@ def clean_cell(html: str) -> str:
 
 
 def fetch_tables(url: str) -> list[list[list[str]]]:
-    resp = requests.get(url, timeout=60, headers={"User-Agent": "nuclear-pipeline-tracker"})
+    resp = requests.get(url, timeout=60, headers={"User-Agent": "baseload-capacity-gap"})
     resp.raise_for_status()
     tables = []
     for tbl in re.findall(r"(?s)<table.*?</table>", resp.text):

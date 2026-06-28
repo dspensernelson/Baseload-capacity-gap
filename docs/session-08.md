@@ -12,7 +12,7 @@
 
 1. Push all code to GitHub (confirm no `.env` file is committed)
 2. Go to vercel.com → New Project → Import from GitHub
-3. Select `nuclear-pipeline-tracker` repo
+3. Select `baseload-capacity-gap` repo
 4. Framework preset: Vite (auto-detected)
 5. Add environment variables in the Vercel dashboard:
    - `VITE_SUPABASE_URL` = your Supabase project URL

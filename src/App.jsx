@@ -198,7 +198,7 @@ export default function App() {
     if (location.pathname.startsWith('/dispatches')) return  // the dispatches page sets its own title
     const titles = { '/': 'Overview', '/history': 'History', '/map': 'Map', '/fleet': 'The Fleet', '/grid': 'The Grid', '/prices': 'Wholesale Prices', '/incidents': 'Incidents', '/safety': 'Safety', '/dispatches': 'Dispatches', '/news': 'News', '/newsletter': 'Newswire', '/scenarios': 'Scenarios', '/sources': 'The Sources', '/data': 'The Data' }
     const t = titles[location.pathname]
-    document.title = t ? `${t} · Nuclear Pipeline Tracker` : 'Nuclear Pipeline Tracker'
+    document.title = t ? `${t} · Baseload` : 'Baseload — The Capacity Gap'
   }, [location.pathname])
 
   const isEmbed = location.pathname.startsWith('/embed')
@@ -232,7 +232,7 @@ export default function App() {
     <>
       {!isEmbed && (<header style={{ background: 'var(--color-brand)', color: '#fff', padding: '0.9rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
         <Link to="/" style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
-          Nuclear Pipeline Tracker
+          Baseload
         </Link>
         <nav style={{ display: 'flex', gap: '1.1rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <NavLink to="/" end style={navLinkStyle}>Overview</NavLink>

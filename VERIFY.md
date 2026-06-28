@@ -7,7 +7,7 @@
 > Companion docs: [TESTING.md](TESTING.md) is the click-through UI walkthrough; this doc is the
 > "is everything correct and behaving" reference, including external sources of truth.
 >
-> Live site: **https://nukemap-two.vercel.app** · Repo: **github.com/DSpEnder77/NukeMap**
+> Live site: **https://nukemap-two.vercel.app** · Repo: **github.com/dspensernelson/NukeMap**
 > Last verified: `____________`  By: `____________`
 
 ---
