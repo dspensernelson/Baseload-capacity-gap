@@ -161,7 +161,7 @@ Track your progress from empty repo to live V1. Check items off as you go.
 - [x] Connect GitHub repo to Vercel (or Netlify)
 - [x] Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in host dashboard env vars
 - [x] Confirm live site reads from Supabase
-- [x] Point custom domain (if Student Pack approved) or use free `*.vercel.app` URL — https://nukemap-two.vercel.app
+- [x] Point custom domain (if Student Pack approved) or use free `*.vercel.app` URL — https://baseload-capacity-gap.vercel.app
 - [x] Write NRC daily status cron (Supabase Edge Function OR GitHub Action):
   - [x] Fetch NRC daily power reactor status text file
   - [x] Parse each unit's power %

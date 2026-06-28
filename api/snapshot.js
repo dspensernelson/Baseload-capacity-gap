@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       headline: headline[0] || null,
       latest_digest: digest[0] || null,
       news_items: news,
-      license: 'CC BY 4.0 — attribute Nuclear Pipeline Tracker',
+      license: 'CC BY 4.0 — attribute Baseload — The Capacity Gap',
     })
   } catch (err) {
     res.status(502).json({ error: err.message })

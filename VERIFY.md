@@ -7,7 +7,7 @@
 > Companion docs: [TESTING.md](TESTING.md) is the click-through UI walkthrough; this doc is the
 > "is everything correct and behaving" reference, including external sources of truth.
 >
-> Live site: **https://nukemap-two.vercel.app** · Repo: **github.com/dspensernelson/NukeMap**
+> Live site: **https://baseload-capacity-gap.vercel.app** · Repo: **github.com/dspensernelson/NukeMap**
 > Last verified: `____________`  By: `____________`
 
 ---
@@ -116,7 +116,7 @@ Spot-check a couple of these on each deeper audit. **NRC and EIA are the ground 
 
 ## 6. Where the ground truth lives (our system)
 
-- **Live site** — https://nukemap-two.vercel.app (auto-deploys from `main`)
+- **Live site** — https://baseload-capacity-gap.vercel.app (auto-deploys from `main`)
 - **Supabase** — tables: `reactors`, `new_reactor_projects`, `decommissioning`, `license_actions`, `sync_log`, `daily_status_history`, `reports`; views: `headline_numbers`, `gap_series`, `fleet_output_series`
 - **GitHub Actions** — cron runs + the watchdog (red run or open issue = look here)
 - **`sync_log`** — every job's receipt (what ran, when, how many rows, errors)

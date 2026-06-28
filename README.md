@@ -1,11 +1,11 @@
 # Baseload — The Capacity Gap
 
-**Live: https://nukemap-two.vercel.app**
+**Live: https://baseload-capacity-gap.vercel.app**
 
 A public, self-updating visualization of the American nuclear transition — every
 reactor, every megawatt, every regulatory event — backed by real NRC and EIA data
 that refreshes itself with no one at the wheel. It *shows*; it doesn't editorialize.
-Every number on the site is traceable to a primary source on the live [Sources](https://nukemap-two.vercel.app/sources) page.
+Every number on the site is traceable to a primary source on the live [Sources](https://baseload-capacity-gap.vercel.app/sources) page.
 
 > New here? Read [`docs/INDEX.md`](docs/INDEX.md) — it maps every document to who it's for.
 > Rebuilding from scratch? [`docs/REBUILD.md`](docs/REBUILD.md) takes you zero → live.
@@ -35,7 +35,7 @@ The nav groups eleven surfaces into five sections; the two trust/utility surface
 | **History** (`/history`) | a sourced timeline of nuclear power, 1938 → the gap | how we got here |
 | **The Fleet** ▾ | **Map** (`/map`) · **Performance** (`/fleet`) · **Incidents** (`/incidents`) | the operating reality — where reactors are, how they're running, what just happened |
 | **The Case** ▾ | **Safety** (`/safety`) · **The Grid** (`/grid`) · **Scenarios** (`/scenarios`) | the argument in context — how safe, vs. other sources, and the what-if explorer |
-| **Dispatches** (`/dispatches`) | an auto-written monthly report (`/dispatches/:period` permalinks, [RSS](https://nukemap-two.vercel.app/rss.xml)) + a regulatory radar of NRC license activity | what changed |
+| **Dispatches** (`/dispatches`) | an auto-written monthly report (`/dispatches/:period` permalinks, [RSS](https://baseload-capacity-gap.vercel.app/rss.xml)) + a regulatory radar of NRC license activity | what changed |
 | *footer* | **The Data** (`/data`) · **The Sources** (`/sources`) | the open data export, and the public audit trail (every number's formula + source) |
 
 Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/gap`).

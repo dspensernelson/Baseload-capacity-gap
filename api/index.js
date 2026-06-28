@@ -8,9 +8,9 @@ export default async function handler(req, res) {
 
   const base = `https://${req.headers.host || 'nuclearpipeline.org'}`
   res.status(200).json({
-    name: 'Nuclear Pipeline Tracker — Open Data API',
+    name: 'Baseload — The Capacity Gap — Open Data API',
     description: 'Read-only JSON feeds over the power-sector news archive and grid dataset.',
-    license: 'CC BY 4.0 — attribute Nuclear Pipeline Tracker',
+    license: 'CC BY 4.0 — attribute Baseload — The Capacity Gap',
     endpoints: [
       {
         path: '/news.json',

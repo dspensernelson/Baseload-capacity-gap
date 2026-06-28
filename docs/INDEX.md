@@ -12,7 +12,7 @@ Every document, who it's for, and the rule that keeps it true. Three readers:
 | Rebuild it from nothing | [`REBUILD.md`](REBUILD.md) 🧭🤖 |
 | Understand how it fits together | [`ARCHITECTURE.md`](ARCHITECTURE.md) 🤖🧭 |
 | Find a table or column | [`data-model.md`](data-model.md) 🤖 |
-| Know where a number came from | [`/sources`](https://nukemap-two.vercel.app/sources) + [`PROVENANCE.md`](PROVENANCE.md) + [`SOURCES.md`](SOURCES.md) 🏛️🤖 |
+| Know where a number came from | [`/sources`](https://baseload-capacity-gap.vercel.app/sources) + [`PROVENANCE.md`](PROVENANCE.md) + [`SOURCES.md`](SOURCES.md) 🏛️🤖 |
 | Understand *why* a choice was made | [`decisions/`](decisions/) (ADRs) 🤖🧭 |
 | Know where it's headed | [`ROADMAP.md`](ROADMAP.md) · `VISION.md` (internal) 🧭 |
 | Operate / verify the live system | [`VERIFY.md`](../VERIFY.md) · [`TESTING.md`](../TESTING.md) 🧭 |

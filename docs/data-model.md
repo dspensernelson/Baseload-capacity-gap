@@ -169,5 +169,5 @@ service key and emails the latest `weekly_news` digest via Resend.
 | `grid_reliability_source_stats_30d` | per-source 30-day reliability profile (`cv_pct`, `ramp95_gw`, ranges) | Grid reliability profile |
 | `grid_firming_snapshot_30d` | 30-day aggregate firming snapshot (overnight + low-renewables nuclear share) | Grid firming callout |
 
-Exact formulas are registered in `metric_lineage` and shown on [`/sources`](https://nukemap-two.vercel.app/sources).
+Exact formulas are registered in `metric_lineage` and shown on [`/sources`](https://baseload-capacity-gap.vercel.app/sources).
 **Rule:** if you change a view's formula, update its `metric_lineage` row in the same commit.

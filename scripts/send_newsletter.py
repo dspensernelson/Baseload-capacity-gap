@@ -31,7 +31,7 @@ load_dotenv()
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "").strip()
-NEWSLETTER_FROM = os.getenv("NEWSLETTER_FROM", "Nuclear Pipeline Tracker <newswire@nuclearpipeline.org>").strip()
+NEWSLETTER_FROM = os.getenv("NEWSLETTER_FROM", "Baseload — The Capacity Gap <newswire@nuclearpipeline.org>").strip()
 
 
 def write_sync_log(sb, status, rows_inserted, start_t, errors, notes):
@@ -154,7 +154,7 @@ def main():
         "<div style='font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#222;line-height:1.5'>"
         + markdown_to_html(body)
         + "<hr style='margin:24px 0;border:none;border-top:1px solid #ddd'>"
-        + "<p style='font-size:12px;color:#888'>You are receiving this because you subscribed at Nuclear Pipeline Tracker. "
+        + "<p style='font-size:12px;color:#888'>You are receiving this because you subscribed at Baseload — The Capacity Gap. "
         + "Reply to unsubscribe.</p></div>"
     )
 

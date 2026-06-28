@@ -149,4 +149,4 @@ The loop closed end-to-end: data → watchdog → content, no human in the path.
 ## V1 — 2025 → early 2026
 The original build (8 sessions, `docs/session-0X.md`): the gap thesis, the three headline
 numbers, the reactor map + table, the gap chart, six tabs, EIA/NRC seed, the first two crons.
-Live at https://nukemap-two.vercel.app.
+Live at https://baseload-capacity-gap.vercel.app.

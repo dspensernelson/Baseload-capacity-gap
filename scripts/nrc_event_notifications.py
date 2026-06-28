@@ -25,7 +25,7 @@ try:
 except Exception:
     BeautifulSoup = None
 
-UA = {"User-Agent": "Mozilla/5.0 (compatible; NukeMapBot/1.0; +https://nukemap-two.vercel.app)"}
+UA = {"User-Agent": "Mozilla/5.0 (compatible; BaseloadBot/1.0; +https://baseload-capacity-gap.vercel.app)"}
 BASE = "https://www.nrc.gov/reading-rm/doc-collections/event-status/event"
 REPORT_DAYS = 30
 
