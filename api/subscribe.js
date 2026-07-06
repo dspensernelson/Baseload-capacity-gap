@@ -32,15 +32,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `${SUPABASE_URL}/rest/v1/subscribers?on_conflict=email`
+    // Plain insert, no ON CONFLICT: the anon role is insert-only (no SELECT
+    // policy), and Postgres rejects any ON CONFLICT statement under RLS without
+    // one. A duplicate email surfaces as a 409, which we treat as success below.
+    const url = `${SUPABASE_URL}/rest/v1/subscribers`
     const r = await fetch(url, {
       method: 'POST',
       headers: {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
-        // Idempotent: a repeat signup is a no-op, never a 409.
-        Prefer: 'resolution=ignore-duplicates,return=minimal',
+        Prefer: 'return=minimal',
       },
       body: JSON.stringify({ email, source }),
     })

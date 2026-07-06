@@ -1,7 +1,7 @@
 # SOURCES — the system of record
 
 Every external source this project draws from, what it feeds, and how. The per-*number*
-provenance is on the live [`/sources`](https://nukemap-two.vercel.app/sources) page and in
+provenance is on the live [`/sources`](https://baseload-capacity-gap.vercel.app/sources) page and in
 `metric_lineage`; this file is the per-*source* catalog. **NRC and EIA are the ground truth.**
 
 | Source | URL | Feeds | Via | Cadence |

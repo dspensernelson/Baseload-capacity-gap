@@ -14,7 +14,7 @@
 >
 > Companion: **VERIFY.md** is the broader "expected behavior + data fact-check" reference (per-page behavior, primary sources to confirm the numbers, red flags). Use this file for a guided UI click-through; use VERIFY.md for the regular health pass.
 >
-> Site to test: **https://nukemap-two.vercel.app**
+> Site to test: **https://baseload-capacity-gap.vercel.app**
 > Tester: `________`   Date: `________`
 
 ---

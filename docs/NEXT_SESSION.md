@@ -22,7 +22,7 @@ don't ask me to re-explain it. Orient yourself first:
    locally) for the thesis and the hidden-advocacy operating model. Don't relitigate.
 4. Skim CHANGELOG.md for how we got to today.
 
-Live site: https://nukemap-two.vercel.app — confirm git status is clean and local
+Live site: https://baseload-capacity-gap.vercel.app — confirm git status is clean and local
 main matches origin/main before assuming anything is unpushed.
 
 This round's candidates (pick and confirm with me before building):

@@ -1,4 +1,4 @@
-const SITE = 'https://nukemap-two.vercel.app'
+const SITE = 'https://baseload-capacity-gap.vercel.app'
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
