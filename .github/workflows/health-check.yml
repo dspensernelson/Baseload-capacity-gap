@@ -63,6 +63,31 @@ jobs:
               });
             }
 
+      # GitHub issues are invisible if nobody reads GitHub notifications; once
+      # RESEND_API_KEY + ALERT_EMAIL secrets exist this also lands in an inbox.
+      # Skips silently until then (secrets can't be used in `if:` expressions).
+      - name: Email alert (pipeline unhealthy)
+        if: steps.check.outputs.status == 'fail'
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NEWSLETTER_FROM: ${{ secrets.NEWSLETTER_FROM }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: |
+          if [ -z "$RESEND_API_KEY" ] || [ -z "$ALERT_EMAIL" ]; then
+            echo "RESEND_API_KEY / ALERT_EMAIL not set — skipping email alert."
+            exit 0
+          fi
+          REPORT=$(cat health_report.txt 2>/dev/null || echo "See the Actions log.")
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          jq -n --arg from "${NEWSLETTER_FROM:-alerts@resend.dev}" \
+                --arg to "$ALERT_EMAIL" \
+                --arg text "$REPORT"$'\n\n'"$RUN_URL" \
+                '{from:$from, to:[$to], subject:"⚠️ Watchdog: data pipeline needs attention", text:$text}' \
+          | curl -sS -X POST https://api.resend.com/emails \
+              -H "Authorization: Bearer $RESEND_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d @- || echo "(email alert failed — issue alerting still active)"
+
       - name: Close watchdog issue (pipeline healthy)
         if: steps.check.outputs.status == 'pass'
         uses: actions/github-script@v7

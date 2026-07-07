@@ -32,6 +32,7 @@ SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "").strip()
 NEWSLETTER_FROM = os.getenv("NEWSLETTER_FROM", "Nuclear Pipeline Tracker <newswire@nuclearpipeline.org>").strip()
+SITE_URL = os.getenv("SITE_URL", "https://baseload-capacity-gap.vercel.app").strip().rstrip("/")
 
 
 def write_sync_log(sb, status, rows_inserted, start_t, errors, notes):
@@ -96,12 +97,20 @@ def already_sent(sb, period: str) -> bool:
     return False
 
 
-def send_email(to_email: str, subject: str, html: str, text: str) -> tuple[bool, str]:
+def send_email(to_email: str, subject: str, html: str, text: str, unsub_url: str = "") -> tuple[bool, str]:
     try:
+        payload = {"from": NEWSLETTER_FROM, "to": [to_email], "subject": subject, "html": html, "text": text}
+        if unsub_url:
+            # RFC 8058 one-click unsubscribe — Gmail/Yahoo require this header
+            # for bulk senders, and it materially helps inbox placement.
+            payload["headers"] = {
+                "List-Unsubscribe": f"<{unsub_url}>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
         r = requests.post(
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
-            json={"from": NEWSLETTER_FROM, "to": [to_email], "subject": subject, "html": html, "text": text},
+            json=payload,
             timeout=20,
         )
         if r.status_code in (200, 201):
@@ -141,8 +150,8 @@ def main():
         print(f"Digest {period} already sent — skipping.")
         return
 
-    subs_resp = sb.table("subscribers").select("email").eq("status", "active").execute()
-    subscribers = [row["email"] for row in (subs_resp.data or []) if row.get("email")]
+    subs_resp = sb.table("subscribers").select("id,email").eq("status", "active").execute()
+    subscribers = [(row["id"], row["email"]) for row in (subs_resp.data or []) if row.get("email")]
     if not subscribers:
         write_sync_log(sb, "skipped", 0, start_t, [], f"no active subscribers; digest {period} not sent")
         print("No active subscribers — nothing to send.")
@@ -150,17 +159,20 @@ def main():
 
     subject = digest.get("title", "Power Sector Newswire")
     body = digest.get("body", "")
-    html = (
-        "<div style='font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#222;line-height:1.5'>"
-        + markdown_to_html(body)
-        + "<hr style='margin:24px 0;border:none;border-top:1px solid #ddd'>"
-        + "<p style='font-size:12px;color:#888'>You are receiving this because you subscribed at Nuclear Pipeline Tracker. "
-        + "Reply to unsubscribe.</p></div>"
-    )
+    body_html = markdown_to_html(body)
 
     sent = 0
-    for email in subscribers:
-        ok, err = send_email(email, subject, html, body)
+    for sub_id, email in subscribers:
+        unsub_url = f"{SITE_URL}/api/unsubscribe?id={sub_id}"
+        html = (
+            "<div style='font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#222;line-height:1.5'>"
+            + body_html
+            + "<hr style='margin:24px 0;border:none;border-top:1px solid #ddd'>"
+            + "<p style='font-size:12px;color:#888'>You are receiving this because you subscribed at Nuclear Pipeline Tracker. "
+            + f"<a href='{unsub_url}' style='color:#888'>Unsubscribe with one click</a>.</p></div>"
+        )
+        text = body + f"\n\n--\nUnsubscribe: {unsub_url}\n"
+        ok, err = send_email(email, subject, html, text, unsub_url)
         if ok:
             sent += 1
         else:

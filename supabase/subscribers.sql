@@ -24,3 +24,21 @@ create policy subscribers_anon_insert
 
 -- Insert privilege for the public web form; reads stay blocked (no SELECT policy).
 grant insert on public.subscribers to anon;
+
+-- One-click unsubscribe (api/unsubscribe.js): anon may flip a row to
+-- 'unsubscribed' — and nothing else — if it knows the row's UUID. The UUID is
+-- unguessable and only ever delivered inside that subscriber's own email, so
+-- this is the standard unsubscribe-token pattern. Column grants are limited to
+-- (status, unsubscribed_at); the list stays unreadable (no SELECT policy means
+-- anon reads return zero rows even with the id column privilege below, which
+-- exists only so the UPDATE's WHERE id = ... filter is allowed).
+grant select (id) on public.subscribers to anon;
+grant update (status, unsubscribed_at) on public.subscribers to anon;
+
+drop policy if exists subscribers_anon_unsubscribe on public.subscribers;
+create policy subscribers_anon_unsubscribe
+  on public.subscribers
+  for update
+  to anon
+  using (true)
+  with check (status = 'unsubscribed');

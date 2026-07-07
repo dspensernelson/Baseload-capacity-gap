@@ -5,6 +5,22 @@ Most recent first. (Fitting that a site with a History tab keeps its own history
 
 ---
 
+## Newsletter actually works: capture unbroken, one-click unsubscribe, self-sustaining crons — July 2026
+The email-capture endpoint had never accepted a single signup: Postgres rejects
+`INSERT ... ON CONFLICT` under RLS when the role has no SELECT policy, and the anon role is
+deliberately insert-only, so every `/api/subscribe` call 502'd. Fixed with a plain insert
+(duplicate → 409, treated as success). The site also carried its dead pre-rename URL
+(`nukemap-two.vercel.app`) in every OG tag, the sitemap, robots.txt, and both feed generators —
+all now point at the live `baseload-capacity-gap.vercel.app`.
+
+Added the missing deliverability layer: `api/unsubscribe.js` (uuid-token one-click unsubscribe,
+RFC 8058 `List-Unsubscribe` headers in every send) backed by a column-scoped anon UPDATE policy
+that can only ever set `status='unsubscribed'`. The watchdog can now also email `ALERT_EMAIL`
+via Resend instead of alerting only through GitHub issues, and a monthly `keepalive.yml`
+heartbeat commit stops GitHub from auto-disabling every scheduled workflow after 60 days of
+repo inactivity — the failure mode that would otherwise have taken the whole pipeline (and the
+watchdog with it) down silently.
+
 ## Weekly Newswire digest automation — June 2026
 Launched a cron-backed newsletter lane that can run fully no-key and publish every week without
 editor intervention. New `scripts/generate_newsletter.py` pulls from free public RSS/Atom feeds

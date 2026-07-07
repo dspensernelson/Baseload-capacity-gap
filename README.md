@@ -57,8 +57,10 @@ Plus reactor permalinks (`/reactor/:slug`) and an embeddable gap chart (`/embed/
   Newsletter syndication now also exposes `newsletter.xml` via `api/newsletter.js`, and the
   news archive is queryable as JSON at `news.json` (`?limit=&offset=&source=&category=&since=&q=`)
   via `api/news.js`. Companion open-data endpoints: `trends.json` (most-mentioned entities),
-  `snapshot.json` (downloadable daily bundle), `api.json` (self-documenting catalog), and a
-  signup endpoint `api/subscribe` that writes to the insert-only `subscribers` table.
+  `snapshot.json` (downloadable daily bundle), `api.json` (self-documenting catalog), a
+  signup endpoint `api/subscribe` that writes to the insert-only `subscribers` table, and a
+  one-click `api/unsubscribe` (uuid-token pattern; anon RLS can only flip `status` to
+  `unsubscribed`).
 
 Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/data-model.md`](docs/data-model.md).
 
@@ -75,7 +77,8 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `news-daily.yml` | daily 10:00 UTC | ingests free power-sector feeds into the durable `news_items` archive (additive, de-duplicated by URL) |
 | `newsletter-weekly.yml` | weekly, Mon 12:00 UTC | curates high-signal headlines from the `news_items` archive into a weekly Newswire digest → `reports` (`kind='weekly_news'`); optional Claude lead if `ANTHROPIC_API_KEY` exists; then emails the digest to active `subscribers` via `scripts/send_newsletter.py` (no-op unless `RESEND_API_KEY` is set) |
 | `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
-| `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure |
+| `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure (and emails `ALERT_EMAIL` via Resend when that secret exists) |
+| `keepalive.yml` | monthly, 15th | heartbeat commit so GitHub never auto-disables the scheduled workflows after 60 days of repo inactivity |
 | `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS pricing (day-ahead + real-time, NP15/SP15) → `wholesale_prices` — no API key needed |
 | `nyiso-prices.yml` | every 6 h | NYISO public MIS zonal LBMP (day-ahead + real-time) → `wholesale_prices` — no API key needed |
 | `ercot-prices.yml` | every 2 h | ERCOT public MIS CDR real-time hub LMP (HB_HOUSTON/HB_NORTH/HB_SOUTH/HB_WEST) → `wholesale_prices` — no API key needed |
