@@ -50,7 +50,7 @@ function buildRss(reports) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Nuclear Pipeline Tracker — Dispatches</title>
+    <title>Baseload — The Capacity Gap — Dispatches</title>
     <link>${SITE}/dispatches</link>
     <atom:link href="${SITE}/rss.xml" rel="self" type="application/rss+xml" />
     <description>A plain-English monthly read on the U.S. nuclear fleet — what's running, what the NRC moved, where the gap stands.</description>

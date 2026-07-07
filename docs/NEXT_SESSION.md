@@ -11,7 +11,7 @@
 ## Paste this to start
 
 ```
-Continuing work on the Nuclear Pipeline Tracker ("NukeMap"). Long-running project —
+Continuing work on Baseload — The Capacity Gap (formerly "NukeMap"). Long-running project —
 don't ask me to re-explain it. Orient yourself first:
 
 1. Read CLAUDE.md (working context, conventions, the "Current Session" footer for

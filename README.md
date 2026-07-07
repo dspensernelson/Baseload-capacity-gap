@@ -1,4 +1,4 @@
-# Nuclear Pipeline Tracker
+# Baseload — The Capacity Gap
 
 **Live: https://baseload-capacity-gap.vercel.app**
 

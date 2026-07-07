@@ -37,7 +37,7 @@ function buildRss(reports) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Nuclear Pipeline Tracker - Weekly Newswire</title>
+    <title>Baseload — The Capacity Gap - Weekly Newswire</title>
     <link>${SITE}/dispatches</link>
     <atom:link href="${SITE}/newsletter.xml" rel="self" type="application/rss+xml" />
     <description>Weekly top nuclear news stories from free public feeds, auto-ranked and published.</description>

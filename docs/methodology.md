@@ -1,6 +1,6 @@
 # Methodology
 
-How the Nuclear Pipeline Tracker computes its numbers, where the data comes
+How Baseload — The Capacity Gap computes its numbers, where the data comes
 from, and what the known caveats are.
 
 ## Data sources

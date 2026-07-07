@@ -1,4 +1,4 @@
-# Nuclear Pipeline Tracker — Claude Code Context
+# Baseload — The Capacity Gap — Claude Code Context
 
 > This file is auto-ingested by Claude Code. Read it at the start of every session before writing any code.
 
@@ -32,7 +32,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 ## Repo Structure
 
 ```
-nuclear-pipeline-tracker/
+baseload-capacity-gap/
 ├── CLAUDE.md                  ← you are here
 ├── CHECKLIST.md               ← master task checklist
 ├── TESTING.md                 ← usability checklist a second instance runs the user through one item at a time

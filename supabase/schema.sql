@@ -1,4 +1,4 @@
--- Nuclear Pipeline Tracker — Full Schema
+-- Baseload — The Capacity Gap — Full Schema
 -- Run this in Supabase SQL editor to recreate the database from scratch.
 
 -- ============================================================

@@ -53,8 +53,8 @@ export default function Newsletter({ reports = [] }) {
 
   useEffect(() => {
     document.title = issue
-      ? `${issue.title} · Nuclear Pipeline Tracker`
-      : 'Newsletter · Nuclear Pipeline Tracker'
+      ? `${issue.title} · Baseload`
+      : 'Newsletter · Baseload'
   }, [issue])
 
   // Single-issue view.

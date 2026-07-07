@@ -143,7 +143,7 @@ export default function Dispatches({ reports = [], licenseActions = [], reactors
     [reactors])
 
   useEffect(() => {
-    if (selected) document.title = `${selected.title} · Nuclear Pipeline Tracker`
+    if (selected) document.title = `${selected.title} · Baseload`
   }, [selected])
 
   return (
