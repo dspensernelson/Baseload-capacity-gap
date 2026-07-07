@@ -1,8 +1,10 @@
 // One-click unsubscribe — GET /api/unsubscribe?id=<subscriber uuid>.
 // The uuid is only ever delivered inside that subscriber's own email, so
 // possession of it is the authorization (standard unsubscribe-token pattern).
-// Uses the anon key: RLS on public.subscribers only lets anon set
-// status='unsubscribed' by id and read nothing (see supabase/subscribers.sql).
+// Calls the unsubscribe_subscriber(uuid) RPC (SECURITY DEFINER) with the anon
+// key — anon has no direct table SELECT/UPDATE grant at all, so the list
+// stays unreadable and there's no way to enumerate ids. See
+// supabase/subscribers.sql for why this has to be an RPC, not a table policy.
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
@@ -29,23 +31,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `${SUPABASE_URL}/rest/v1/subscribers?id=eq.${id}`
+    const url = `${SUPABASE_URL}/rest/v1/rpc/unsubscribe_subscriber`
     const r = await fetch(url, {
-      method: 'PATCH',
+      method: 'POST',
       headers: {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
       },
-      body: JSON.stringify({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString() }),
+      body: JSON.stringify({ sub_id: id }),
     })
     if (!r.ok) {
       const text = await r.text()
-      throw new Error(`Supabase update failed: ${r.status} ${text.slice(0, 200)}`)
+      throw new Error(`Supabase RPC failed: ${r.status} ${text.slice(0, 200)}`)
     }
-    // An unknown id also returns 204 (zero rows matched) — same message either
-    // way, so the endpoint never confirms whether an id exists.
+    // An unknown id is also a silent no-op — same response either way, so the
+    // endpoint never confirms whether an id exists.
     res.status(200).send(page("You're unsubscribed", 'You will not receive the weekly newswire again. No confirmation email will be sent.'))
   } catch (err) {
     res.status(502).send(page('Something went wrong', 'We could not process the unsubscribe. Please try again in a minute, or reply to any newsletter email and we will remove you manually.'))

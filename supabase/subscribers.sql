@@ -25,20 +25,33 @@ create policy subscribers_anon_insert
 -- Insert privilege for the public web form; reads stay blocked (no SELECT policy).
 grant insert on public.subscribers to anon;
 
--- One-click unsubscribe (api/unsubscribe.js): anon may flip a row to
--- 'unsubscribed' — and nothing else — if it knows the row's UUID. The UUID is
--- unguessable and only ever delivered inside that subscriber's own email, so
--- this is the standard unsubscribe-token pattern. Column grants are limited to
--- (status, unsubscribed_at); the list stays unreadable (no SELECT policy means
--- anon reads return zero rows even with the id column privilege below, which
--- exists only so the UPDATE's WHERE id = ... filter is allowed).
-grant select (id) on public.subscribers to anon;
-grant update (status, unsubscribed_at) on public.subscribers to anon;
+-- One-click unsubscribe (api/unsubscribe.js): anon may flip exactly one row
+-- to 'unsubscribed' if it knows that row's UUID, which only ever travels
+-- inside that subscriber's own email (standard unsubscribe-token pattern).
+--
+-- This is a SECURITY DEFINER RPC, not a table-level UPDATE grant + RLS
+-- policy. That was the first cut and it's unsafe: PostgREST/Postgres can't
+-- evaluate `WHERE id = eq.<uuid>` for a row anon has no SELECT visibility
+-- into, so a bare `using (true)` UPDATE policy silently matches zero rows.
+-- The fix is *not* to add a permissive SELECT policy — combined with the
+-- UPDATE policy's `using (true)` that would let anyone enumerate every
+-- subscriber id via `?select=id` and then mass-unsubscribe the whole list.
+-- The function runs with the owner's privileges internally (bypassing RLS
+-- for this one targeted UPDATE) while anon only ever gets EXECUTE — no
+-- table-level SELECT or UPDATE grant at all, so the list stays fully
+-- unreadable and there is no enumeration surface.
+create or replace function public.unsubscribe_subscriber(sub_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.subscribers
+     set status = 'unsubscribed', unsubscribed_at = now()
+   where id = sub_id;
+end;
+$$;
 
-drop policy if exists subscribers_anon_unsubscribe on public.subscribers;
-create policy subscribers_anon_unsubscribe
-  on public.subscribers
-  for update
-  to anon
-  using (true)
-  with check (status = 'unsubscribed');
+revoke all on function public.unsubscribe_subscriber(uuid) from public;
+grant execute on function public.unsubscribe_subscriber(uuid) to anon;
