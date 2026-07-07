@@ -17,3 +17,6 @@ health_report.txt
 health_status.txt
 reconcile_report.txt
 reconcile_status.txt
+
+# Personal launch/ops checklist — local only, like VISION.md
+docs/LAUNCH_CHECKLIST.md

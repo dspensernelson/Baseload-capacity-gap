@@ -31,4 +31,8 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           RESEND_API_KEY:       ${{ secrets.RESEND_API_KEY }}
           NEWSLETTER_FROM:      ${{ secrets.NEWSLETTER_FROM }}
+          # Repo variable (Settings → Variables), not a secret. Unset → the
+          # script falls back to the vercel.app URL. Set it when the custom
+          # domain lands so unsubscribe links ride the canonical host.
+          SITE_URL:             ${{ vars.SITE_URL }}
         run: python scripts/send_newsletter.py

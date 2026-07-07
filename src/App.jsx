@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, NavLink, Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import supabase from './supabase'
+import SignupForm from './components/SignupForm'
 
 // Route-level code splitting keeps the initial bundle small; each page chunk
 // loads on demand behind the Suspense fallback below.
@@ -73,6 +74,9 @@ function SiteFooter({ reactors }) {
     : '—'
   return (
     <footer style={{ borderTop: '1px solid var(--color-border)', padding: '2rem', textAlign: 'center', fontSize: '0.78rem', color: 'var(--color-text-muted)', background: 'var(--color-surface)' }}>
+      <div style={{ maxWidth: '420px', margin: '0 auto 1.4rem', textAlign: 'left' }}>
+        <SignupForm source="footer" compact heading="Get the weekly newswire" />
+      </div>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
         <span className="pulse-dot" style={{ width: 7, height: 7 }} />
         Reactor power status refreshed daily from the U.S. NRC · last update {when}. License records refreshed weekly.
