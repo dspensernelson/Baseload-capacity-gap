@@ -7,6 +7,11 @@ Sources (public, no key):
   http://mis.nyiso.com/public/csv/realtime/YYYYMMDDrealtime_zone.csv
 
 Idempotent: upserts on (iso, hub, market, interval_start).
+
+Exit-code contract (ADR-0016): exit 1 means THE FEED FAILED — nothing landed.
+A skipped malformed row or one unavailable day-file is a warning: it is printed,
+recorded in sync_log, and the run still exits 0. Sustained silence is the
+watchdog's job, not the exit code's.
 """
 import csv
 import io
@@ -35,15 +40,18 @@ MARKETS = [
 ]
 
 
-def write_sync_log(sb, status, rows_inserted, start_t, errors):
+def write_sync_log(sb, status, rows_inserted, start_t, fatal, warnings):
+    note = f"NYISO zonal LBMP ({', '.join(m['name'] for m in MARKETS)}), {LOOKBACK_DAYS}d trailing window."
+    if warnings:
+        note += " Non-fatal: " + "; ".join(warnings)
     try:
         sb.table("sync_log").insert({
             "source": "nyiso_prices",
             "status": status,
             "rows_inserted": rows_inserted,
             "duration_ms": int((time.time() - start_t) * 1000),
-            "error_message": ("; ".join(errors))[:500] if errors else None,
-            "notes": f"NYISO zonal LBMP ({', '.join(m['name'] for m in MARKETS)}), {LOOKBACK_DAYS}d trailing window.",
+            "error_message": ("; ".join(fatal))[:500] if fatal else None,
+            "notes": note[:1000],
         }).execute()
     except Exception as e:
         print(f"(could not write sync_log row: {e})")
@@ -52,7 +60,17 @@ def write_sync_log(sb, status, rows_inserted, start_t, errors):
 def fetch_csv(url):
     backoff = 5
     for attempt in range(1, MAX_RETRIES + 1):
-        resp = requests.get(url, timeout=45, headers={"User-Agent": "nukemap-nyiso-prices"})
+        try:
+            resp = requests.get(url, timeout=45, headers={"User-Agent": "nukemap-nyiso-prices"})
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            # DNS/connection blips on the runner are as transient as a 5xx — the
+            # retry ladder exists for exactly this, so don't skip it (they used to
+            # go straight to fatal; see the CAISO name-resolution failures, July 2026).
+            if attempt < MAX_RETRIES:
+                time.sleep(backoff)
+                backoff *= 2
+                continue
+            raise
         if resp.status_code == 404:
             return []
         if resp.status_code >= 500 and attempt < MAX_RETRIES:
@@ -80,8 +98,9 @@ def parse_ts(ts):
 def main():
     start_t = time.time()
     sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-    errors = []
+    fatal, warnings = [], []
     records = []
+    fetches_ok = fetches_failed = 0
 
     today = datetime.now(timezone.utc).astimezone(NY_TZ).date()
     days = [today - timedelta(days=i) for i in range(LOOKBACK_DAYS)]
@@ -92,11 +111,14 @@ def main():
             url = market["url"].format(date=date_key)
             try:
                 rows = fetch_csv(url)
+                fetches_ok += 1
             except requests.exceptions.RequestException as e:
-                errors.append(f"{market['name']} {date_key}: request_error: {e}")
+                fetches_failed += 1
+                warnings.append(f"{market['name']} {date_key}: request_error: {e}")
                 continue
             except Exception as e:
-                errors.append(f"{market['name']} {date_key}: fetch_error: {type(e).__name__}: {e}")
+                fetches_failed += 1
+                warnings.append(f"{market['name']} {date_key}: fetch_error: {type(e).__name__}: {e}")
                 continue
 
             if not rows:
@@ -123,7 +145,7 @@ def main():
                     bad_rows += 1
 
             if bad_rows:
-                errors.append(f"{market['name']} {date_key}: skipped {bad_rows} malformed row(s)")
+                warnings.append(f"{market['name']} {date_key}: skipped {bad_rows} malformed row(s)")
 
     written = 0
     if records:
@@ -134,13 +156,27 @@ def main():
             ).execute()
             written = len(records)
         except Exception as e:
-            errors.append(f"upsert_error: {e}")
+            fatal.append(f"upsert_error: {e}")
 
-    status = "error" if errors else "success"
-    write_sync_log(sb, status, written, start_t, errors)
+    # Fatal only when the feed as a whole produced nothing usable. A 5-day
+    # window means single-day gaps can't trip this.
+    if fetches_ok == 0:
+        fatal.append(f"every NYISO fetch failed ({fetches_failed} attempt(s)) — source unreachable.")
+    elif not records:
+        fatal.append("NYISO returned no usable rows across the whole lookback window.")
 
-    print(f"Done: wrote {written} NYISO rows" + (f" with {len(errors)} error(s)" if errors else ""))
-    if errors:
+    status = "error" if fatal else ("partial" if warnings else "success")
+    write_sync_log(sb, status, written, start_t, fatal, warnings)
+
+    for w in warnings:
+        print(f"  warning: {w}")
+    for f in fatal:
+        print(f"  ERROR: {f}")
+    print(
+        f"Done [{status}]: wrote {written} NYISO rows from {fetches_ok}/{fetches_ok + fetches_failed} fetches"
+        + (f", {len(warnings)} warning(s)" if warnings else "")
+    )
+    if fatal:
         raise SystemExit(1)
 
 

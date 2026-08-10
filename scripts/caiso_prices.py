@@ -18,6 +18,10 @@ into the same table later, not a schema change.
 Idempotent: upserts on (iso, hub, market, interval_start), so re-running just
 refreshes the trailing window.
 
+Exit-code contract (ADR-0016): exit 1 means THE FEED FAILED — nothing landed.
+One hub failing while others succeed is a warning, since each hub writes
+independently. Sustained silence is the watchdog's job, not the exit code's.
+
 Run:  python scripts/caiso_prices.py
 """
 import io
@@ -73,10 +77,20 @@ def fetch_hub(hub, market, start, end):
     }
     backoff = 15
     for attempt in range(1, MAX_RETRIES + 1):
-        resp = requests.get(OASIS_URL, params=params, timeout=60,
-                             headers={"User-Agent": "nukemap-caiso-prices"})
-        if resp.status_code == 429 and attempt < MAX_RETRIES:
-            print(f"    {hub}: 429 rate-limited (attempt {attempt}/{MAX_RETRIES}), waiting {backoff}s…")
+        try:
+            resp = requests.get(OASIS_URL, params=params, timeout=60,
+                                 headers={"User-Agent": "nukemap-caiso-prices"})
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            # Runner-side DNS/connection blips are as transient as a 429 and belong
+            # on the same ladder (three such failures went straight to fatal in July 2026).
+            if attempt < MAX_RETRIES:
+                print(f"    {hub}: connection error (attempt {attempt}/{MAX_RETRIES}), waiting {backoff}s… ({e})")
+                time.sleep(backoff)
+                backoff *= 2
+                continue
+            raise
+        if resp.status_code in (429, 500, 502, 503, 504) and attempt < MAX_RETRIES:
+            print(f"    {hub}: HTTP {resp.status_code} (attempt {attempt}/{MAX_RETRIES}), waiting {backoff}s…")
             time.sleep(backoff)
             backoff *= 2
             continue
@@ -89,15 +103,18 @@ def fetch_hub(hub, market, start, end):
     return []
 
 
-def write_sync_log(sb, status, total_written, start_t, errors):
+def write_sync_log(sb, status, total_written, start_t, fatal, warnings):
+    note = f"CAISO pricing markets {', '.join(m['name'] for m in MARKETS)}, hubs {', '.join(HUBS)}."
+    if warnings:
+        note += " Non-fatal: " + "; ".join(warnings)
     try:
         sb.table("sync_log").insert({
             "source":        "caiso_prices",
             "status":        status,
             "rows_inserted": total_written,
             "duration_ms":   int((time.time() - start_t) * 1000),
-            "error_message": ("; ".join(errors))[:500] if errors else None,
-            "notes":         f"CAISO pricing markets {', '.join(m['name'] for m in MARKETS)}, hubs {', '.join(HUBS)}.",
+            "error_message": ("; ".join(fatal))[:500] if fatal else None,
+            "notes":         note[:1000],
         }).execute()
     except Exception as e:
         print(f"(could not write sync_log row: {e})")
@@ -110,7 +127,8 @@ def main():
     now = datetime.now(timezone.utc)
 
     total_written = 0
-    errors = []
+    fatal, warnings = [], []
+    fetches_ok = fetches_failed = 0
     for market in MARKETS:
         end = now
         start = end - timedelta(days=market["lookback_days"])
@@ -121,17 +139,21 @@ def main():
             short_hub = hub.replace("TH_", "").replace("_GEN-APND", "")
             try:
                 rows = fetch_hub(hub, market, start, end)
+                fetches_ok += 1
             except requests.exceptions.RequestException as e:
+                fetches_failed += 1
                 print(f"  {hub} ({market['name']}): FAILED ({e})")
-                errors.append(f"{short_hub} {market['name']}: {e}")
+                warnings.append(f"{short_hub} {market['name']}: {e}")
                 continue
             except (zipfile.BadZipFile, csv.Error) as e:
+                fetches_failed += 1
                 print(f"  {hub} ({market['name']}): FAILED to parse response ({e})")
-                errors.append(f"{short_hub} {market['name']}: parse_error: {e}")
+                warnings.append(f"{short_hub} {market['name']}: parse_error: {e}")
                 continue
             except Exception as e:
+                fetches_failed += 1
                 print(f"  {hub} ({market['name']}): FAILED unexpectedly ({type(e).__name__}: {e})")
-                errors.append(f"{short_hub} {market['name']}: unexpected_error: {type(e).__name__}: {e}")
+                warnings.append(f"{short_hub} {market['name']}: unexpected_error: {type(e).__name__}: {e}")
                 continue
 
             records = []
@@ -155,7 +177,7 @@ def main():
                     bad_rows += 1
 
             if bad_rows:
-                errors.append(f"{short_hub} {market['name']}: skipped {bad_rows} malformed row(s)")
+                warnings.append(f"{short_hub} {market['name']}: skipped {bad_rows} malformed row(s)")
 
             if records:
                 try:
@@ -163,17 +185,30 @@ def main():
                         records, on_conflict="iso,hub,market,interval_start"
                     ).execute()
                 except Exception as e:
-                    errors.append(f"{short_hub} {market['name']}: upsert_error: {e}")
+                    # A failed write is data loss, not a source hiccup — always fatal.
+                    fatal.append(f"{short_hub} {market['name']}: upsert_error: {e}")
                     print(f"  {hub} ({market['name']}): FAILED write ({e})")
                     continue
             total_written += len(records)
             print(f"  {hub} ({market['name']}): {len(records)} rows written")
 
-    status = "error" if errors else "success"
-    write_sync_log(sb, status, total_written, start_t, errors)
+    if fetches_ok == 0:
+        fatal.append(f"every CAISO hub fetch failed ({fetches_failed} attempt(s)) — OASIS unreachable.")
+    elif total_written == 0:
+        fatal.append("CAISO returned no usable rows for any hub or market.")
 
-    print(f"Done: wrote {total_written} rows total" + (f", {len(errors)} hub(s) failed" if errors else ""))
-    if errors:
+    status = "error" if fatal else ("partial" if warnings else "success")
+    write_sync_log(sb, status, total_written, start_t, fatal, warnings)
+
+    for w in warnings:
+        print(f"  warning: {w}")
+    for f in fatal:
+        print(f"  ERROR: {f}")
+    print(
+        f"Done [{status}]: wrote {total_written} rows from {fetches_ok}/{fetches_ok + fetches_failed} hub fetches"
+        + (f", {len(warnings)} warning(s)" if warnings else "")
+    )
+    if fatal:
         raise SystemExit(1)
 
 

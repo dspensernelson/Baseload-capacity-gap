@@ -23,6 +23,7 @@ unless noted. Numbers are assigned once and never reused.
 | [0013](0013-radar-snapshot-diff.md) | Regulatory Radar: snapshot-diff, license cron to weekly |
 | [0014](0014-demand-growth-band.md) | The demand-growth visual (shipped on the gap chart, moved to The Grid) |
 | [0015](0015-caiso-pricing-pilot.md) | The wholesale-pricing layer: a CAISO pilot, not an EIA shortcut |
+| [0016](0016-cron-exit-code-contract.md) | A cron's exit code means "the feed failed," not "something was imperfect" |
 
 ## Writing a new one
 Copy the shape of any file here and add a row above. If a decision touches the *advocacy

@@ -77,7 +77,7 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `news-daily.yml` | daily 10:00 UTC | ingests free power-sector feeds into the durable `news_items` archive (additive, de-duplicated by URL) |
 | `newsletter-weekly.yml` | weekly, Mon 12:00 UTC | curates high-signal headlines from the `news_items` archive into a weekly Newswire digest → `reports` (`kind='weekly_news'`); optional Claude lead if `ANTHROPIC_API_KEY` exists; then emails the digest to active `subscribers` via `scripts/send_newsletter.py` (no-op unless `RESEND_API_KEY` is set) |
 | `reconcile.yml` | weekly Mon + after license cron | re-derives headlines from atomic rows → `reconciliation_log`; flags drift |
-| `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness; opens a GitHub issue only on failure (and emails `ALERT_EMAIL` via Resend when that secret exists) |
+| `health-check.yml` | after each cron + daily | watchdog: freshness/sanity + provenance completeness, plus price-feed staleness (ERCOT 12h / NYISO 18h / CAISO 36h — see [ADR-0016](docs/decisions/0016-cron-exit-code-contract.md)); opens a GitHub issue only on failure (and emails `ALERT_EMAIL` via Resend when that secret exists) |
 | `keepalive.yml` | monthly, 15th | heartbeat commit so GitHub never auto-disables the scheduled workflows after 60 days of repo inactivity |
 | `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS pricing (day-ahead + real-time, NP15/SP15) → `wholesale_prices` — no API key needed |
 | `nyiso-prices.yml` | every 6 h | NYISO public MIS zonal LBMP (day-ahead + real-time) → `wholesale_prices` — no API key needed |
@@ -87,6 +87,12 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 `/grid` now includes two source-backed reliability layers filled by a daily cron from EIA-930:
 - `grid_reliability_daily` — per-day source reliability snapshots (avg/range/CV/ramp stress).
 - `grid_firming_daily` — per-day firming snapshots (overnight nuclear share + low-renewables-hour nuclear share).
+
+**A red cron means data is missing.** The price feeds exit non-zero only when the feed as a
+whole failed to deliver — a skipped malformed row, one unavailable source file, or one hub
+failing while others succeed is recorded as a warning (`sync_log.status = 'partial'`) and the
+run stays green. Catching a feed that has genuinely *stopped* is the watchdog's job, not the
+exit code's. See [ADR-0016](docs/decisions/0016-cron-exit-code-contract.md).
 
 **Manual by design:** `new_reactor_projects` (~7 rows of editorial judgment about which
 SMR/new-build projects are credible) and the curated reference tables (`energy_safety`,

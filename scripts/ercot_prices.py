@@ -8,6 +8,12 @@ Source chain (public, no key):
 
 This report publishes every 5 minutes. We fetch only a short trailing publish
 window each run, then upsert on (iso, hub, market, interval_start).
+
+Exit-code contract (ADR-0016): exit 1 means THE FEED FAILED — nothing landed.
+ERCOT routinely lists a DocID and then expires it before we can download it
+(the download returns an XML "Error Downloading Content - NO Results" body
+instead of a zip); with a 180-minute window overlapping a 2-hour cron, the next
+run re-fetches that interval anyway. That is a warning, not a failure.
 """
 
 import csv
@@ -39,18 +45,21 @@ REQUEST_TIMEOUT_S = 60
 US_CENTRAL = ZoneInfo("America/Chicago")
 
 
-def write_sync_log(sb, status, rows_inserted, start_t, errors, docs_seen, docs_downloaded):
+def write_sync_log(sb, status, rows_inserted, start_t, fatal, warnings, docs_seen, docs_downloaded):
+    note = (
+        f"ERCOT NP6-788 hub LMP ({MARKET}); docs seen={docs_seen}, "
+        f"downloaded={docs_downloaded}; hubs={', '.join(TARGET_HUBS)}."
+    )
+    if warnings:
+        note += " Non-fatal: " + "; ".join(warnings)
     try:
         sb.table("sync_log").insert({
             "source": "ercot_prices",
             "status": status,
             "rows_inserted": rows_inserted,
             "duration_ms": int((time.time() - start_t) * 1000),
-            "error_message": ("; ".join(errors))[:500] if errors else None,
-            "notes": (
-                f"ERCOT NP6-788 hub LMP ({MARKET}); docs seen={docs_seen}, "
-                f"downloaded={docs_downloaded}; hubs={', '.join(TARGET_HUBS)}."
-            ),
+            "error_message": ("; ".join(fatal))[:500] if fatal else None,
+            "notes": note[:1000],
         }).execute()
     except Exception as e:
         print(f"(could not write sync_log row: {e})")
@@ -73,15 +82,34 @@ def parse_interval_ts(raw):
     return local.astimezone(timezone.utc).isoformat()
 
 
+def get_with_retry(url, params):
+    """GET with backoff on 5xx and on connection/DNS blips — both are transient."""
+    backoff = 5
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            resp = requests.get(
+                url,
+                params=params,
+                timeout=REQUEST_TIMEOUT_S,
+                headers={"User-Agent": "nukemap-ercot-prices"},
+            )
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            if attempt < MAX_RETRIES:
+                time.sleep(backoff)
+                backoff *= 2
+                continue
+            raise
+        if resp.status_code >= 500 and attempt < MAX_RETRIES:
+            time.sleep(backoff)
+            backoff *= 2
+            continue
+        resp.raise_for_status()
+        return resp
+    raise RuntimeError(f"exhausted {MAX_RETRIES} attempts for {url}")
+
+
 def fetch_doc_list():
-    params = {"reportTypeId": REPORT_TYPE_ID}
-    resp = requests.get(
-        DOC_LIST_URL,
-        params=params,
-        timeout=REQUEST_TIMEOUT_S,
-        headers={"User-Agent": "nukemap-ercot-prices"},
-    )
-    resp.raise_for_status()
+    resp = get_with_retry(DOC_LIST_URL, {"reportTypeId": REPORT_TYPE_ID})
     payload = json.loads(resp.text)
     docs = payload.get("ListDocsByRptTypeRes", {}).get("DocumentList", [])
     out = []
@@ -106,37 +134,23 @@ def fetch_doc_list():
 
 
 def download_doc_csv(doc_id):
-    params = {"doclookupId": doc_id}
-    backoff = 5
-    for attempt in range(1, MAX_RETRIES + 1):
-        resp = requests.get(
-            DOWNLOAD_URL,
-            params=params,
-            timeout=REQUEST_TIMEOUT_S,
-            headers={"User-Agent": "nukemap-ercot-prices"},
-        )
-        if resp.status_code >= 500 and attempt < MAX_RETRIES:
-            time.sleep(backoff)
-            backoff *= 2
-            continue
-        resp.raise_for_status()
-        try:
-            with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
-                csv_name = next(n for n in zf.namelist() if n.lower().endswith(".csv"))
-                with zf.open(csv_name) as f:
-                    return list(csv.DictReader(io.TextIOWrapper(f, encoding="utf-8")))
-        except StopIteration as e:
-            raise ValueError("zip has no CSV payload") from e
-        except zipfile.BadZipFile as e:
-            body_prefix = resp.text[:200] if resp.text else ""
-            raise ValueError(f"non-zip payload ({body_prefix})") from e
-    return []
+    resp = get_with_retry(DOWNLOAD_URL, {"doclookupId": doc_id})
+    try:
+        with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
+            csv_name = next(n for n in zf.namelist() if n.lower().endswith(".csv"))
+            with zf.open(csv_name) as f:
+                return list(csv.DictReader(io.TextIOWrapper(f, encoding="utf-8")))
+    except StopIteration as e:
+        raise ValueError("zip has no CSV payload") from e
+    except zipfile.BadZipFile as e:
+        body_prefix = resp.text[:200] if resp.text else ""
+        raise ValueError(f"non-zip payload ({body_prefix})") from e
 
 
 def main():
     start_t = time.time()
     sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-    errors = []
+    fatal, warnings = [], []
 
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(minutes=LOOKBACK_MINUTES)
@@ -144,8 +158,10 @@ def main():
     try:
         docs = fetch_doc_list()
     except Exception as e:
-        errors.append(f"doc_list_error: {type(e).__name__}: {e}")
-        write_sync_log(sb, "error", 0, start_t, errors, 0, 0)
+        # The listing is the entry point — if it's gone, there is no feed at all.
+        fatal.append(f"doc_list_error: {type(e).__name__}: {e}")
+        write_sync_log(sb, "error", 0, start_t, fatal, warnings, 0, 0)
+        print(f"  ERROR: {fatal[0]}")
         raise SystemExit(1)
 
     selected = [d for d in docs if d["publish_at"].astimezone(timezone.utc) >= cutoff][:MAX_DOCS]
@@ -157,10 +173,10 @@ def main():
             rows = download_doc_csv(doc["doc_id"])
             docs_downloaded += 1
         except requests.exceptions.RequestException as e:
-            errors.append(f"doc {doc['doc_id']}: request_error: {e}")
+            warnings.append(f"doc {doc['doc_id']}: request_error: {e}")
             continue
         except Exception as e:
-            errors.append(f"doc {doc['doc_id']}: parse_error: {type(e).__name__}: {e}")
+            warnings.append(f"doc {doc['doc_id']}: parse_error: {type(e).__name__}: {e}")
             continue
 
         bad_rows = 0
@@ -185,7 +201,7 @@ def main():
                 bad_rows += 1
 
         if bad_rows:
-            errors.append(f"doc {doc['doc_id']}: skipped {bad_rows} malformed row(s)")
+            warnings.append(f"doc {doc['doc_id']}: skipped {bad_rows} malformed row(s)")
 
     written = 0
     if records:
@@ -196,16 +212,32 @@ def main():
             ).execute()
             written = len(records)
         except Exception as e:
-            errors.append(f"upsert_error: {e}")
+            fatal.append(f"upsert_error: {e}")
 
-    status = "error" if errors else "success"
-    write_sync_log(sb, status, written, start_t, errors, len(selected), docs_downloaded)
+    if not selected:
+        # ERCOT published nothing in the window. Self-heals on the next run; a
+        # sustained publishing gap is what the watchdog's freshness check is for.
+        warnings.append(f"no documents published in the last {LOOKBACK_MINUTES} minutes.")
+    elif docs_downloaded == 0:
+        fatal.append(f"all {len(selected)} listed document(s) failed to download.")
+    elif not records:
+        fatal.append(
+            f"{docs_downloaded} document(s) downloaded but none contained rows for "
+            f"{', '.join(TARGET_HUBS)} — settlement-point names may have changed."
+        )
 
+    status = "error" if fatal else ("partial" if warnings else "success")
+    write_sync_log(sb, status, written, start_t, fatal, warnings, len(selected), docs_downloaded)
+
+    for w in warnings:
+        print(f"  warning: {w}")
+    for f in fatal:
+        print(f"  ERROR: {f}")
     print(
-        f"Done: wrote {written} ERCOT rows from {docs_downloaded}/{len(selected)} docs"
-        + (f" with {len(errors)} error(s)" if errors else "")
+        f"Done [{status}]: wrote {written} ERCOT rows from {docs_downloaded}/{len(selected)} docs"
+        + (f", {len(warnings)} warning(s)" if warnings else "")
     )
-    if errors:
+    if fatal:
         raise SystemExit(1)
 
 

@@ -74,11 +74,20 @@ def write_status(status, report):
 
 
 def run_checks(sb):
+    # Window has to cover the slowest threshold below (36h) with room to spare;
+    # the price crons alone write ~17 rows/day.
     logs = with_retry(lambda: sb.table("sync_log").select("*")
-                      .order("run_at", desc=True).limit(60).execute()).data
+                      .order("run_at", desc=True).limit(300).execute()).data
 
     def latest(source):
         return next((r for r in logs if r["source"] == source), None)
+
+    def latest_delivering(source):
+        """Newest run that actually landed rows — the only proof a feed is alive."""
+        return next((r for r in logs
+                     if r["source"] == source
+                     and r.get("status") != "error"
+                     and (r.get("rows_inserted") or 0) > 0), None)
 
     # 1 — Daily power-status cron ran, succeeded, updated a sane number of units
     d = latest("nrc_daily_status")
@@ -135,6 +144,29 @@ def run_checks(sb):
             errors.append(f"News ingest broken — last successful run {age / 24:.0f}d ago (threshold 3d).")
         elif age > 36:
             warnings.append(f"News ingest is late — last run {age:.0f}h ago (daily cron, threshold 36h).")
+
+    # 3c — Wholesale price feeds. Individual runs deliberately tolerate partial
+    # source hiccups (ADR-0016), so the red X no longer reports them — this is the
+    # only place a genuinely dead price feed surfaces. Thresholds are ~3 missed
+    # cron cycles, so a single bad run never opens an issue.
+    for src, label, max_age_h in (
+        ("ercot_prices", "ERCOT hub LMP (2h cron)", 12),
+        ("nyiso_prices", "NYISO zonal LBMP (6h cron)", 18),
+        ("caiso_prices", "CAISO hub LMP (daily cron)", 36),
+    ):
+        delivering = latest_delivering(src)
+        if not delivering:
+            errors.append(f"{label}: no run has written a row in the retained sync_log window.")
+        else:
+            age = hours_since(parse_ts(delivering.get("run_at")))
+            if age is None:
+                warnings.append(f"{label}: run_at unparseable.")
+            elif age > max_age_h:
+                errors.append(f"{label} is stale — last run to write rows was {age:.0f}h ago "
+                              f"(threshold {max_age_h}h).")
+        last = latest(src)
+        if last and last.get("status") == "error":
+            warnings.append(f"{label}: most recent run failed — {last.get('error_message')}")
 
     # 4 — Headline numbers are in a sane range (catches data/view corruption)
     hn = with_retry(lambda: sb.table("headline_numbers").select("*").single().execute()).data
