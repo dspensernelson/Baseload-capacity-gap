@@ -46,7 +46,7 @@ Every row in the four hand-curated tables carries:
 - `provenance_note` — free text; **required for manual rows**, especially low-confidence ones
 
 Completeness = `source` AND `source_url` AND `verified_at` are all set. This is enforced
-(see Layer 5). Today: **229/229 curated rows complete.**
+(see Layer 5). Today: **230/230 curated rows complete.**
 
 Scrapers stamp these automatically going forward; manual rows are stamped by the curator.
 The exact backfill lives in [`supabase/provenance.sql`](../supabase/provenance.sql).

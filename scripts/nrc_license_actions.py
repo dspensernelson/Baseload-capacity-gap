@@ -28,6 +28,13 @@ SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 SLR_URL = "https://www.nrc.gov/reactors/operating/licensing/renewal/subsequent-license-renewal.html"
 LR_URL  = "https://www.nrc.gov/reactors/operating/licensing/renewal/applications.html"
 
+# A per-request `headers={...}` dict trips nrc.gov's bot-management WAF (403) even
+# with an honest, self-identifying UA; setting it on a Session in place (preserving
+# requests' normal default header set/order) does not. Reproduced deterministically
+# against the live site, Aug 2026 — use a session, not a one-off headers kwarg.
+SESSION = requests.Session()
+SESSION.headers["User-Agent"] = "Mozilla/5.0 (compatible; BaseloadBot/1.0; +https://baseload-capacity-gap.vercel.app)"
+
 # action_types this script owns; rows of other types (e.g. restart_authorization)
 # are preserved across rebuilds
 OWNED_ACTION_TYPES = ["license_renewal", "subsequent_license_renewal"]
@@ -109,7 +116,7 @@ def clean_cell(html: str) -> str:
 
 
 def fetch_tables(url: str) -> list[list[list[str]]]:
-    resp = requests.get(url, timeout=60, headers={"User-Agent": "baseload-capacity-gap"})
+    resp = SESSION.get(url, timeout=60)
     resp.raise_for_status()
     tables = []
     for tbl in re.findall(r"(?s)<table.*?</table>", resp.text):
@@ -197,7 +204,9 @@ def build_actions(slr_tables, lr_tables, db_reactors):
                 return by_unit
         return cands
 
-    def add(table, action_type, status, received_col, issued_col, exp_col):
+    scraped_at = datetime.now(timezone.utc).isoformat()
+
+    def add(table, action_type, status, received_col, issued_col, exp_col, source_url):
         for row in table[1:]:  # skip header row
             if len(row) <= max(received_col, issued_col or 0, exp_col or 0):
                 continue
@@ -223,18 +232,24 @@ def build_actions(slr_tables, lr_tables, db_reactors):
                     "status":              status,
                     "notes":               f"{plant} Unit {r['unit_number']} — scraped from nrc.gov"
                                            + (f"; application received {received}" if received else ""),
+                    "source":              "NRC",
+                    "source_url":          source_url,
+                    "source_date":         (issued or received).isoformat() if (issued or received) else None,
+                    "verified_at":         scraped_at,
+                    "provenance_note":     f"Scraped from the NRC {action_type.replace('_', ' ')} "
+                                           f"status page; row reflects the table as published at scrape time.",
                 })
 
     # SLR page: table 2 = under review, table 3 = issued
     if len(slr_tables) >= 3:
-        add(slr_tables[1], "subsequent_license_renewal", "under_review", 1, None, None)
-        add(slr_tables[2], "subsequent_license_renewal", "approved", 1, 2, 3)
+        add(slr_tables[1], "subsequent_license_renewal", "under_review", 1, None, None, SLR_URL)
+        add(slr_tables[2], "subsequent_license_renewal", "approved", 1, 2, 3, SLR_URL)
 
     # Initial LR page: tables 2 & 3 = in review pipeline, table 4 = issued history
     if len(lr_tables) >= 4:
-        add(lr_tables[1], "license_renewal", "under_review", 1, None, None)
-        add(lr_tables[2], "license_renewal", "under_review", 1, None, None)
-        add(lr_tables[3], "license_renewal", "approved", 1, 2, 3)
+        add(lr_tables[1], "license_renewal", "under_review", 1, None, None, LR_URL)
+        add(lr_tables[2], "license_renewal", "under_review", 1, None, None, LR_URL)
+        add(lr_tables[3], "license_renewal", "approved", 1, 2, 3, LR_URL)
 
     return actions, unmatched
 

@@ -24,6 +24,7 @@ unless noted. Numbers are assigned once and never reused.
 | [0014](0014-demand-growth-band.md) | The demand-growth visual (shipped on the gap chart, moved to The Grid) |
 | [0015](0015-caiso-pricing-pilot.md) | The wholesale-pricing layer: a CAISO pilot, not an EIA shortcut |
 | [0016](0016-cron-exit-code-contract.md) | A cron's exit code means "the feed failed," not "something was imperfect" |
+| [0017](0017-license-scraper-provenance-and-waf.md) | The license scraper never wrote provenance, and a WAF quirk almost hid the fix |
 
 ## Writing a new one
 Copy the shape of any file here and add a row above. If a decision touches the *advocacy
