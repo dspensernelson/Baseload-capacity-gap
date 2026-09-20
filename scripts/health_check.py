@@ -237,6 +237,21 @@ def run_checks(sb):
         errors.append(f"{prov_missing} curated row(s) missing source/URL/verified_at — "
                       f"a published number with no provenance.")
 
+    # 8 — wholesale_prices rollup keeps the DB under the free-tier cap. If it stops,
+    # nothing breaks visibly — the table just quietly grows ~9 MB/week again — so
+    # this is the only place a dead rollup surfaces. Weekly cron; 10d = one missed run.
+    ru = with_retry(lambda: sb.table("sync_log").select("*").eq("source", "rollup_wholesale_prices")
+                    .order("run_at", desc=True).limit(1).execute()).data
+    if not ru:
+        warnings.append("No `rollup_wholesale_prices` run logged yet.")
+    else:
+        age = hours_since(parse_ts(ru[0].get("run_at")))
+        if ru[0].get("status") != "success":
+            errors.append(f"Wholesale rollup last run errored: {ru[0].get('error_message') or ru[0].get('notes')}")
+        elif age is not None and age > 24 * 10:
+            errors.append(f"Wholesale rollup overdue — last run {age / 24:.0f}d ago (threshold 10d); "
+                          f"wholesale_prices is growing unbounded.")
+
     return sb
 
 

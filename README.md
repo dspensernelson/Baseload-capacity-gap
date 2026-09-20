@@ -82,7 +82,7 @@ Full picture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Schema: [`docs/dat
 | `caiso-prices.yml` | daily 16:00 UTC | CAISO OASIS pricing (day-ahead + real-time, NP15/SP15) → `wholesale_prices` — no API key needed |
 | `nyiso-prices.yml` | every 6 h | NYISO public MIS zonal LBMP (day-ahead + real-time) → `wholesale_prices` — no API key needed |
 | `ercot-prices.yml` | every 2 h | ERCOT public MIS CDR real-time hub LMP (HB_HOUSTON/HB_NORTH/HB_SOUTH/HB_WEST) → `wholesale_prices` — no API key needed |
-| `pjm-prices.yml` | manual (`workflow_dispatch`) | Optional PJM Data Miner day-ahead hourly LMP (WEST/MIDATL) → `wholesale_prices` (requires `PJM_API_KEY`) |
+| `wholesale-rollup.yml` | weekly, Sun 06:00 UTC | rolls real-time `wholesale_prices` rows older than 30 days up to hourly avg/min/max in `wholesale_prices_hourly` (keeps the DB under the free-tier cap); watchdog flags it if overdue |
 
 `/grid` now includes two source-backed reliability layers filled by a daily cron from EIA-930:
 - `grid_reliability_daily` — per-day source reliability snapshots (avg/range/CV/ramp stress).
@@ -128,8 +128,7 @@ npm run dev          # frontend at localhost:5173
 Copy `.env.example` → `.env` with Supabase keys (and `EIA_API_KEY` for the EIA scripts).
 The Python ETL under `scripts/` needs `pip install requests beautifulsoup4 python-dotenv "supabase==2.9.1"`
 and the same `.env`; the scheduled crons run on GitHub Actions using repo secrets
-`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY`. Optional PJM ingest also needs
-`PJM_API_KEY` when enabled.
+`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EIA_API_KEY`.
 
 To stand up the whole thing from nothing, follow [`docs/REBUILD.md`](docs/REBUILD.md).
 
@@ -147,7 +146,7 @@ src/
 api/                 og.js (live OG share card), rss.js (Dispatches RSS feed) — see ADR-0012
 scripts/             Python ETL, the cron scripts, the watchdog, reconcile, docs_check
 supabase/            table DDL + views + seeds (apply order in docs/REBUILD.md)
-.github/workflows/   the 11 crons + watchdog (+ optional pjm-prices manual workflow)
+.github/workflows/   the crons + watchdog
 docs/                INDEX, ARCHITECTURE, REBUILD, data-model, PROVENANCE, SOURCES,
                      ROADMAP, methodology, decisions/ (ADRs), history/ (V1 build log)
 CLAUDE.md            working context for AI-assisted sessions (the agent's entry point)

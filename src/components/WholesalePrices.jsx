@@ -10,7 +10,6 @@ const SERIES_BY_MARKET = {
     { key: 'CAISO_SP15', iso: 'CAISO', hub: 'SP15', label: 'CAISO SP15', color: 'var(--color-demand)' },
     { key: 'NYISO_NYC', iso: 'NYISO', hub: 'N.Y.C.', label: 'NYISO NYC', color: '#1f78b4' },
     { key: 'NYISO_LONGIL', iso: 'NYISO', hub: 'LONGIL', label: 'NYISO Long Island', color: '#d95f02' },
-    { key: 'PJM_WEST', iso: 'PJM', hub: 'WEST', label: 'PJM West (optional)', color: '#4daf4a' },
   ],
   real_time: [
     { key: 'CAISO_NP15', iso: 'CAISO', hub: 'NP15', label: 'CAISO NP15', color: 'var(--color-pipeline)' },
@@ -23,7 +22,7 @@ const SERIES_BY_MARKET = {
 }
 
 const PREFERRED_FOCUS = {
-  day_ahead: ['CAISO_SP15', 'NYISO_NYC', 'CAISO_NP15', 'NYISO_LONGIL', 'PJM_WEST'],
+  day_ahead: ['CAISO_SP15', 'NYISO_NYC', 'CAISO_NP15', 'NYISO_LONGIL'],
   real_time: ['CAISO_SP15', 'NYISO_NYC', 'ERCOT_HBHOUSTON', 'CAISO_NP15', 'ERCOT_HBNORTH', 'NYISO_LONGIL'],
 }
 
@@ -57,7 +56,7 @@ export default function WholesalePrices() {
     supabase
       .from('wholesale_prices')
       .select('iso, hub, market, interval_start, price_usd_mwh')
-      .in('iso', ['CAISO', 'NYISO', 'ERCOT', 'PJM'])
+      .in('iso', ['CAISO', 'NYISO', 'ERCOT'])
       .in('market', ['day_ahead', 'real_time'])
       .gte('interval_start', since)
       .order('interval_start')
@@ -190,7 +189,7 @@ export default function WholesalePrices() {
 
       <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.6rem' }}>
         {market === 'day_ahead' ? 'Day-ahead' : 'Real-time'} locational marginal price, last 48 hours. Times shown in Pacific time.
-        Sources: CAISO OASIS, NYISO public MIS CSV, ERCOT public MIS CDR feed, and optional PJM Data Miner integration.
+        Sources: CAISO OASIS, NYISO public MIS CSV, and ERCOT public MIS CDR feed.
       </p>
     </div>
   )

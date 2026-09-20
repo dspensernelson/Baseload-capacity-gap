@@ -34,7 +34,7 @@ AUTOMATION_MAP = {
     "caiso-prices.yml": ["caiso_prices.py"],
     "nyiso-prices.yml": ["nyiso_prices.py"],
     "ercot-prices.yml": ["ercot_prices.py"],
-    "pjm-prices.yml": ["pjm_prices.py"],
+    "wholesale-rollup.yml": ["rollup_wholesale_prices.py"],
     "docs-check.yml": ["docs_check.py", "pipeline_contract_check.py"],
 }
 
@@ -56,7 +56,7 @@ REQUIRED_ENV_BY_SCRIPT = {
     "caiso_prices.py": ["SUPABASE_URL", "SUPABASE_SERVICE_KEY"],
     "nyiso_prices.py": ["SUPABASE_URL", "SUPABASE_SERVICE_KEY"],
     "ercot_prices.py": ["SUPABASE_URL", "SUPABASE_SERVICE_KEY"],
-    "pjm_prices.py": ["SUPABASE_URL", "SUPABASE_SERVICE_KEY", "PJM_API_KEY"],
+    "rollup_wholesale_prices.py": ["SUPABASE_URL", "SUPABASE_SERVICE_KEY"],
     "docs_check.py": [],
     "pipeline_contract_check.py": [],
 }
