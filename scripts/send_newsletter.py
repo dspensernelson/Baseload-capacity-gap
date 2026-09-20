@@ -15,10 +15,12 @@ Optional env: RESEND_API_KEY, NEWSLETTER_FROM.
 
 Run:
   python scripts/send_newsletter.py
+  python scripts/send_newsletter.py --test-to you@example.com   # proof copy only
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import time
 
@@ -78,6 +80,16 @@ def markdown_to_html(body: str) -> str:
     return "\n".join(lines)
 
 
+def render_html(body: str, unsub_url: str) -> str:
+    return (
+        "<div style='font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#222;line-height:1.5'>"
+        + markdown_to_html(body)
+        + "<hr style='margin:24px 0;border:none;border-top:1px solid #ddd'>"
+        + "<p style='font-size:12px;color:#888'>You are receiving this because you subscribed at Baseload — The Capacity Gap. "
+        + f"<a href='{unsub_url}' style='color:#888'>Unsubscribe with one click</a>.</p></div>"
+    )
+
+
 def already_sent(sb, period: str) -> bool:
     try:
         resp = (
@@ -121,6 +133,10 @@ def send_email(to_email: str, subject: str, html: str, text: str, unsub_url: str
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--test-to", metavar="EMAIL",
+                    help="send the latest digest to this address only; ignores the list and the already-sent guard")
+    test_to = ap.parse_args().test_to
     start_t = time.time()
     sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
     errors: list[str] = []
@@ -145,6 +161,16 @@ def main():
         print("RESEND_API_KEY not set — skipping send (digest is published on the web/RSS).")
         return
 
+    if test_to:
+        # Proof copy: all-zero uuid makes the unsubscribe link a harmless no-op.
+        # Logged as 'test' (never 'success') so already_sent() ignores it.
+        unsub_url = f"{SITE_URL}/api/unsubscribe?id=00000000-0000-0000-0000-000000000000"
+        ok, err = send_email(test_to, f"[TEST] {digest.get('title', '')}", render_html(digest.get("body", ""), unsub_url),
+                             digest.get("body", ""), unsub_url)
+        write_sync_log(sb, "test", int(ok), start_t, [err] if err else [], f"test send of digest {period}")
+        print(f"Test send of {period} to {test_to}: {'ok' if ok else err}")
+        raise SystemExit(0 if ok else 1)
+
     if already_sent(sb, period):
         write_sync_log(sb, "skipped", 0, start_t, [], f"digest {period} already sent")
         print(f"Digest {period} already sent — skipping.")
@@ -159,18 +185,11 @@ def main():
 
     subject = digest.get("title", "Power Sector Newswire")
     body = digest.get("body", "")
-    body_html = markdown_to_html(body)
 
     sent = 0
     for sub_id, email in subscribers:
         unsub_url = f"{SITE_URL}/api/unsubscribe?id={sub_id}"
-        html = (
-            "<div style='font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#222;line-height:1.5'>"
-            + body_html
-            + "<hr style='margin:24px 0;border:none;border-top:1px solid #ddd'>"
-            + "<p style='font-size:12px;color:#888'>You are receiving this because you subscribed at Baseload — The Capacity Gap. "
-            + f"<a href='{unsub_url}' style='color:#888'>Unsubscribe with one click</a>.</p></div>"
-        )
+        html = render_html(body, unsub_url)
         text = body + f"\n\n--\nUnsubscribe: {unsub_url}\n"
         ok, err = send_email(email, subject, html, text, unsub_url)
         if ok:

@@ -16,9 +16,9 @@ jobs:
   health:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -36,7 +36,7 @@ jobs:
 
       - name: Open / update watchdog issue (pipeline unhealthy)
         if: steps.check.outputs.status == 'fail'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -90,7 +90,7 @@ jobs:
 
       - name: Close watchdog issue (pipeline healthy)
         if: steps.check.outputs.status == 'pass'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const open = await github.rest.issues.listForRepo({

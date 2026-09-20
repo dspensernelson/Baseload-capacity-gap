@@ -1,6 +1,6 @@
-# Baseload — The Capacity Gap — Claude Code Context
+# Baseload — The Capacity Gap — Codex Context
 
-> This file is auto-ingested by Claude Code. Read it at the start of every session before writing any code.
+> This file is auto-ingested by Codex. Read it at the start of every session before writing any code.
 
 ---
 
@@ -33,7 +33,7 @@ A public-facing, advocacy-leaning data visualization showing the gap between ret
 
 ```
 baseload-capacity-gap/
-├── CLAUDE.md                  ← you are here
+├── AGENTS.md                  ← you are here
 ├── CHECKLIST.md               ← master task checklist
 ├── TESTING.md                 ← usability checklist a second instance runs the user through one item at a time
 ├── VERIFY.md                  ← living "expected behavior + data fact-check" reference (run the 5-min pass regularly)
@@ -43,7 +43,7 @@ baseload-capacity-gap/
 │   ├── ROADMAP.md             ← 10-year horizons, invariants, and what to architecture-proof now
 │   ├── ROADMAP.md             ← the 10-year horizons, invariants & risk plan (directional)
 │   ├── data-model.md          ← full schema reference
-│   ├── agent-runbook.md       ← how to work with Claude Code
+│   ├── agent-runbook.md       ← how to work with Codex
 │   ├── session-01.md          ← seed the database
 │   ├── session-02.md          ← full schema & remaining seed data
 │   ├── session-03.md          ← gap view (SQL)
@@ -185,10 +185,8 @@ See `docs/data-model.md` for full schema.
 
 > Update this section at the start of each working session.
 
-**Active session:** September 19, 2026 — audit + newsletter launch prep (branch `newsletter-hardening`)
-**State of the world (verified Sept 19, not assumed):** site + all `api/*` endpoints 200; 15/16 workflows green on schedule, every `sync_log` source fresh; no open watchdog issues. Shipped since the June 26 entry and never recorded here: News page + durable `news_items` archive (`news-daily.yml`), weekly newswire digest (`newsletter-weekly.yml` → `generate_newsletter.py` + `send_newsletter.py`), email capture (`api/subscribe.js`, `api/unsubscribe.js`, `subscribers` table, site-wide footer signup), `api/news|newsletter|snapshot|trends`, `keepalive.yml`, ADR-0016 partial-success crons. 20 tables.
-**The newsletter has never emailed anyone.** 13 digests are on web/RSS, but `RESEND_API_KEY` / `NEWSLETTER_FROM` / `ANTHROPIC_API_KEY` were never set, so the send step logs `skipped` and exits 0. The default From domain (`nuclearpipeline.org`) has no DNS. 1 active subscriber. **Green workflow ≠ working — read `sync_log.status`.**
-**This session:** watchdog check 3d (active subscribers + unsent digest = fail; digest overdue = fail); `send_newsletter.py --test-to` proof sends; `subscribers` anon grant narrowed to `(email, source)` + sanity constraints (**SQL in repo, not yet applied live**); Actions bumped off Node 20 (checkout v7, setup-python v7, github-script v9).
-**Next planned:** (1) user: sending domain + Resend account + secrets; (2) test send → review render → first real send via `workflow_dispatch`; (3) double opt-in before any promotion (`subscribers.confirmed` exists, unused); (4) `wholesale_prices` rollup — 113 MB of a 151 MB DB, ~9 MB/week, NYISO real-time is 70% of rows, free-tier cap is 500 MB (~mid-2027); (5) PJM workflow: key it or delete it (dead since June 27).
-**Blockers:** sending domain + Resend key (user-only).
+**Active session:** June 26, 2026 — reliability hardening + pricing expansion
+**Last completed:** (June 25, 2026, in order) **Newsletter scoping discussed and parked** — build-vs-buy + multi-feed design reasoning preserved in session transcript, shelved on subscriber-demand skepticism, no code changed. → **Distribution** (ROADMAP H1): `/dispatches/:period` permalinks; live OG/Twitter share card (`api/og.js`, Edge + `@vercel/og`, renders from `headline_numbers` on every request); RSS feed (`api/rss.js`, `/rss.xml`); `WebSite`/`Dataset` JSON-LD. First server-side compute beyond GitHub Actions crons — see [ADR-0012](docs/decisions/0012-thin-distribution-functions.md). → **Regulatory Radar** (VISION Surface 3): license cron moved monthly→weekly (`nrc-license-weekly.yml`) and now also runs `scripts/generate_radar.py`, which snapshot-diffs `license_actions` week over week (the table has no row history — it's fully rebuilt every run) to write a plain-English "what changed" digest, shown **alongside** (not instead of) the existing live pending/issued list on `/dispatches` — see [ADR-0013](docs/decisions/0013-radar-snapshot-diff.md). → **Demand-growth visual** (ROADMAP H2 / VISION "the Race," first move): EIA AEO2026 reference case (0.9–1.6%/yr through 2050) baselined to the actual 2024 high (4,430 TWh), converted to implied new firm capacity using the same 90% capacity-factor yardstick `ReplacementMath.jsx` already discloses — explicitly not a claim nuclear alone covers the growth. New `demand_forecast` table + `demand_growth_series` view, migration applied live. **Shipped on the Overview gap chart, then moved to The Grid the same day** on direct user feedback that whole-grid context on the nuclear-specific hero chart blurred the message — same "context, not combat" rule VISION already applies to other energy sources, applied to the site's own hero visual. Now lives as `DemandGrowth.jsx`, "Why this gets harder, not easier" on `/grid`. Two real bugs caught and fixed in preview before the relocation: a stacked Recharts `Area` series with `null` values silently broke the whole chart's domain calc (defaulted to 0 instead), and the band's much larger scale (~220 GW by 2045) was visually dwarfing the nuclear-capacity areas sharing one Y-axis — see [ADR-0014](docs/decisions/0014-demand-growth-band.md) and its amendment. → **Wholesale pricing pilot**: the planned "start with EIA" approach turned out to be impossible — verified directly against the live EIA API (`api.eia.gov/v2/electricity/`) rather than assumed, and **EIA has no wholesale price route at all**; its wholesale-markets page is a biweekly Excel file licensed from a commercial exchange (ICE), wrong granularity for an hourly story regardless. Pivoted to a CAISO pilot instead (`scripts/caiso_prices.py`, `caiso-prices.yml` daily) — confirmed free, public, no API key, more open than EIA's own API. New `wholesale_prices` table (`iso`/`market` columns ready for more ISOs or real-time prices later, no schema change needed), rendered as "The price of intermittency" on `/grid` right after `GridMix`. Migration applied live; **first manual workflow trigger failed** — CAISO rate-limits back-to-back requests (HTTP 429 on the second hub), and since both hubs batched into one upsert at the end, the first hub's successful fetch was discarded too. Fixed: 8s delay + retry-with-backoff between hubs, each hub upserts immediately so one failing doesn't discard another's success (verified the fix against the live CAISO API before re-shipping). Re-triggered, succeeded: **240 rows live** (120/hub × 2 hubs), chart confirmed rendering the real duck-curve story ("midday cost just $9/MWh... by 7 PM PT, price had jumped to $38/MWh"). See [ADR-0015](docs/decisions/0015-caiso-pricing-pilot.md) and its amendment. Live at https://baseload-capacity-gap.vercel.app, auto-deploys from `main`. 16 tables, 5 views, 8 data crons (one now weekly instead of monthly) + watchdog + reconcile + docs-check. Headlines unchanged: Operating ~101.9 GW / Retiring-by-2035 ~13.2 GW / Pipeline ~2.0 GW.
+**Next planned:** no-key pricing expansion is now in place (CAISO day-ahead + real-time; NYISO day-ahead + real-time). Next decision: push farther into no-key ERCOT/SPP/MISO sources where machine-readable endpoints are stable, or pivot to H1 event-driven Dispatches and the watchdog -> agent-fix loop.
+**Blockers:** —
 **A fresh thread can start cold from this file + `docs/INDEX.md`** — that's the point of the documentation overhaul. Memory files at the user level (`nukemap-deployment.md`, `nukemap-identity.md`) cover the URL/deploy/auth mechanics and the hidden-advocacy end-state; this file + git log/CHANGELOG.md cover everything else.

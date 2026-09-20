@@ -168,6 +168,40 @@ def run_checks(sb):
         if last and last.get("status") == "error":
             warnings.append(f"{label}: most recent run failed — {last.get('error_message')}")
 
+    # 3d — Newsletter. The send step is built to skip quietly (exit 0) while keys
+    # or subscribers don't exist, which also means it can skip quietly forever.
+    # The rule is state-derived: a skip is fine with nobody on the list, and a
+    # failure the moment someone is. Queried per source — weekly rows fall out of
+    # the 300-row window above within days.
+    def latest_of(source):
+        rows = with_retry(lambda: sb.table("sync_log").select("*").eq("source", source)
+                          .order("run_at", desc=True).limit(1).execute()).data
+        return rows[0] if rows else None
+
+    gen = latest_of("generate_newsletter")
+    if not gen:
+        warnings.append("No `generate_newsletter` run logged yet.")
+    else:
+        age = hours_since(parse_ts(gen.get("run_at")))
+        if gen.get("status") != "success":
+            errors.append(f"Weekly digest generation errored: {gen.get('error_message') or gen.get('notes')}")
+        elif age is not None and age > 24 * 10:
+            errors.append(f"Weekly digest overdue — last generated {age / 24:.0f}d ago (threshold 10d).")
+
+    subs = with_retry(lambda: sb.table("subscribers").select("id", count="exact")
+                      .eq("status", "active").execute())
+    active_subs = subs.count or 0
+    snd = latest_of("send_newsletter")
+    if active_subs > 0:
+        if not snd:
+            errors.append(f"{active_subs} active subscriber(s) but `send_newsletter` has never run.")
+        elif snd.get("status") == "skipped" and "already sent" not in (snd.get("notes") or ""):
+            errors.append(f"{active_subs} active subscriber(s) but the last digest was not emailed — {snd.get('notes')}")
+        elif snd.get("status") == "error":
+            errors.append(f"Newsletter send failed for every subscriber: {snd.get('error_message')}")
+        elif snd.get("status") == "partial":
+            warnings.append(f"Newsletter send was partial — {snd.get('notes')}: {snd.get('error_message')}")
+
     # 4 — Headline numbers are in a sane range (catches data/view corruption)
     hn = with_retry(lambda: sb.table("headline_numbers").select("*").single().execute()).data
     op = float(hn.get("operating_mw") or 0)
