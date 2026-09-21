@@ -9,6 +9,28 @@ Groups: **core entities** · **automated feeds** · **provenance system** · **c
 
 ---
 
+## Access model — who can write what
+
+The public site holds only the **anon** key, so the database is **read-only for the public by
+privilege, with RLS as a second lock** ([`supabase/privileges.sql`](../supabase/privileges.sql)):
+
+| Role | Reads | Writes |
+|------|-------|--------|
+| `anon` / `authenticated` (browser) | every table + view (RLS: `SELECT` policy) | **none**, except `INSERT (email, source)` on `subscribers` — the signup form, via `api/subscribe.js` |
+| `service_role` (GitHub Actions crons) | everything | everything — the only writer |
+
+- Unsubscribe is the `SECURITY DEFINER` RPC `unsubscribe_subscriber(uuid)`, so it needs no table
+  grant; `rollup_wholesale_prices()` is executable by `service_role` only.
+- **Default privileges:** tables created by `postgres` start `SELECT`-only for the public roles, and
+  the `ensure_rls` event trigger enables RLS on them, so a new table is unreadable until a policy is
+  added on purpose. Supabase's own default (`ALL` to `anon`/`authenticated`) is what this replaces —
+  it left RLS as the only barrier.
+- **New table checklist:** RLS on + an explicit `SELECT` policy; never `GRANT` write privileges to
+  `anon`/`authenticated`; if a public write is truly needed, grant the narrowest column list and
+  document it here.
+- **Known limit:** `supabase_admin` keeps its own default ACL for tables *it* creates
+  (`postgres` cannot alter another role's defaults). Nothing in this project is created by it.
+
 ## Core entities
 
 ### `reactors` — the central entity (94 rows)
