@@ -69,12 +69,21 @@ PK: `snapshot_date`. Columns include overnight/midday source averages plus
 `overnight_nuclear_share_pct`, `low_renewables_hours_pct`,
 `nuclear_share_when_low_renewables_pct`, `hours_observed`, `updated_at`.
 
-### `wholesale_prices` — CAISO day-ahead hourly LMP (pilot, grows daily)
+### `wholesale_prices` — multi-ISO wholesale LMP (rolling 30-day window at full resolution)
 `iso`+`hub`+`market`+`interval_start` PK, `price_usd_mwh`, `updated_at`. Powers "The price of
-intermittency" on The Grid. Pilot scope: CAISO only (NP15/SP15), day-ahead market only — `iso`
-and `market` are real columns so another ISO or real-time prices is additive, not a schema
-change. No API key needed (CAISO OASIS is public). Degrades gracefully. See
-[ADR-0015](decisions/0015-caiso-pricing-pilot.md).
+intermittency" on The Grid. CAISO (day-ahead + real-time), NYISO (day-ahead + real-time zonal
+LBMP), ERCOT (real-time hub LMP); all no-key public feeds. `iso` and `market` are real columns so
+another ISO is additive, not a schema change. Real-time rows older than 30 days are rolled up into
+`wholesale_prices_hourly` and deleted (NYISO 5-minute data was ~70% of the table and grew ~9 MB/week
+against the 500 MB free-tier cap); day-ahead rows are already hourly and are kept. Degrades
+gracefully. See [ADR-0015](decisions/0015-caiso-pricing-pilot.md).
+
+### `wholesale_prices_hourly` — hourly rollup of aged real-time prices
+`iso`+`hub`+`market`+`hour_start` PK (UTC hour), `avg_price_usd_mwh`, `min_price_usd_mwh`,
+`max_price_usd_mwh`, `n_intervals`, `rolled_at`. Written by `rollup_wholesale_prices()` (a single
+`DELETE … RETURNING` → aggregate statement, so every raw row removed is a row counted) via
+`scripts/rollup_wholesale_prices.py` (`wholesale-rollup.yml`, weekly). Min/max are kept beside the
+mean because the story is the evening spike, which an average alone would flatten. Watchdog-monitored.
 
 ### `incidents` — the live NRC event wire (11 rows, grows daily)
 NRC Event Notifications, plant events only (filtered to rows with a `Facility`).

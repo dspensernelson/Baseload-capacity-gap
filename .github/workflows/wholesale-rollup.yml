@@ -1,10 +1,12 @@
-name: PJM Wholesale Prices
+name: Wholesale Price Rollup
 
 on:
+  schedule:
+    - cron: '0 6 * * 0'   # Sunday 06:00 UTC — roll aged real-time prices up to hourly
   workflow_dispatch:
 
 jobs:
-  update-pjm-prices:
+  rollup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -14,11 +16,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install python-dotenv "supabase==2.9.1" requests
+        run: pip install python-dotenv "supabase==2.9.1"
 
-      - name: Run PJM day-ahead LMP fetch
+      - name: Roll real-time wholesale prices up to hourly
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          PJM_API_KEY: ${{ secrets.PJM_API_KEY }}
-        run: python scripts/pjm_prices.py
+        run: python scripts/rollup_wholesale_prices.py

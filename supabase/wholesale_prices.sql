@@ -8,7 +8,7 @@
 -- hardcoded, so adding another ISO or real-time prices later is a new script
 -- writing into the same table, not a schema change. See ADR-0015.
 CREATE TABLE IF NOT EXISTS wholesale_prices (
-  iso             TEXT NOT NULL,        -- 'CAISO' (designed to extend: 'ERCOT', 'PJM', ...)
+  iso             TEXT NOT NULL,        -- 'CAISO' | 'NYISO' | 'ERCOT' (extensible)
   hub             TEXT NOT NULL,        -- e.g. 'NP15', 'SP15'
   market          TEXT NOT NULL,        -- 'day_ahead' (designed to extend: 'real_time')
   interval_start  TIMESTAMPTZ NOT NULL,

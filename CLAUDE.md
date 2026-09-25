@@ -110,7 +110,7 @@ baseload-capacity-gap/
 13. **`incidents`** — live NRC Event Notifications (plant events); written by `nrc_event_notifications.py` (daily), powers Incidents
 14. **`history_milestones`** — the History timeline (sourced, 1938 → the gap)
 15. **`demand_forecast`** — the EIA AEO reference-case demand-growth assumption (1 row, curated, annual-refresh) behind "Why this gets harder, not easier" on The Grid; feeds `demand_growth_series`. See ADR-0014
-16. **`wholesale_prices`** — multi-ISO wholesale prices (CAISO day-ahead + real-time, NYISO day-ahead + real-time zonal LBMP, ERCOT real-time hub LMP; optional PJM when keyed), powers "The price of intermittency" on The Grid. Core feeds are no-key.
+16. **`wholesale_prices`** — multi-ISO wholesale prices (CAISO day-ahead + real-time, NYISO day-ahead + real-time zonal LBMP, ERCOT real-time hub LMP; real-time rows older than 30 days are rolled up to hourly avg/min/max in `wholesale_prices_hourly`), powers "The price of intermittency" on The Grid. Core feeds are no-key.
 17. **`grid_reliability_daily`** — daily materialized source reliability metrics (avg/p10/p90/CV/ramp95) derived from `generation_hourly`; powers The Grid reliability trend.
 18. **`grid_firming_daily`** — daily materialized firming snapshot (overnight nuclear share and low-renewables-hour nuclear share) derived from `generation_hourly`; powers The Grid firming trend.
 
