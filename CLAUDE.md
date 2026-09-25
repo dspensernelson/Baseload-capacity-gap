@@ -163,6 +163,7 @@ See `docs/data-model.md` for full schema.
 - Every cron run writes to `sync_log` — this is non-negotiable
 - Upsert (not insert) on seed scripts, keyed on `eia_plant_id + unit_number`
 - Read the generated code line by line before running it — don't black-box ETL
+- **Least privilege on the public API** — `anon`/`authenticated` are read-only (`supabase/privileges.sql`); the only public write is `INSERT (email, source)` on `subscribers`. New tables start `SELECT`-only with RLS on; never `GRANT` write privileges to `anon`/`authenticated`, and apply `privileges.sql` last on any rebuild. See the access model in `docs/data-model.md`
 
 ---
 

@@ -38,6 +38,11 @@ Run each in the Supabase SQL editor (or `psql`). All are idempotent (`IF NOT EXI
 | 10 | `supabase/safety_incidents.sql` | `energy_safety`, `notable_accidents`, `incidents` + reference seeds |
 | 11 | `supabase/history.sql` | `history_milestones` + timeline seed |
 
+**Always last:** after every other `supabase/*.sql` file (including ones added after this table was
+written — `news_items`, `subscribers`, `wholesale_prices*`, `demand_forecast`), apply
+`supabase/privileges.sql`. It makes the public roles read-only; applying it earlier would let a later
+file's default grants widen them again.
+
 (`supabase/provenance.sql` is applied in step 2, after rows exist — it adds the provenance
 columns *and* backfills them.)
 
