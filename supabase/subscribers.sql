@@ -23,7 +23,20 @@ create policy subscribers_anon_insert
   with check (true);
 
 -- Insert privilege for the public web form; reads stay blocked (no SELECT policy).
-grant insert on public.subscribers to anon;
+-- Column-level: anon may supply only email + source. A table-wide grant let a
+-- direct PostgREST caller set status/confirmed/id itself, bypassing api/subscribe.js.
+-- Supabase's default privileges also hand anon SELECT/UPDATE/REFERENCES here; RLS
+-- denies them today, but an unintended grant is one permissive policy from a leak.
+revoke all on public.subscribers from anon;
+grant insert (email, source) on public.subscribers to anon;
+
+-- Same bounds api/subscribe.js enforces, held at the table so the direct path can't skip them.
+alter table public.subscribers drop constraint if exists subscribers_email_sane;
+alter table public.subscribers add constraint subscribers_email_sane
+  check (length(email) <= 254 and email = lower(email) and email ~ '^[^\s@]+@[^\s@]+\.[^\s@]+$');
+alter table public.subscribers drop constraint if exists subscribers_source_sane;
+alter table public.subscribers add constraint subscribers_source_sane
+  check (source is null or length(source) <= 60);
 
 -- One-click unsubscribe (api/unsubscribe.js): anon may flip exactly one row
 -- to 'unsubscribed' if it knows that row's UUID, which only ever travels
