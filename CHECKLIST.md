@@ -187,3 +187,48 @@ Track your progress from empty repo to live V1. Check items off as you go.
 - [ ] ADAMS document feed
 - [ ] Mobile layout + shareable deep links
 - [ ] Paperclip agent org setup
+
+---
+
+## Launch Readiness — Newsletter & Hardening (Sept 19–29, 2026)
+
+**Status: the newsletter is live.** First real send went out automatically via the Monday
+cron on Sept 28 (`Power Sector Newswire - Week 40, 2026`, delivered) once the secrets were
+set; a `--test-to` proof copy delivered Sept 29. Both confirmed delivered in Resend.
+
+**One-slide summary.** *What:* audited the project, found the newsletter had never emailed
+anyone despite looking healthy, fixed that plus three unrelated risks (a silent-failure
+watchdog gap, unbounded database growth, over-permissioned public database access). *Why:*
+"green" checks were hiding a silently-skipped send; the DB was on pace to hit its free-tier
+cap by mid-2027; public keys could in theory have written to any table. *How:* verified live
+systems end to end, shipped three PRs (#4, #5, #6 — all merged), wired a real sending domain
++ API key, proved delivery in production. *Next:* let it run — it's a live weekly cron now;
+open items below are polish, not blockers.
+
+### Done
+- [x] Full audit — 15/16 crons green and fresh, all endpoints 200, no open watchdog issues; found the newsletter send step skips silently when unconfigured (13 digests published to web/RSS, zero emails ever sent)
+- [x] Watchdog check: active subscribers + digest not emailed = alert; digest overdue >10 d = alert (PR #4, merged)
+- [x] `send_newsletter.py --test-to EMAIL` proof sends that never block the real send (PR #4, merged)
+- [x] Subscriber table locked: anon may insert only `(email, source)`, cannot read/alter the list; input constraints added (live)
+- [x] GitHub Actions bumped off deprecated Node 20 — checkout v7, setup-python v7, github-script v9 (PR #4, merged)
+- [x] `wholesale_prices` hourly rollup — 352,833 rows → 29,373 hourly avg/min/max, conserved per hub; weekly cron + watchdog check (live; PR #5, merged)
+- [x] Dead PJM price feed removed (PR #5, merged)
+- [x] Public roles (`anon`/`authenticated`) read-only by privilege, not just RLS; new tables default read-only (live; PR #6, merged)
+- [x] Accidentally-committed `AGENTS.md` (from an overbroad `git add -A`) removed from `main`
+- [x] Sending domain: using the already-verified `rhubarbpye.com` in Resend (owner's call — new domain wasn't worth the DNS wait)
+- [x] `RESEND_API_KEY` (a fresh, sending-only key scoped to that domain), `NEWSLETTER_FROM`, `SITE_URL` set as GitHub secrets/variables
+- [x] `workflow_dispatch` `test_to` input added to `newsletter-weekly.yml` — a preview send skips generating a new digest and never touches the subscriber list
+- [x] Test send delivered (Sept 29) to the owner's own inbox; **real send already delivered** (Sept 28, Monday cron) to the one existing subscriber
+- [x] Watchdog re-run confirms the newsletter check now passes — issue #7 stays open only for an unrelated, pre-existing NRC license-scraper 403 (flagged separately, `task_bd70a8c5`)
+
+### Open — needs the owner
+- [ ] Delete or keep the orphaned unused Resend key `baseload-newsletter-cron` (harmless, sending-only, never used — cosmetic)
+- [ ] Decide on `AGENTS.md` if it keeps reappearing untracked (something outside this session regenerates it; it's excluded from every commit so far)
+
+### Open — polish, not blocking
+- [ ] Double opt-in before the list is promoted beyond word-of-mouth (`subscribers.confirmed` exists, unused) — right now anyone can sign up someone else's address
+- [ ] Fact-check newsletter copy against the "hostile fact-check" and no-CTA rules (not yet done)
+- [ ] Unsubscribe error page: drop the "we" and the "reply to any newsletter email" line unless the From address has a monitored inbox
+- [ ] Static CI check that fails if any `supabase/*.sql` grants writes to anon/authenticated; live privilege-drift watchdog check
+- [ ] Optional: `VACUUM FULL wholesale_prices` to return disk space (DB ~157 MB of 500 MB; growth has stopped, not urgent)
+- [ ] NRC license-scraper 403 (nrc.gov blocking again) — separate task flagged, keeps issue #7 open until fixed
