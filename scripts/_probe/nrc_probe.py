@@ -1,29 +1,23 @@
-import requests, sys
+import requests, time, collections
 B = "https://www.nrc.gov"
-OLD = B + "/reactors/operating/licensing/renewal/subsequent-license-renewal.html"
-NEW = B + "/licensing-applications/operating-reactor-licensing/reactor-license-renewal/status-subsequent-license-renewal-applications"
-CHROME = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
-          "Chrome/126.0.0.0 Safari/537.36")
-BOT = "Mozilla/5.0 (compatible; BaseloadBot/1.0; +https://baseload-capacity-gap.vercel.app)"
-BROWSER_HDRS = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9"}
-variants = {
-  "bot-ua session":            (BOT, {}),
-  "python-requests default":   (None, {}),
-  "chrome-ua session":         (CHROME, {}),
-  "chrome-ua + accept hdrs":   (CHROME, BROWSER_HDRS),
-  "bot-ua + accept hdrs":      (BOT, BROWSER_HDRS),
-  "plain 'baseload-capacity-gap'": ("baseload-capacity-gap", {}),
+URLS = {
+  "SLR-old": B + "/reactors/operating/licensing/renewal/subsequent-license-renewal.html",
+  "LR-old":  B + "/reactors/operating/licensing/renewal/applications.html",
 }
-for url_label, url in (("OLD(redirects)", OLD), ("NEW(direct)", NEW)):
+BOT = "Mozilla/5.0 (compatible; BaseloadBot/1.0; +https://baseload-capacity-gap.vercel.app)"
+PYBOT = f"python-requests/{requests.__version__} BaseloadBot/1.0 (+https://baseload-capacity-gap.vercel.app)"
+HDRS = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language": "en-US,en;q=0.9"}
+variants = {"current-bot-ua": (BOT, {}), "python-default": (None, {}),
+            "pybot-honest": (PYBOT, {}), "pybot+accept": (PYBOT, HDRS)}
+N = 8
+for ulabel, url in URLS.items():
     for name, (ua, extra) in variants.items():
-        s = requests.Session()
-        if ua: s.headers["User-Agent"] = ua
-        s.headers.update(extra)
-        try:
-            r = s.get(url, timeout=60)
-            print(f"{url_label:15} {name:32} -> {r.status_code} hops={[h.status_code for h in r.history]} len={len(r.text)}")
-            if r.status_code == 403 and name == "bot-ua session":
-                print("   403 headers:", dict(r.headers)); print("   403 body[:400]:", r.text[:400].replace("\n", " "))
-        except Exception as e:
-            print(f"{url_label:15} {name:32} -> EXC {e}")
+        tally = collections.Counter()
+        for i in range(N):
+            s = requests.Session()
+            if ua: s.headers["User-Agent"] = ua
+            s.headers.update(extra)
+            try: tally[s.get(url, timeout=60).status_code] += 1
+            except Exception as e: tally["exc"] += 1
+            time.sleep(2)
+        print(f"{ulabel:8} {name:16} {dict(tally)}", flush=True)
