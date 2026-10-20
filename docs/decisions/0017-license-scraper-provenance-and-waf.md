@@ -63,3 +63,28 @@ wasn't isolated further — reproducing the passing shape was enough.
   `Session.headers` in place over passing a fresh `headers=` dict per call. It's free
   insurance against a fingerprinting heuristic that a one-off dict can trip and a persistent
   session's natural header set does not.
+
+## Amendment — October 2026: the Session theory was wrong; the User-Agent was the trigger
+
+Weekly runs started failing again on Sept 21 (403 on the SLR page, after nrc.gov moved both
+renewal pages and 301-redirects the old paths to `/licensing-applications/…`; watchdog issue
+#7). The Session fix above was in place, so it was not the cause. Probing from a GitHub Actions
+runner (8 trials × 2 pages × 4 variants, fresh Session per trial):
+
+| User-Agent | Result |
+|---|---|
+| `Mozilla/5.0 (compatible; BaseloadBot/1.0; +url)` (the "fix") | 11 × 200, 5 × 403 (~30% fail) |
+| `python-requests/<ver>` (default) | 16 / 16 × 200 |
+| `python-requests/<ver> BaseloadBot/1.0 (+url)` | 16 / 16 × 200 |
+| same + `Accept` / `Accept-Language` | 16 / 16 × 200 |
+| Chrome UA, or bare `baseload-capacity-gap` | 403 |
+
+The 403 body is Akamai's ("Access Denied", `Server: AkamaiGHost`). Akamai Bot Manager
+apparently distrusts a browser-claiming UA from a non-browser TLS client; the August
+"Session passes, `headers=` kwarg fails" result was most likely this same ~30% flakiness
+observed over too few trials. **Decision:** lead the UA with the real client token
+(`python-requests/<ver>`) and append the bot name and contact URL. The scraper still follows
+the 301s to the new pages, so the old URL constants keep working.
+
+**Still exposed:** `nrc_event_notifications.py` uses the same `Mozilla/5.0 (compatible; …)` UA
+on nrc.gov and should get the same change if it starts flaking.

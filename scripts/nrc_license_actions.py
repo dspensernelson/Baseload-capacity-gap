@@ -28,12 +28,16 @@ SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 SLR_URL = "https://www.nrc.gov/reactors/operating/licensing/renewal/subsequent-license-renewal.html"
 LR_URL  = "https://www.nrc.gov/reactors/operating/licensing/renewal/applications.html"
 
-# A per-request `headers={...}` dict trips nrc.gov's bot-management WAF (403) even
-# with an honest, self-identifying UA; setting it on a Session in place (preserving
-# requests' normal default header set/order) does not. Reproduced deterministically
-# against the live site, Aug 2026 — use a session, not a one-off headers kwarg.
+# nrc.gov sits behind Akamai Bot Manager. A UA that claims to be a browser
+# ("Mozilla/5.0 …") from a non-browser TLS client gets intermittent 403s (~30% of
+# requests, measured Oct 2026 from a GitHub Actions runner); a UA that honestly
+# says "python-requests" passed 48/48. So lead with the real client token and keep
+# the bot name + contact URL after it. See ADR-0017 (Oct 2026 amendment).
 SESSION = requests.Session()
-SESSION.headers["User-Agent"] = "Mozilla/5.0 (compatible; BaseloadBot/1.0; +https://baseload-capacity-gap.vercel.app)"
+SESSION.headers["User-Agent"] = (
+    f"python-requests/{requests.__version__} BaseloadBot/1.0 "
+    "(+https://baseload-capacity-gap.vercel.app)"
+)
 
 # action_types this script owns; rows of other types (e.g. restart_authorization)
 # are preserved across rebuilds
