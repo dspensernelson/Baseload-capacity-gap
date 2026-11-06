@@ -41,6 +41,10 @@ TARGET_HUBS = ["HB_HOUSTON", "HB_NORTH", "HB_SOUTH", "HB_WEST"]
 LOOKBACK_MINUTES = 180
 MAX_DOCS = 120
 MAX_RETRIES = 3
+# The listing is the one fatal call (ADR-0016), so it gets a longer ladder that
+# rides out a few minutes of ERCOT 503s: 5+10+20+40+80s of backoff, ~2.5 min.
+# Per-doc downloads keep the short ladder; one failed doc is only a warning.
+LISTING_MAX_RETRIES = 6
 REQUEST_TIMEOUT_S = 60
 US_CENTRAL = ZoneInfo("America/Chicago")
 
@@ -82,10 +86,10 @@ def parse_interval_ts(raw):
     return local.astimezone(timezone.utc).isoformat()
 
 
-def get_with_retry(url, params):
+def get_with_retry(url, params, max_retries=MAX_RETRIES):
     """GET with backoff on 5xx and on connection/DNS blips — both are transient."""
     backoff = 5
-    for attempt in range(1, MAX_RETRIES + 1):
+    for attempt in range(1, max_retries + 1):
         try:
             resp = requests.get(
                 url,
@@ -94,22 +98,25 @@ def get_with_retry(url, params):
                 headers={"User-Agent": "nukemap-ercot-prices"},
             )
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-            if attempt < MAX_RETRIES:
+            if attempt < max_retries:
                 time.sleep(backoff)
                 backoff *= 2
                 continue
             raise
-        if resp.status_code >= 500 and attempt < MAX_RETRIES:
+        if resp.status_code >= 500 and attempt < max_retries:
+            print(f"  retry {attempt}/{max_retries - 1}: HTTP {resp.status_code}, waiting {backoff}s")
             time.sleep(backoff)
             backoff *= 2
             continue
         resp.raise_for_status()
         return resp
-    raise RuntimeError(f"exhausted {MAX_RETRIES} attempts for {url}")
+    raise RuntimeError(f"exhausted {max_retries} attempts for {url}")
 
 
 def fetch_doc_list():
-    resp = get_with_retry(DOC_LIST_URL, {"reportTypeId": REPORT_TYPE_ID})
+    resp = get_with_retry(
+        DOC_LIST_URL, {"reportTypeId": REPORT_TYPE_ID}, max_retries=LISTING_MAX_RETRIES
+    )
     payload = json.loads(resp.text)
     docs = payload.get("ListDocsByRptTypeRes", {}).get("DocumentList", [])
     out = []

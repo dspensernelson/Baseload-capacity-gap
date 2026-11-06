@@ -62,3 +62,12 @@ Supporting changes:
 - The same two-list shape should be copied by any future ISO feed (SPP, MISO, a keyed PJM).
   The generalizable rule, extending ADR-0015's closing lesson: **never let one source's
   hiccup erase another source's success — and never let it fail the run either.**
+
+## Amendment (November 2026): a longer retry ladder for ERCOT's listing
+ERCOT run #873 (Nov 5) went red because the document listing returned HTTP 503 three times
+in ~15 seconds. The run before and after it delivered. The contract above was right (no
+listing means no data), but a 15-second retry window turned a brief ERCOT outage into an
+alert. The listing call now retries 6 times (5+10+20+40+80s, ~2.5 minutes) before it counts
+as fatal. Per-document downloads keep the short 3-try ladder, since one failed document is
+only a warning and 36 long ladders would stretch the run. Each 5xx retry is now printed, so
+the Actions log shows how close a run came to failing.
